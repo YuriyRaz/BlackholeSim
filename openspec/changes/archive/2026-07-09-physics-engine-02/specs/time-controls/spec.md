@@ -31,7 +31,7 @@ The system SHALL support a speed multiplier from 0.1× to 10× that scales the t
 - **THEN** the next physics step SHALL use the new speed multiplier
 
 ### Requirement: Timeline scrubber
-The system SHALL provide a timeline scrubber that shows the current simulation time and allows the user to drag to any point in time. Scrubbing SHALL recompute physics from the start to the target time.
+The system SHALL provide a timeline scrubber that shows the current simulation time and allows the user to drag to any point in time. Scrubbing SHALL recompute physics from the nearest prior state snapshot to the target time. Snapshots are taken every 100 simulation steps. For a forward scrub to a time beyond all snapshots, physics runs forward from the last snapshot. For a backward scrub, physics replays from the nearest earlier snapshot. Maximum recomputation for a scrub is 100 steps.
 
 #### Scenario: Scrubber shows current time
 - **WHEN** the simulation is at time t = 2.5 seconds
@@ -39,7 +39,11 @@ The system SHALL provide a timeline scrubber that shows the current simulation t
 
 #### Scenario: Drag scrubber to rewind
 - **WHEN** the user drags the scrubber from t = 2.5 to t = 1.0
-- **THEN** the simulation SHALL recompute physics from t = 0 to t = 1.0 and display that state
+- **THEN** the system SHALL find the nearest snapshot before t = 1.0 and recompute from that point (max 100 steps)
+
+#### Scenario: Drag scrubber forward beyond last snapshot
+- **WHEN** the user drags the scrubber to a time beyond all saved snapshots
+- **THEN** the system SHALL run physics forward from the last snapshot to the target time
 
 #### Scenario: Scrubber bounds
 - **WHEN** the scrubber is displayed

@@ -1,31 +1,31 @@
 {
   "nodes": [
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "apply",
       "command": "openspec-apply-change"
     },
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "verify",
       "command": "openspec-verify-change"
     },
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "fix",
       "command": "Fix all findings including minor"
     },
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "sync",
       "command": "openspec-sync-specs"
     },
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "archive",
       "command": "openspec-archive-change"

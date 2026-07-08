@@ -1,13 +1,13 @@
 {
   "nodes": [
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "investigate",
       "command": "openspec explore to investigate issues"
     },
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "review",
       "command": "Architecture review of implemented work"

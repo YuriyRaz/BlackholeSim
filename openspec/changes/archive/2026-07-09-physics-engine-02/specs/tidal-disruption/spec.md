@@ -12,7 +12,7 @@ The system SHALL compute tidal forces on any body near any black hole. The tidal
 - **THEN** particles on the near side SHALL be pulled harder than particles on the far side
 
 ### Requirement: Body disruption detection
-The system SHALL detect when a body is disrupted (tidal force exceeds self-gravity) and mark it as `disrupted = true`. After disruption, the body's particles SHALL be released as free bodies under gravitational influence.
+The system SHALL detect when a body is disrupted (tidal force exceeds self-gravity) and mark it as `disrupted = true`. After disruption, the body's particles SHALL be released as free bodies under gravitational influence. Star particle count SHALL follow the generation algorithm below.
 
 #### Scenario: Body approaches on eccentric orbit disrupts at periapsis
 - **WHEN** a body on an eccentric orbit passes within the tidal disruption radius at periapsis
@@ -21,6 +21,25 @@ The system SHALL detect when a body is disrupted (tidal force exceeds self-gravi
 #### Scenario: Disrupted body releases particles
 - **WHEN** a body is marked as disrupted
 - **THEN** its constituent particles SHALL become independent bodies subject to gravity from all objects
+
+### Requirement: Star particle count algorithm
+Each star SHALL be composed of N particles, where N = clamp(floor(star.mass / (0.1 × M_sun)), 50, 500). Particle positions SHALL be distributed uniformly within the star's radius using rejection sampling (points within a sphere). Upon disruption, each particle inherits the star's center-of-mass velocity plus a random velocity perturbation (±10% of orbital velocity at the particle's position within the star) to simulate tidal shearing.
+
+#### Scenario: Solar-mass star has 500 particles
+- **WHEN** a star has mass = 1.0 × M_sun
+- **THEN** it SHALL be composed of 500 particles (1.0 / 0.1 = 10, clamped to 500)
+
+#### Scenario: Low-mass star has 50 particles minimum
+- **WHEN** a star has mass = 0.05 × M_sun
+- **THEN** it SHALL be composed of 50 particles (minimum)
+
+#### Scenario: High-mass star has 500 particles maximum
+- **WHEN** a star has mass = 100 × M_sun
+- **THEN** it SHALL be composed of 500 particles (maximum)
+
+#### Scenario: Disrupted star particles have velocity dispersion
+- **WHEN** a star is disrupted
+- **THEN** each particle SHALL have its own velocity perturbation to produce tidal shearing
 
 ### Requirement: Star deformation before disruption
 The system SHALL apply progressive deformation to a star as it approaches the tidal disruption radius, stretching it into a prolate spheroid. Deformation SHALL be proportional to (d_R / d)² where d is current distance and d_R is the disruption radius.

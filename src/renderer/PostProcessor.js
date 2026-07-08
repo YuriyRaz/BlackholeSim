@@ -1,6 +1,7 @@
 export class PostProcessor {
   constructor(renderer, shaderModule) {
     this.renderer = renderer;
+    this._shaderModule = shaderModule;
     this._w = renderer.width;
     this._h = renderer.height;
     this._fb1 = null;
@@ -65,13 +66,22 @@ export class PostProcessor {
     const v = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(v, vs);
     gl.compileShader(v);
+    if (!gl.getShaderParameter(v, gl.COMPILE_STATUS)) {
+      console.error('Vertex shader error:', gl.getShaderInfoLog(v));
+    }
     const f = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(f, fs);
     gl.compileShader(f);
+    if (!gl.getShaderParameter(f, gl.COMPILE_STATUS)) {
+      console.error('Fragment shader error:', gl.getShaderInfoLog(f));
+    }
     const p = gl.createProgram();
     gl.attachShader(p, v);
     gl.attachShader(p, f);
     gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      console.error('Program link error:', gl.getProgramInfoLog(p));
+    }
     return p;
   }
 

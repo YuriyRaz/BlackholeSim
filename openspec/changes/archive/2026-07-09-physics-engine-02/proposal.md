@@ -12,10 +12,26 @@ Every visual effect in the simulation — mergers, tidal disruptions, accretion 
 - **Tidal forces**: Tidal force computation on any body near any black hole. Stars deform and disrupt when tidal force exceeds self-gravity.
 - **Gravitational wave emission**: Any accelerating mass pair emits GWs. Frequency, strain, luminosity from orbital parameters. GW energy loss drives orbital decay.
 - **Black hole spin effects**: Frame dragging, ISCO shift, ergosphere region.
-- **Jet emission**: Inner disk gas particles near ISCO around a spinning BH are redirected along the spin axis. Jet intensity ∝ a² × accretion_rate.
+- **Jet emission**: Inner disk particles near ISCO around a spinning BH are redirected along the spin axis. Jet intensity ∝ a² × accretion_rate.
 - **Initial condition presets**: Functions returning arrays of bodies and gas particles. Binary BH, TDE, Kerr presets. These are data, not classes.
-- **Time controls**: Play/pause, speed adjustment, timeline scrubber.
+- **Time controls**: Play/pause, speed adjustment, timeline scrubber with state snapshots.
 - **Object interaction**: Click-to-focus, orbital path visualization, object list.
+
+## Simulation Units
+
+All physics computations use internal simulation units (SI units). The simulation uses SI internally (meters, kilograms, seconds) and the renderer maps these to screen coordinates via camera projection. Constants are defined in `src/core/Constants.js`:
+
+| Symbol | Value | Description |
+|--------|-------|-------------|
+| G | 6.674e-11 N⋅m²/kg² | Gravitational constant |
+| c | 3e8 m/s | Speed of light |
+| M_sun | 1.989e30 kg | Solar mass |
+| R_sun | 6.96e8 m | Solar radius |
+| Rs | 2GM/c² | Schwarzschild radius (computed) |
+
+**Coordinate mapping**: The renderer uses camera projection to map 3D positions (in meters) to screen pixels. Body sizes and distances are expressed in meters. Gas particle sizes are expressed in meters (typically 0.01–0.1 Rs). The camera auto-scales based on the scene bounding box, so the user always sees the full scene regardless of absolute scale.
+
+**Physical values in formulas** (GW strain, tidal forces, accretion temperature) use SI units directly. Display values in the info panel are shown in physical units (M_sun, Hz, Kelvin, W/m²) with conversions from simulation units where needed.
 
 ## Capabilities
 
@@ -28,7 +44,7 @@ Every visual effect in the simulation — mergers, tidal disruptions, accretion 
 - `gravitational-waves`: GW frequency, strain, luminosity from orbital parameters. GW energy loss drives orbital decay.
 - `bh-spin-effects`: Frame dragging, ISCO shift, ergosphere computation for spinning black holes.
 - `initial-presets`: Functions returning body/gas initial conditions. Binary BH, TDE, Kerr presets.
-- `time-controls`: Play/pause, speed multiplier, timeline scrubber.
+- `time-controls`: Play/pause, speed multiplier, timeline scrubber with state snapshots.
 - `object-interaction`: Click-to-focus, orbital path rendering, object list panel.
 
 ### Modified Capabilities
@@ -41,4 +57,5 @@ Every visual effect in the simulation — mergers, tidal disruptions, accretion 
 - **New modules**: ~15 JavaScript modules (physics/, objects/, ui/ additions).
 - **No scenario classes**: Physics engine has no concept of "scenarios" or "phases." Presets are data functions.
 - **All effects emerge from physics**: Mergers, tidal disruptions, accretion disks, jets, GW chirps — all consequences of the equations.
-- **Performance**: N-body solver on CPU. With Barnes-Hut, 500 gas particles + 10 bodies at ~5ms per step.
+- **Performance**: N-body solver on CPU. With Barnes-Hut, 500 gas particles + 10 bodies at ~5ms per step. WebGPU compute shaders are not yet implemented; physics runs on CPU regardless of rendering backend.
+- **Timeline scrubber**: Uses periodic state snapshots (every 100 steps) for O(N/100) recomputation instead of O(N) full recompute. Snapshot memory is bounded at 100 snapshots maximum.

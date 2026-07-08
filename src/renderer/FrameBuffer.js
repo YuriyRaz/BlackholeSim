@@ -3,6 +3,7 @@ export class FrameBuffer {
     this.renderer = renderer;
     this.width = width;
     this.height = height;
+    this.format = format;
 
     if (renderer.backend === 'webgpu') {
       this.texture = renderer.createTexture(width, height, format,
@@ -46,6 +47,11 @@ export class FrameBuffer {
       this.texture?.destroy?.();
       this.texture = this.renderer.createTexture(w, h, 'rgba8unorm', GPUTextureUsage.TEXTURE_BINDING);
       this.view = this.texture.createView();
+    } else if (this.renderer.gl) {
+      const gl = this.renderer.gl;
+      gl.deleteTexture(this.tex);
+      gl.deleteFramebuffer(this.fbo);
+      this._initGL(gl, this.format);
     }
   }
 }

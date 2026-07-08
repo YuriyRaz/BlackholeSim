@@ -1,7 +1,7 @@
 {
   "nodes": [
     {
-      "status": "queued",
+      "status": "completed",
       "run_in": "job_session",
       "id": "explore",
       "command": "openspec explore"

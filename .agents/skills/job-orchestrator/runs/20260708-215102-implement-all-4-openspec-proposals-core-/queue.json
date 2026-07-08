@@ -24,28 +24,31 @@
       "sequence": 2,
       "depends_on": ["J001"],
       "waiting_on": [],
-      "status": "running"
+      "status": "completed"
     },
     {
       "job_id": "J003",
       "priority": 50,
       "sequence": 3,
       "depends_on": ["J002"],
-      "waiting_on": []
+      "waiting_on": [],
+      "status": "completed"
     },
     {
       "job_id": "J004",
       "priority": 50,
       "sequence": 4,
       "depends_on": ["J003"],
-      "waiting_on": []
+      "waiting_on": [],
+      "status": "completed"
     },
     {
       "job_id": "J005",
       "priority": 50,
       "sequence": 5,
       "depends_on": ["J004"],
-      "waiting_on": []
+      "waiting_on": [],
+      "status": "running"
     },
     {
       "job_id": "J006",

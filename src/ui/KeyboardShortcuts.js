@@ -5,7 +5,7 @@ export class KeyboardShortcuts {
     this._create();
     setTimeout(() => this._fadeOut(), 5000);
     window.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'h') this._toggle();
+      if (e.key.toLowerCase() === 'h' && !e.target.closest('input')) this._toggle();
     });
   }
 
@@ -22,6 +22,8 @@ export class KeyboardShortcuts {
         <div>WASD/QE — Move camera</div>
         <div>R — Reset camera</div>
         <div>C — Toggle cinematic</div>
+        <div>Space — Play/Pause</div>
+        <div>[ / ] — Speed down/up</div>
         <div>H — Toggle this overlay</div>
       </div>
     `;
@@ -30,6 +32,5 @@ export class KeyboardShortcuts {
 
   _fadeOut() { this._el.style.opacity = '0'; this._visible = false; }
   _fadeIn() { this._el.style.opacity = '1'; this._visible = true; }
-
   _toggle() { this._visible ? this._fadeOut() : this._fadeIn(); }
 }

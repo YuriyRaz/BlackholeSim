@@ -230,4 +230,13 @@ export class Renderer {
       this._depthView = this._depthTexture.createView();
     }
   }
+
+  destroy() {
+    if (this._backend === 'webgpu' && this._device) {
+      this._device.destroy();
+    } else if (this._gl) {
+      const loseContext = this._gl.getExtension('WEBGL_lose_context');
+      if (loseContext) loseContext.loseContext();
+    }
+  }
 }

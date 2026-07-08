@@ -48,7 +48,7 @@ export class BodyRenderer {
       out vec3 v_normal;
       out vec3 v_worldPos;
       void main() {
-        vec3 wp = a_pos * u_bodyPos + u_bodyPos;
+        vec3 wp = a_pos * u_bodyRadius + u_bodyPos;
         gl_Position = u_viewProj * vec4(wp, 1.0);
         v_normal = a_pos;
         v_worldPos = wp;
@@ -57,6 +57,7 @@ export class BodyRenderer {
       precision highp float;
       in vec3 v_normal; in vec3 v_worldPos;
       uniform vec3 u_bodyColor; uniform uint u_bodyType; uniform float u_time; uniform vec3 u_camPos;
+      uniform bool u_selected;
       out vec4 fragColor;
       void main() {
         vec3 n = normalize(v_normal);
@@ -75,10 +76,15 @@ export class BodyRenderer {
         } else {
           fragColor = vec4(col, 1.0);
         }
+        if (u_selected) {
+          vec3 vd = normalize(u_camPos - v_worldPos);
+          float rim = 1.0 - max(dot(vd, n), 0.0);
+          fragColor.rgb += vec3(0.2, 0.4, 0.8) * pow(rim, 2.0) * 0.5;
+        }
       }`
     );
 
-    const names = ['u_viewProj','u_bodyPos','u_bodyColor','u_bodyRadius','u_bodyType','u_time','u_camPos'];
+    const names = ['u_viewProj','u_bodyPos','u_bodyColor','u_bodyRadius','u_bodyType','u_time','u_camPos','u_selected'];
     names.forEach(n => { this._uniforms[n] = gl.getUniformLocation(this._program, n); });
 
     this._sphereData = this._createSphere(16);
@@ -116,6 +122,7 @@ export class BodyRenderer {
       gl.uniform3f(this._uniforms.u_bodyColor, ...body.color);
       gl.uniform1f(this._uniforms.u_bodyRadius, body.radius || 1.0);
       gl.uniform1ui(this._uniforms.u_bodyType, typeMap[body.type] || 1);
+      gl.uniform1i(this._uniforms.u_selected, body.selected ? 1 : 0);
 
       gl.drawElements(gl.TRIANGLES, this._sphereData.indices.length, gl.UNSIGNED_SHORT, 0);
     }

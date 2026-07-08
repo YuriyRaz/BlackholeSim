@@ -10,14 +10,23 @@ import { ParticleRenderer } from './renderer/ParticleRenderer.js';
 import { BodyRenderer } from './objects/BodyRenderer.js';
 import { LensingPass } from './renderer/LensingPass.js';
 import { BackgroundPass } from './renderer/BackgroundPass.js';
+import { PhysicsEngine } from './physics/PhysicsEngine.js';
+import { TrailRenderer } from './renderer/TrailRenderer.js';
 
 const canvas = document.getElementById('viewport');
 const clock = new Clock();
+const physics = new PhysicsEngine();
 
 const renderer = await Renderer.create(canvas);
 if (!renderer) {
   document.body.innerHTML = '<div style="color:#fff;font-size:24px;text-align:center;margin-top:40vh">WebGPU and WebGL 2.0 are not supported in this browser.</div>';
   throw new Error('No GPU backend available');
+}
+if (renderer.backend === 'webgpu') {
+  const fallback = document.createElement('div');
+  fallback.style.cssText = 'position:fixed;top:0;left:0;right:0;background:rgba(255,0,0,0.8);color:#fff;text-align:center;padding:10px;z-index:9999;font-size:16px';
+  fallback.textContent = 'WebGPU rendering is not yet implemented. Falling back to WebGL 2.0.';
+  document.body.appendChild(fallback);
 }
 
 const profiler = new Profiler();
@@ -29,9 +38,10 @@ const lensingPass = new LensingPass(renderer, shaderModule);
 const backgroundPass = new BackgroundPass(renderer, shaderModule);
 const particleRenderer = new ParticleRenderer(renderer, shaderModule);
 const bodyRenderer = new BodyRenderer(renderer, shaderModule);
+const trailRenderer = new TrailRenderer(renderer, shaderModule);
 const postProcessor = new PostProcessor(renderer, shaderModule);
 
-const ui = new UIManager({ cameraManager, quality, profiler });
+const ui = new UIManager({ cameraManager, quality, profiler, physicsEngine: physics });
 
 renderer.onResize((w, h) => {
   cameraManager.resize(w, h);
@@ -39,6 +49,7 @@ renderer.onResize((w, h) => {
   backgroundPass.resize(w, h);
   particleRenderer.resize(w, h);
   bodyRenderer.resize(w, h);
+  trailRenderer.resize(w, h);
   postProcessor.resize(w, h);
 });
 
@@ -54,10 +65,15 @@ function animate() {
   profiler.update(dt);
   quality.update();
   cameraManager.update(dt);
+  physics.step(dt);
 
   const camState = cameraManager.getState();
   const settings = quality.getSettings();
   const display = ui.getDisplaySettings();
+  const physState = physics.getState();
+
+  camState.bodies = physState.bodies;
+  camState.time = clock.elapsed;
 
   renderer.beginFrame();
 
@@ -67,6 +83,7 @@ function animate() {
   }
   if (display.particles) particleRenderer.render(camState, settings);
   if (display.bodies) bodyRenderer.render(camState, settings);
+  if (display.trails) trailRenderer.render(camState, settings);
 
   if (display.postProcessing) {
     postProcessor.render(settings);
@@ -74,6 +91,8 @@ function animate() {
 
   renderer.endFrame();
   ui.updateFPS(profiler.fps);
+  ui.update(physState);
 }
 
+window.addEventListener('beforeunload', () => renderer.destroy());
 animate();

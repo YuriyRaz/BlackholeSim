@@ -66,6 +66,40 @@ Key constraint: The physics engine has no concept of "scenarios" or "phases." It
 
 **Why**: Full MHD jet launching requires magnetic field simulation — too expensive. Probability-based redirection captures the essential Blandford-Znajek proportionality (P ∝ a² × Ṁ) without simulating magnetic fields.
 
+### D6: Physics-to-Renderer Data Contract
+
+**Decision**: PhysicsEngine.getState() returns a structured object with typed arrays for renderer consumption. The format matches what ParticleRenderer and BodyRenderer already expect.
+
+**Why**: Implicit data contracts cause integration bugs. Explicitly defining the format ensures physics and renderer agree on the interface.
+
+**Format**:
+```javascript
+{
+  bodies: [
+    { id, position: [x, y, z], velocity: [x, y, z], mass, type: 'blackhole'|'star'|'neutronstar', fixed, disrupted, name }
+  ],
+  gasParticles: [
+    { position: [x, y, z], velocity: [x, y, z], temperature, size, type: 'gas' }
+  ],
+  jetParticles: [
+    { position: [x, y, z], velocity: [x, y, z], type: 'jet' }
+  ],
+  gw: { frequency, strain, phase },
+  accretionRate,
+  simTime
+}
+```
+
+The renderer maps `type` to the appropriate visual treatment (additive blending for jets, color from temperature for gas). The renderer does not interpret physics values — it only consumes position, color, size, and blend mode.
+
+### D7: UI-Shell Modifications Are Physics-Engine-02 Scope
+
+**Decision**: UI modifications (time controls, object list, expanded info panel) are part of this change, not ui-shell.
+
+**Why**: These UI components directly consume physics state and control physics behavior. They cannot function without the physics engine. The existing ui-shell (preset selector, display toggles, quality selector) is already implemented in core-renderer-01. This change adds physics-specific UI that depends on physics engine output.
+
+**Boundaries**: ui-shell modifications in this change are limited to: time control bar, object list panel, expanded physics info panel (orbital data, accretion rate, GW strain). The base ui-shell (preset selector, display toggles, quality selector, camera mode) is owned by core-renderer-01.
+
 ## Risks / Trade-offs
 
 - **Gas particle count limits disk resolution** → 500 gas particles gives a sparse disk. Acceptable for interactive simulation — visual density comes from point sprite rendering with glow.

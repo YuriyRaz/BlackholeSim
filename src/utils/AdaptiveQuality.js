@@ -79,12 +79,20 @@ export class AdaptiveQuality {
   _downgrade() {
     const order = ['High', 'Medium', 'Low', 'Minimum'];
     const idx = order.indexOf(this._currentLevel);
-    if (idx < order.length - 1) this._currentLevel = order[idx + 1];
+    if (idx < order.length - 1) {
+      this._currentLevel = order[idx + 1];
+      this._skipFrames = 0;
+      this._frameSkip = false;
+    }
   }
 
   _upgrade() {
     const order = ['High', 'Medium', 'Low', 'Minimum'];
     const idx = order.indexOf(this._currentLevel);
-    if (idx > 0) this._currentLevel = order[idx - 1];
+    if (idx > 0) {
+      this._currentLevel = order[idx - 1];
+      this._skipFrames = 0;
+      this._frameSkip = false;
+    }
   }
 }

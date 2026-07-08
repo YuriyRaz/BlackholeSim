@@ -15,6 +15,14 @@ export class CameraManager {
     this._viewProjection = new Float32Array(16);
     this._perspective = new Float32Array(16);
     this._aspect = canvas.width / canvas.height || 1;
+
+    // Wire up user input to cinematic camera when in cinematic mode
+    const notifyCinematic = () => {
+      if (this._mode === 'cinematic') this.cinematic.onUserInput();
+    };
+    canvas.addEventListener('mousedown', notifyCinematic);
+    canvas.addEventListener('mousemove', notifyCinematic);
+    canvas.addEventListener('wheel', notifyCinematic);
   }
 
   get mode() { return this._mode; }

@@ -1,4 +1,6 @@
-## ADDED Requirements
+# Accretion Physics
+
+## Requirements
 
 ### Requirement: ISCO as inner edge
 The inner edge of the gas particle distribution SHALL be at the Innermost Stable Circular Orbit (ISCO). Gas particles that migrate inside ISCO SHALL plunge into the black hole and be removed from the simulation.
@@ -58,6 +60,21 @@ Jet particles SHALL travel outward along the BH spin axis at relativistic speeds
 #### Scenario: Jet color gradient
 - **WHEN** jet particles render
 - **THEN** on-axis particles SHALL be blue-white and off-axis particles SHALL be redder
+
+### Requirement: Jet particle lifecycle
+Jet particles SHALL be removed from the simulation when they travel beyond 200× the Schwarzschild radius from the emitting black hole along the spin axis. The maximum simultaneous jet particle count SHALL be 2,000. When the limit is reached, the oldest jet particles SHALL be removed first (FIFO). Jet particles SHALL NOT interact with other particles (no collisions, no gravitational influence on other bodies).
+
+#### Scenario: Jet particles removed at distance limit
+- **WHEN** a jet particle travels beyond 200×Rs from the emitting black hole
+- **THEN** it SHALL be removed from the simulation
+
+#### Scenario: Jet particle count cap
+- **WHEN** jet particle count reaches 2,000
+- **THEN** new jet particles SHALL displace the oldest jet particles
+
+#### Scenario: Jet particles are non-interacting
+- **WHEN** a jet particle is in the simulation
+- **THEN** it SHALL NOT exert gravitational force on other particles and SHALL NOT collide with gas or debris particles
 
 ### Requirement: Jet precession for tilted BH
 For black holes with spin axis tilted relative to the orbital plane, the jet emission direction SHALL precess (wobble) around the average spin axis, driven by frame dragging.
