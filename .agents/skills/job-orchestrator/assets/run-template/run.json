@@ -9,8 +9,12 @@
   "state_root": "{{STATE_ROOT}}",
   "protocol": {
     "manifest_path": "protocol/manifest.json",
-    "version": 1,
+    "version": 2,
     "sha256": "{{PROTOCOL_SHA256}}"
+  },
+  "skill_source": {
+    "path": "{{SKILL_SOURCE}}",
+    "update_scope": "future_runs"
   },
   "revision": 1,
   "active_job_id": null,

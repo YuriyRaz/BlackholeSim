@@ -7,13 +7,15 @@
 2. Read `run.json`, `request.md`, `setup.json`, `queue.json`, and the event
    journal.
 3. Hash `protocol/job-protocol.md` and compare it with the manifest.
-4. Acquire or safely take over the orchestrator lease.
-5. Validate every indexed job directory, contract, and report path.
-6. Rebuild disposable indexes if they disagree with authoritative job files.
-7. Reconstruct parent/child waits from `workflow.json`, child request events,
+4. Replay `improvements.jsonl` and identify unresolved observations and active
+   maintenance jobs.
+5. Acquire or safely take over the orchestrator lease.
+6. Validate every indexed job directory, contract, and report path.
+7. Rebuild disposable indexes if they disagree with authoritative job files.
+8. Reconstruct parent/child waits from `workflow.json`, child request events,
    and child report paths.
-8. Find any active dispatch and classify it before scheduling new work.
-9. Persist `recovering`, perform reconciliation, then return the run to
+9. Find any active dispatch and classify it before scheduling new work.
+10. Persist `recovering`, perform reconciliation, then return the run to
    `active`, `waiting_for_user`, or `blocked`.
 
 ## Classify Interrupted Dispatches
@@ -86,6 +88,24 @@ job IDs, child report paths, and unresolved child requests.
 Do not resume work when the protocol hash, contract revision, or bootstrap
 acknowledgement is inconsistent. Persist the mismatch and investigate or
 migrate explicitly.
+
+## Improvement Recovery
+
+Rebuild each improvement candidate from its append-only events. Do not create
+a duplicate maintenance job when an accepted or materialized candidate already
+references one.
+
+If a maintenance job was interrupted, reconcile its file changes and
+validation evidence before retrying. Preserve unrelated working-tree changes.
+If canonical skill files changed while the job was unavailable, require the
+maintenance job to reread them and reconsider its patch.
+
+Canonical updates do not change the active run's frozen protocol. Resume active
+jobs with the original hash unless a completed migration job explicitly
+updated the run manifest, contracts, versions, and acknowledgements.
+
+Before restoring a terminal run state, ensure every observation is resolved,
+rejected, or deferred with a reason.
 
 ## Corrupt Or Partial State
 

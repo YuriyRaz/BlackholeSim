@@ -3,7 +3,7 @@
   "job_id": "{{JOB_ID}}",
   "workflow_node_id": "{{WORKFLOW_NODE_ID}}",
   "contract_revision": 1,
-  "protocol_version": 1,
+  "protocol_version": 2,
   "protocol_sha256": "{{PROTOCOL_SHA256}}",
   "command": "{{COMMAND}}",
   "status": "recorded",

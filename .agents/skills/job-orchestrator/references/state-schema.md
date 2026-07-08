@@ -9,6 +9,7 @@
     |-- request.md
     |-- setup.json
     |-- queue.json
+    |-- improvements.jsonl
     |-- protocol/
     |   |-- job-protocol.md
     |   `-- manifest.json
@@ -40,6 +41,7 @@ inside indexes when portability matters.
 - `run.json` is authoritative for run lifecycle and active controller.
 - `setup.json` is authoritative for normalized initial configuration.
 - `queue.json` is authoritative for scheduling order and dependencies.
+- `improvements.jsonl` is the append-only observation and maintenance ledger.
 - `protocol/job-protocol.md` is the immutable worker protocol for this run.
 - `protocol/manifest.json` records its version, source, and SHA-256 hash.
 - `jobs/<id>/job.json` is authoritative for job lifecycle.
@@ -67,6 +69,10 @@ when they disagree.
   "updated_at": "2026-07-08T12:00:00Z",
   "workspace": "C:\\Projects\\example",
   "state_root": "C:\\...\\job-orchestrator\\runs",
+  "skill_source": {
+    "path": "C:\\Projects\\ai-skills\\skills\\job-orchestrator",
+    "update_scope": "future_runs"
+  },
   "revision": 1,
   "active_job_id": null,
   "active_dispatch_id": null
@@ -97,6 +103,14 @@ completed | completed_with_concerns | blocked | canceled
     "max_children_per_job": 20,
     "max_verification_repair_attempts": 3,
     "nested_delegation": "tracked_only",
+    "continuous_improvement": {
+      "enabled": true,
+      "capture_all_observations": true,
+      "auto_create_maintenance_jobs": true,
+      "max_maintenance_jobs_per_run": 3,
+      "require_generalizable_evidence": true,
+      "apply_to_active_run": false
+    },
     "investigate_alternatives_before_user": true,
     "final_synthesis": "when_requested_or_needed"
   }
@@ -149,7 +163,7 @@ in the queue. Keep parent and child jobs in this same queue.
     "id": "agent-session-42",
     "resumable": true,
     "protocol_ack": {
-      "protocol_version": 1,
+      "protocol_version": 2,
       "protocol_sha256": "...",
       "contract_revision": 1,
       "acknowledged_at": "2026-07-08T12:01:00Z"
@@ -178,7 +192,7 @@ global dispatch slot.
 
 ```json
 {
-  "protocol_version": 1,
+  "protocol_version": 2,
   "file": "job-protocol.md",
   "sha256": "...",
   "source": "references/job-protocol.md",
@@ -193,14 +207,14 @@ an explicit migration decision and re-bootstrap of every affected session.
 
 ```json
 {
-  "contract_version": 1,
+  "contract_version": 2,
   "revision": 1,
   "job_id": "J001",
   "role": "Verifier",
   "goal": "Verify and repair the change",
   "protocol": {
     "path": "../../protocol/job-protocol.md",
-    "version": 1,
+    "version": 2,
     "sha256": "..."
   },
   "report_path": "report.md",
@@ -208,6 +222,8 @@ an explicit migration decision and re-bootstrap of every affected session.
   "may_propose_jobs": true,
   "may_spawn_untracked_agents": false,
   "may_contact_user": false,
+  "may_update_skill": false,
+  "skill_source_path": null,
   "related_reports": []
 }
 ```
@@ -302,7 +318,7 @@ Persist each dispatch before sending it:
   "job_id": "J001",
   "workflow_node_id": "verify",
   "contract_revision": 1,
-  "protocol_version": 1,
+  "protocol_version": 2,
   "protocol_sha256": "...",
   "command": "/openspec-verify-change",
   "status": "recorded",
@@ -336,6 +352,21 @@ Kinds are extensible strings such as `question`, `resolution`,
 `child_result`, `artifact_available`, `job_request`, `user_answer`, and
 `acknowledgement`.
 
+## Improvement Ledger
+
+Store append-only observation and lifecycle events:
+
+```json
+{"observation_id":"IO001","source_job_id":"J004","source_dispatch_id":"D009","category":"protocol_gap","summary":"Recovery repeated an acknowledged external action","evidence":["jobs/J004/report.md"],"impact":"Duplicate side effect","suggested_change":"Require reconciliation","generalizable":true,"confidence":"high","signature":"protocol-gap:external-action-acknowledgement","status":"observed","created_at":"..."}
+{"observation_id":"IO001","status":"accepted","maintenance_job_id":"J010","created_at":"..."}
+{"observation_id":"IO001","status":"resolved","maintenance_job_id":"J010","validation":["quick_validate"],"created_at":"..."}
+```
+
+Do not rewrite earlier events. Deduplicate by signature while preserving each
+source occurrence. A skill-maintenance job is an ordinary job whose contract
+explicitly sets `may_update_skill: true` and supplies `skill_source_path`.
+Ordinary job contracts keep both fields disabled.
+
 ## Reports And Checkpoints
 
 Update `report.md` after each completed workflow node. Include:
@@ -347,6 +378,7 @@ Update `report.md` after each completed workflow node. Include:
 - unresolved concerns and questions
 - decisions received from other jobs
 - proposed follow-up jobs
+- improvement observations with evidence and generalizability
 
 Update `checkpoint.md` with the minimum context required to replace a lost
 subagent session: current objective, completed workflow nodes and steps, active
@@ -357,8 +389,8 @@ child requests, and the exact next permitted action.
 
 Write snapshots atomically through a temporary file followed by replacement.
 Increment `revision` on every authoritative update. Append journal events
-before exposing dependent work. Include event IDs, request IDs, and dispatch
-IDs so replay is idempotent.
+before exposing dependent work. Include event IDs, request IDs, observation
+IDs, and dispatch IDs so replay is idempotent.
 
 Use `orchestrator.lock` as a renewable lease containing controller ID,
 acquired time, expiry, and heartbeat. A replacement controller may take over

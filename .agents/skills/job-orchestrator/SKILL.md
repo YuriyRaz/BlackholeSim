@@ -17,7 +17,9 @@ run or reconciling an interrupted step. Read
 mixes parent-session commands, child jobs, nested delegation, or verification
 and repair loops. Use [job-protocol.md](references/job-protocol.md) only as the
 worker-facing protocol snapshot; do not replace it with the full orchestrator
-instructions.
+instructions. Read
+[continuous-improvement.md](references/continuous-improvement.md) before
+processing improvement observations or creating a skill-maintenance job.
 
 ## Establish The Run
 
@@ -37,6 +39,8 @@ instructions.
    The default state root is this skill's `runs/` directory. Pass
    `--state-root` when the request or environment requires another location.
    Initialization snapshots and hashes the worker protocol into the run.
+   It also records the canonical skill source and initializes the improvement
+   ledger.
 6. Decompose the goal into jobs and persist them before dispatching any work.
    Compile each selected role flow into workflow nodes and snapshot it into the
    job so later setup changes do not silently alter active work.
@@ -56,6 +60,7 @@ Perform only these actions in the root orchestrator session:
 - dispatch one workflow step to one subagent
 - evaluate structured job responses
 - route messages and artifact paths between jobs
+- collect, deduplicate, and classify improvement observations
 - persist state transitions and recovery checkpoints
 - detect blocked work, loops, and exhausted approaches
 - decide whether additional advisory, remediation, verification, or synthesis
@@ -124,6 +129,42 @@ Do not rely on a subagent discovering the installed skill. The frozen protocol
 path, job contract path, and current dispatch are required inputs. Enforce the
 contract by validating acknowledgements, result envelopes, report existence,
 child requests, and workflow boundaries.
+
+## Improve Continuously
+
+Require every job result to include `improvement_observations`, even when it is
+an empty list. Capture errors, recurring friction, missing safeguards,
+ambiguous instructions, concept weaknesses, and credible optimizations.
+Persist every observation in `improvements.jsonl` before acting on it.
+
+Do not let ordinary jobs edit the canonical skill. The root orchestrator:
+
+1. Deduplicates observations by evidence and failure signature.
+2. Classifies each as transient, project-specific, or generalizable.
+3. Creates an explicit skill-maintenance job for a generalizable defect or
+   optimization with sufficient evidence.
+4. Gives only that job `may_update_skill: true`, the canonical skill path,
+   evidence report paths, and a narrowly scoped objective.
+5. Requires the maintenance job to make the smallest reusable change, test
+   affected scripts or templates, run the skill validator, and report changed
+   files and validation evidence.
+6. Records a deferral reason when an observation is unsafe, speculative,
+   duplicate, project-specific, or outside current authority.
+
+Prioritize a maintenance job immediately when the current protocol could cause
+data loss, unsafe actions, repeated failure, or invalid recovery. Schedule
+lower-risk optimizations without displacing critical task work, but process
+every unresolved observation before completing the run.
+
+Skill changes affect future runs by default. Never mutate the frozen protocol
+snapshot of an active run. If a current run requires new semantics, create a
+separate migration job, persist the decision, update contracts, and
+re-bootstrap affected sessions.
+
+Bound continuous improvement with configured limits. Deduplicate repeated
+lessons, prohibit an improvement job from recursively editing the skill without
+a new accepted observation, and never weaken safety or validation merely to
+make a failing run pass.
 
 ## Route Concerns
 

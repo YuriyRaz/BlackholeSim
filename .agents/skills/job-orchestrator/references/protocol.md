@@ -34,6 +34,8 @@ profiles, workflows, priorities, and inputs.
 12. A waiting parent never occupies the active dispatch slot.
 13. Every job session acknowledges a frozen worker protocol and job contract
     before receiving domain work.
+14. Every job reports improvement observations; only an explicitly authorized
+    skill-maintenance job may modify the canonical skill.
 
 ## Initial Prompt Normalization
 
@@ -117,7 +119,7 @@ bootstrap request. Require:
 ```json
 {
   "protocol_ack": {
-    "protocol_version": 1,
+    "protocol_version": 2,
     "protocol_sha256": "...",
     "job_id": "J001",
     "contract_revision": 1,
@@ -158,6 +160,7 @@ Require this result:
     "command": "/openspec-apply-change",
     "priority": 50
   }],
+  "improvement_observations": [],
   "ready_for_next_step": true,
   "checkpoint_summary": "context needed after session loss"
 }
@@ -174,6 +177,28 @@ actual job ID only after acceptance.
 Protocol awareness does not replace enforcement. Validate result envelopes,
 verify required files, reject future-step execution, and treat queue mutations
 or unapproved nested agents as protocol violations.
+
+## Continuous Improvement
+
+Append every job's `improvement_observations` to `improvements.jsonl`. Use a
+stable signature based on category, affected instruction or component, failure
+pattern, and proposed outcome. Preserve duplicates as events but link them to
+the same candidate.
+
+Classify observations:
+
+- `transient`: environmental or one-time failure with no reusable correction
+- `project_specific`: useful locally but inappropriate for the shared skill
+- `generalizable`: a reusable prevention, correction, safety rule, or
+  optimization
+
+For a supported generalizable observation, create a normal queue job whose
+contract alone grants `may_update_skill: true`. Pass the canonical skill source
+path, observation IDs, evidence paths, current files, and required validation.
+The root orchestrator does not design or apply the update itself.
+
+See [continuous-improvement.md](continuous-improvement.md) for acceptance,
+priority, validation, migration, and loop-control rules.
 
 ## Artifact References
 
@@ -232,3 +257,6 @@ a job complete.
 
 When final synthesis is needed, create a synthesis job and provide selected
 report paths. Keep raw reports available so the synthesis can be audited.
+
+Before completing the run, resolve every improvement candidate by recording a
+completed maintenance job, rejection, or explicit deferral reason.

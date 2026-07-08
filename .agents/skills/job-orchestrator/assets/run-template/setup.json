@@ -19,6 +19,14 @@
     "max_children_per_job": 20,
     "max_verification_repair_attempts": 3,
     "nested_delegation": "tracked_only",
+    "continuous_improvement": {
+      "enabled": true,
+      "capture_all_observations": true,
+      "auto_create_maintenance_jobs": true,
+      "max_maintenance_jobs_per_run": 3,
+      "require_generalizable_evidence": true,
+      "apply_to_active_run": false
+    },
     "investigate_alternatives_before_user": true,
     "final_synthesis": "when_requested_or_needed"
   }

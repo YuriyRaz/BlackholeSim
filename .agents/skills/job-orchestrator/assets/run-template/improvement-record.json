@@ -1,0 +1,15 @@
+{
+  "observation_id": "{{OBSERVATION_ID}}",
+  "source_job_id": "{{SOURCE_JOB_ID}}",
+  "source_dispatch_id": "{{SOURCE_DISPATCH_ID}}",
+  "category": "{{CATEGORY}}",
+  "summary": "{{SUMMARY}}",
+  "evidence": [],
+  "impact": "{{IMPACT}}",
+  "suggested_change": null,
+  "generalizable": false,
+  "confidence": "medium",
+  "signature": "{{SIGNATURE}}",
+  "status": "observed",
+  "created_at": "{{CREATED_AT}}"
+}

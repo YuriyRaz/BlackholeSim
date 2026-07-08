@@ -1,6 +1,6 @@
 # Job Execution Protocol
 
-Protocol version: 1
+Protocol version: 2
 
 ## Authority
 
@@ -19,7 +19,7 @@ contract, then return:
 ```json
 {
   "protocol_ack": {
-    "protocol_version": 1,
+    "protocol_version": 2,
     "protocol_sha256": "<hash supplied by orchestrator>",
     "job_id": "<job ID>",
     "contract_revision": 1,
@@ -50,6 +50,21 @@ active concerns, relevant artifact paths, and the exact next permitted action.
 
 Do not mark work complete when required artifacts were not written.
 
+## Continuous Improvement
+
+Observe problems in both the domain work and the orchestration method. Report:
+
+- errors or failures that a reusable instruction could prevent
+- ambiguous, missing, or conflicting protocol guidance
+- repeated manual recovery or avoidable token and tool use
+- unsafe assumptions or missing validation
+- generalizable optimizations to workflows, contracts, or templates
+
+Do not edit the skill unless the contract explicitly sets
+`may_update_skill: true`. Ordinary jobs only report observations. Include
+concrete evidence and distinguish project-specific lessons from reusable ones.
+Return an empty list when nothing was observed.
+
 ## Communication
 
 Return concerns, questions, child-job proposals, and artifact references to the
@@ -71,6 +86,15 @@ Return:
   "concerns": [{"id": "...", "summary": "...", "impact": "..."}],
   "questions": [{"id": "...", "question": "...", "blocking": true}],
   "proposed_jobs": [],
+  "improvement_observations": [{
+    "category": "error | protocol_gap | safety | optimization",
+    "summary": "what should improve",
+    "evidence": ["report or artifact path, error, or observed behavior"],
+    "impact": "what happens if it is not improved",
+    "suggested_change": "optional concise recommendation",
+    "generalizable": true,
+    "confidence": "low | medium | high"
+  }],
   "ready_for_next_step": true,
   "checkpoint_summary": "context needed after session loss"
 }

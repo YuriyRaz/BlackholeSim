@@ -15,7 +15,7 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE_ROOT = SKILL_ROOT / "assets" / "run-template"
 JOB_PROTOCOL_SOURCE = SKILL_ROOT / "references" / "job-protocol.md"
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 
 def parse_args() -> argparse.Namespace:
@@ -87,6 +87,7 @@ def main() -> int:
         "CREATED_AT": created_at,
         "WORKSPACE": str(workspace),
         "STATE_ROOT": str(state_root),
+        "SKILL_SOURCE": str(SKILL_ROOT.resolve()),
         "PROTOCOL_SHA256": protocol_sha256,
     }
     write_json(
@@ -119,6 +120,7 @@ def main() -> int:
     (run_root / "request.md").write_text(load_request(args), encoding="utf-8")
     (run_root / "events.jsonl").touch()
     (run_root / "decisions.jsonl").touch()
+    (run_root / "improvements.jsonl").touch()
 
     print(run_root)
     return 0
