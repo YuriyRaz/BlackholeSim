@@ -1,0 +1,33 @@
+schema: spec-driven
+
+context: |
+  Tech stack: WebGPU (primary) + WebGL 2.0 (fallback), custom WGSL/GLSL shaders,
+  Vite build tool, vanilla JS UI. No Three.js, no game engine, no physics library.
+  
+  Architecture: Renderer reads physics state and draws it. Physics engine computes
+  forces and positions. Visual effects emerge from physics state. Audio reads
+  physics events. No scenario classes, no hardcoded phase transitions.
+  
+  Core principle: Every visual effect emerges from the physics equations.
+  Presets are data functions returning {bodies, gas, camera} — not classes
+  with state machines.
+  
+  Performance target: 30+ fps on Intel HD 620, 60fps on NVIDIA GTX.
+  Half-resolution lensing fallback for weak GPUs.
+
+  Domain: Interactive 3D black hole simulation visualizing gravitational
+  phenomena — lensing, accretion disks, tidal disruptions, mergers, jets,
+  gravitational waves — in real-time on consumer hardware.
+
+rules:
+  proposal:
+    - No scenario classes or hardcoded phase transitions
+    - All effects must emerge from physics, not special-case code
+    - Presets are data functions, not classes
+  design:
+    - Include "Why" for each decision
+    - List alternatives considered
+    - Document performance trade-offs
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Include unit tests where applicable
