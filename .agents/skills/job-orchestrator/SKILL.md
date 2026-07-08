@@ -1,6 +1,6 @@
 ---
 name: job-orchestrator
-description: Orchestrate complex requests through a durable, resumable queue of sequential subagent jobs while keeping the root session limited to coordination. Use when a request should be decomposed into role-driven jobs, executed one workflow step at a time, persisted as reports and state files, resumed after interruption, escalated through advisory jobs, or expressed as a composite workflow whose persistent parent session requests tracked child jobs.
+description: Orchestrate complex requests through a durable, resumable queue of sequential subagent jobs while keeping the root session limited to coordination and continuously improving the skill from execution evidence. Use when a request should be decomposed into role-driven jobs, executed one workflow step at a time, persisted as reports and state files, resumed after interruption, escalated through advisory jobs, expressed as a composite workflow, or used to identify and apply reusable protocol improvements.
 ---
 
 # Job Orchestrator

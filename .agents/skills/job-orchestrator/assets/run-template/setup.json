@@ -9,6 +9,7 @@
     "verify": {},
     "fix": {},
     "advisory": {},
+    "skill_maintenance": {},
     "final_synthesis": {}
   },
   "policies": {

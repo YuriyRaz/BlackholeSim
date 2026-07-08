@@ -74,11 +74,12 @@ The maintenance job must:
 
 1. Reproduce or substantiate the issue when practical.
 2. Decide whether instruction, schema, template, or script is the right layer.
-3. Make the smallest generalizable update.
-4. Update protocol or schema versions when compatibility changes.
-5. Test changed scripts and parse changed templates.
-6. Run the official skill validator.
-7. Report changed files, evidence, residual risk, and whether active runs need
+3. Use the `skill-creator` guidance when it is available.
+4. Make the smallest generalizable update.
+5. Update protocol or schema versions when compatibility changes.
+6. Test changed scripts and parse changed templates.
+7. Run the official skill validator.
+8. Report changed files, evidence, residual risk, and whether active runs need
    migration.
 
 An ordinary job may propose a maintenance job but may not grant itself update

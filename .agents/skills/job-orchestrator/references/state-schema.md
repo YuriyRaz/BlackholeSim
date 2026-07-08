@@ -69,6 +69,11 @@ when they disagree.
   "updated_at": "2026-07-08T12:00:00Z",
   "workspace": "C:\\Projects\\example",
   "state_root": "C:\\...\\job-orchestrator\\runs",
+  "protocol": {
+    "manifest_path": "protocol/manifest.json",
+    "version": 2,
+    "sha256": "..."
+  },
   "skill_source": {
     "path": "C:\\Projects\\ai-skills\\skills\\job-orchestrator",
     "update_scope": "future_runs"
