@@ -1,0 +1,27 @@
+{
+  "nodes": [
+    {
+      "id": "explore",
+      "position": 1,
+      "status": "completed_with_concerns",
+      "run_in": "job_session",
+      "command": "openspec explore",
+      "child_request_ids": [],
+      "child_job_ids": [],
+      "required_report_paths": [],
+      "attempt": 1
+    },
+    {
+      "id": "create-proposal",
+      "position": 2,
+      "status": "pending",
+      "run_in": "job_session",
+      "command": "openspec proposal",
+      "child_request_ids": [],
+      "child_job_ids": [],
+      "required_report_paths": [],
+      "attempt": 0
+    }
+  ],
+  "session_policy": "persistent"
+}

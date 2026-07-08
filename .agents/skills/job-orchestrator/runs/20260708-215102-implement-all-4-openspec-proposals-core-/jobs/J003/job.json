@@ -1,0 +1,20 @@
+{
+  "report_path": "report.md",
+  "depth": 0,
+  "status": "queued",
+  "role": "Architect",
+  "title": "Architect for core-renderer-01",
+  "job_type": "architect_review",
+  "revision": 1,
+  "attempt": 0,
+  "updated_at": "2026-07-08T21:51:02Z",
+  "current_workflow_node_id": "investigate",
+  "parent_job_id": null,
+  "created_at": "2026-07-08T21:51:02Z",
+  "checkpoint_path": "checkpoint.md",
+  "goal": "Architecture review of core-renderer-01 implementation",
+  "approach_id": "initial",
+  "session": null,
+  "id": "J003",
+  "priority": 50
+}

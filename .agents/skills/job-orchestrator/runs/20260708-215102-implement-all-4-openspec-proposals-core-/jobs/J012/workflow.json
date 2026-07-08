@@ -1,0 +1,23 @@
+{
+  "nodes": [
+    {
+      "status": "queued",
+      "run_in": "job_session",
+      "id": "investigate",
+      "command": "openspec explore to investigate issues"
+    },
+    {
+      "status": "queued",
+      "run_in": "job_session",
+      "id": "review",
+      "command": "Architecture review of implemented work"
+    },
+    {
+      "status": "queued",
+      "run_in": "job_session",
+      "id": "correct",
+      "command": "Make corrections using sub jobs"
+    }
+  ],
+  "session_policy": "persistent"
+}

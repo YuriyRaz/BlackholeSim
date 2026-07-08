@@ -1,0 +1,20 @@
+{
+  "role": "Architect",
+  "may_contact_user": false,
+  "revision": 1,
+  "skill_source_path": null,
+  "checkpoint_path": "checkpoint.md",
+  "goal": "Architecture review of audio-polish-04 implementation",
+  "contract_version": 2,
+  "may_update_skill": false,
+  "may_propose_jobs": true,
+  "may_spawn_untracked_agents": false,
+  "report_path": "report.md",
+  "protocol": {
+    "version": 2,
+    "sha256": "2df135370cad9df0c9dd68c6784e85e31dba061c0d38878c6244d54051e34429",
+    "path": "../../protocol/job-protocol.md"
+  },
+  "job_id": "J012",
+  "related_reports": []
+}

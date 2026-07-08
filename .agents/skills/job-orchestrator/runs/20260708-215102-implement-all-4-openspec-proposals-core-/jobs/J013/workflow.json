@@ -1,0 +1,16 @@
+{
+  "session_policy": "persistent",
+  "nodes": [
+    {
+      "id": "investigate",
+      "position": 1,
+      "status": "pending",
+      "run_in": "job_session",
+      "command": "Investigate missing specs and resolve Q001",
+      "child_request_ids": [],
+      "child_job_ids": [],
+      "required_report_paths": [],
+      "attempt": 0
+    }
+  ]
+}

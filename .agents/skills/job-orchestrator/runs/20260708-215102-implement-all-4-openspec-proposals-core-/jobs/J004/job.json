@@ -1,0 +1,20 @@
+{
+  "report_path": "report.md",
+  "depth": 0,
+  "status": "queued",
+  "role": "Proposal",
+  "title": "Proposal for physics-engine-02",
+  "job_type": "proposal_explore",
+  "revision": 1,
+  "attempt": 0,
+  "updated_at": "2026-07-08T21:51:02Z",
+  "current_workflow_node_id": "explore",
+  "parent_job_id": null,
+  "created_at": "2026-07-08T21:51:02Z",
+  "checkpoint_path": "checkpoint.md",
+  "goal": "Explore and propose physics-engine-02 changes",
+  "approach_id": "initial",
+  "session": null,
+  "id": "J004",
+  "priority": 50
+}

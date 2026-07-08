@@ -1,0 +1,22 @@
+{
+  "steps": [
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "investigate",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "review",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "correct",
+      "status": "pending"
+    }
+  ]
+}

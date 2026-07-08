@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    {
+      "status": "queued",
+      "run_in": "job_session",
+      "id": "explore",
+      "command": "openspec explore"
+    },
+    {
+      "status": "queued",
+      "run_in": "job_session",
+      "id": "create-proposal",
+      "command": "openspec proposal"
+    }
+  ],
+  "session_policy": "persistent"
+}

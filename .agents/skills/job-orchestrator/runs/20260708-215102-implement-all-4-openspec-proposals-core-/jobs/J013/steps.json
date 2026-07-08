@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "investigate",
+      "workflow_node_id": "investigate",
+      "command": "Investigate missing specs and resolve Q001",
+      "status": "pending",
+      "attempts": [],
+      "result_path": null
+    }
+  ]
+}

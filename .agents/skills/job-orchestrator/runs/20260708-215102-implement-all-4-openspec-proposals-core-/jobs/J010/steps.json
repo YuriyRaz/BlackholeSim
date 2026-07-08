@@ -1,0 +1,16 @@
+{
+  "steps": [
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "explore",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "create-proposal",
+      "status": "pending"
+    }
+  ]
+}

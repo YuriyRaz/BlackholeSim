@@ -1,0 +1,40 @@
+{
+  "steps": [
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "apply",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "verify",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "fix",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "sync",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "archive",
+      "status": "pending"
+    },
+    {
+      "started_at": null,
+      "completed_at": null,
+      "node_id": "publish",
+      "status": "pending"
+    }
+  ]
+}

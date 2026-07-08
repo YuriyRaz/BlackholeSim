@@ -1,0 +1,20 @@
+{
+  "report_path": "report.md",
+  "depth": 0,
+  "status": "completed",
+  "role": "Proposal",
+  "title": "Proposal for core-renderer-01",
+  "job_type": "proposal_explore",
+  "revision": 1,
+  "attempt": 0,
+  "updated_at": "2026-07-08T21:51:02Z",
+  "current_workflow_node_id": "explore",
+  "parent_job_id": null,
+  "created_at": "2026-07-08T21:51:02Z",
+  "checkpoint_path": "checkpoint.md",
+  "goal": "Explore and propose core-renderer-01 changes",
+  "approach_id": "initial",
+  "session": null,
+  "id": "J001",
+  "priority": 50
+}

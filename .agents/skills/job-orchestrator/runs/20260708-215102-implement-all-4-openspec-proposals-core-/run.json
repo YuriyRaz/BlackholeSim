@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "run_id": "20260708-215102-implement-all-4-openspec-proposals-core-",
+  "status": "active",
+  "goal": "Implement all 4 OpenSpec proposals (core-renderer-01, physics-engine-02, visual-effects-03, audio-polish-04) through the full Proposal\u2192Implementation\u2192Architect pipeline",
+  "created_at": "2026-07-08T21:51:02.086022Z",
+  "updated_at": "2026-07-08T21:51:02.086022Z",
+  "workspace": "C:\\Projects\\BlackholeSim",
+  "state_root": "C:\\Projects\\ai-skills\\skills\\job-orchestrator\\runs",
+  "protocol": {
+    "manifest_path": "protocol/manifest.json",
+    "version": 2,
+    "sha256": "2df135370cad9df0c9dd68c6784e85e31dba061c0d38878c6244d54051e34429"
+  },
+  "skill_source": {
+    "path": "C:\\Projects\\ai-skills\\skills\\job-orchestrator",
+    "update_scope": "future_runs"
+  },
+  "revision": 1,
+  "active_job_id": null,
+  "active_dispatch_id": null
+}

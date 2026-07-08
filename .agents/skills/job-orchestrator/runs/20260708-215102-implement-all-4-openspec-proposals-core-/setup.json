@@ -1,0 +1,70 @@
+{
+  "goal": "Implement all 4 OpenSpec proposals (core-renderer-01, physics-engine-02, visual-effects-03, audio-polish-04) through the full Proposal→Implementation→Architect pipeline",
+  "requirements": [
+    "Each proposal goes through: Proposal job → Implementation job → Architect job",
+    "Proposal role: openspec explore → ask Architect if issues → openspec proposal",
+    "Implementation role: openspec-apply-change → openspec-verify-change → fix all findings → openspec-sync-specs → openspec-archive-change → commit and push",
+    "Architect role: investigate issues, architecture review, find solutions for open questions",
+    "Proposals have dependency chain: renderer → physics → effects → audio"
+  ],
+  "acceptance_criteria": [
+    "All 4 proposals implemented and verified",
+    "All verification findings fixed",
+    "Architecture reviews completed for each proposal",
+    "Changes synced, archived, and committed"
+  ],
+  "roles": {
+    "Proposal": {
+      "purpose": "Explore and validate OpenSpec proposals",
+      "workflow": [
+        {"id": "explore", "command": "openspec explore"},
+        {"id": "ask-architect", "command": "Ask Architect if issues found", "conditional": true},
+        {"id": "create-proposal", "command": "openspec proposal"}
+      ]
+    },
+    "Implementation": {
+      "purpose": "Apply, verify, and finalize OpenSpec changes",
+      "workflow": [
+        {"id": "apply", "command": "openspec-apply-change"},
+        {"id": "verify", "command": "openspec-verify-change"},
+        {"id": "fix", "command": "Fix all findings including minor"},
+        {"id": "sync", "command": "openspec-sync-specs"},
+        {"id": "archive", "command": "openspec-archive-change"},
+        {"id": "publish", "command": "Commit to main and push"}
+      ]
+    },
+    "Architect": {
+      "purpose": "Architecture review, investigate issues, find solutions",
+      "workflow": [
+        {"id": "investigate", "command": "openspec explore to investigate issues"},
+        {"id": "review", "command": "Architecture review of implemented work"},
+        {"id": "correct", "command": "Make corrections using sub jobs"}
+      ]
+    }
+  },
+  "job_types": {
+    "proposal_explore": {},
+    "implement": {},
+    "architect_review": {},
+    "advisory": {}
+  },
+  "policies": {
+    "execution_mode": "sequential",
+    "max_same_approach_attempts": 2,
+    "max_total_attempts_per_step": 4,
+    "max_job_depth": 4,
+    "max_children_per_job": 20,
+    "max_verification_repair_attempts": 3,
+    "nested_delegation": "tracked_only",
+    "continuous_improvement": {
+      "enabled": true,
+      "capture_all_observations": true,
+      "auto_create_maintenance_jobs": true,
+      "max_maintenance_jobs_per_run": 3,
+      "require_generalizable_evidence": true,
+      "apply_to_active_run": false
+    },
+    "investigate_alternatives_before_user": true,
+    "final_synthesis": "when_requested_or_needed"
+  }
+}
