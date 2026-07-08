@@ -1,0 +1,101 @@
+# Recovery Protocol
+
+## Resume A Run
+
+1. Locate the run by explicit run ID. Do not guess when multiple active runs
+   match the same workspace.
+2. Read `run.json`, `request.md`, `setup.json`, `queue.json`, and the event
+   journal.
+3. Hash `protocol/job-protocol.md` and compare it with the manifest.
+4. Acquire or safely take over the orchestrator lease.
+5. Validate every indexed job directory, contract, and report path.
+6. Rebuild disposable indexes if they disagree with authoritative job files.
+7. Reconstruct parent/child waits from `workflow.json`, child request events,
+   and child report paths.
+8. Find any active dispatch and classify it before scheduling new work.
+9. Persist `recovering`, perform reconciliation, then return the run to
+   `active`, `waiting_for_user`, or `blocked`.
+
+## Classify Interrupted Dispatches
+
+An interrupted dispatch may be:
+
+- recorded but never sent
+- sent but not started
+- running in a resumable subagent session
+- completed by the subagent but not persisted
+- externally effective but locally unacknowledged
+- safe to retry
+- unsafe to retry without reconciliation
+
+Never convert `running` to `pending` blindly.
+
+If the original session exists, ask it only for the status and missing result.
+If the session is lost, create a replacement job session using `job.json`,
+`checkpoint.md`, relevant step results, and related reports.
+
+## Composite Parent Recovery
+
+For each parent node marked `waiting_for_child`:
+
+1. Resolve every child request to an accepted child job, rejection, or
+   incomplete materialization event.
+2. Verify accepted child directories and authoritative job states.
+3. Do not recreate a child when a materialized job ID already exists.
+4. If all required children completed, verify their reports and route those
+   paths to the parent.
+5. If the parent session is unavailable, replace it using its checkpoint,
+   workflow state, and child reports.
+6. Require acknowledgement of recovered child results before dispatching the
+   next parent-session node.
+
+Detect orphan children whose parent or workflow node is missing. Preserve them
+for investigation rather than silently deleting or attaching them elsewhere.
+Reject any recovered dependency cycle involving an ancestor and descendant.
+
+## Side Effects
+
+Exactly-once execution cannot be guaranteed for external systems. Every
+side-effecting step must define a recovery check and, where possible, an
+idempotency key.
+
+Examples:
+
+- Before repeating a commit, inspect repository history and working state.
+- Before repeating a push, verify the expected commit on the remote branch.
+- Before repeating deployment, inspect provider deployment status.
+- Before repeating issue creation, search by durable correlation ID.
+
+Record observed external state before deciding to retry, accept completion, or
+create a repair job.
+
+## Session Loss
+
+Resume a persistent subagent only when its session ID remains valid. Otherwise:
+
+1. Mark the old session unavailable without marking the job failed.
+2. Persist a `session_replaced` event.
+3. Start a new subagent with the job checkpoint and report paths.
+4. Send the frozen protocol path and job contract path.
+5. Require a matching protocol acknowledgement without domain work.
+6. Tell it which steps are already complete and exactly one next action.
+
+For a composite job, also provide completed and waiting workflow nodes, child
+job IDs, child report paths, and unresolved child requests.
+
+Do not resume work when the protocol hash, contract revision, or bootstrap
+acknowledgement is inconsistent. Persist the mismatch and investigate or
+migrate explicitly.
+
+## Corrupt Or Partial State
+
+Prefer the append-only event journal when a snapshot is truncated or has an
+unexpected revision. Quarantine malformed files rather than overwriting them.
+If journal and external side effects cannot establish a safe next action,
+create an investigation job or ask the user when authority is required.
+
+## Completion Audit
+
+After recovery, do not trust a terminal status alone. Confirm required job
+reports exist, referenced artifacts are readable, acceptance criteria are
+addressed, and no active dispatch remains.

@@ -1,0 +1,25 @@
+{
+  "goal": "{{GOAL}}",
+  "requirements": [],
+  "acceptance_criteria": [],
+  "roles": {},
+  "job_types": {
+    "explore": {},
+    "implement": {},
+    "verify": {},
+    "fix": {},
+    "advisory": {},
+    "final_synthesis": {}
+  },
+  "policies": {
+    "execution_mode": "sequential",
+    "max_same_approach_attempts": 2,
+    "max_total_attempts_per_step": 4,
+    "max_job_depth": 4,
+    "max_children_per_job": 20,
+    "max_verification_repair_attempts": 3,
+    "nested_delegation": "tracked_only",
+    "investigate_alternatives_before_user": true,
+    "final_synthesis": "when_requested_or_needed"
+  }
+}

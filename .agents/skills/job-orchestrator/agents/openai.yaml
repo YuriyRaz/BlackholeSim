@@ -1,0 +1,4 @@
+interface:
+  display_name: "Job Orchestrator"
+  short_description: "Run durable, resumable multi-agent job workflows"
+  default_prompt: "Use $job-orchestrator to execute this request through a durable sequential job queue."

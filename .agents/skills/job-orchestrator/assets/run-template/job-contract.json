@@ -1,0 +1,18 @@
+{
+  "contract_version": 1,
+  "revision": 1,
+  "job_id": "{{JOB_ID}}",
+  "role": "{{ROLE}}",
+  "goal": "{{JOB_GOAL}}",
+  "protocol": {
+    "path": "../../protocol/job-protocol.md",
+    "version": 1,
+    "sha256": "{{PROTOCOL_SHA256}}"
+  },
+  "report_path": "report.md",
+  "checkpoint_path": "checkpoint.md",
+  "may_propose_jobs": true,
+  "may_spawn_untracked_agents": false,
+  "may_contact_user": false,
+  "related_reports": []
+}

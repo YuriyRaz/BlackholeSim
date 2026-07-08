@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "run_id": "{{RUN_ID}}",
+  "status": "initializing",
+  "goal": "{{GOAL}}",
+  "created_at": "{{CREATED_AT}}",
+  "updated_at": "{{CREATED_AT}}",
+  "workspace": "{{WORKSPACE}}",
+  "state_root": "{{STATE_ROOT}}",
+  "protocol": {
+    "manifest_path": "protocol/manifest.json",
+    "version": 1,
+    "sha256": "{{PROTOCOL_SHA256}}"
+  },
+  "revision": 1,
+  "active_job_id": null,
+  "active_dispatch_id": null
+}
