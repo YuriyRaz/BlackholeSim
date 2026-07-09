@@ -55,8 +55,8 @@ export const Constants = {
   jetMaxDistance: 200,
   trailMaxPoints: 200,
 
-  snapshotInterval: 100,
-  maxSnapshots: 100,
+  snapshotInterval: 10,
+  maxSnapshots: 600,
   maxRecomputeSteps: 100,
 
   gasMinRadius: 10,

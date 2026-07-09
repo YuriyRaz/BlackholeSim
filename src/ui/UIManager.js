@@ -186,6 +186,10 @@ export class UIManager {
     this._objectList.update(state.bodies);
   }
 
+  derivePhase(state) {
+    this._phaseIndicator.derivePhase(state);
+  }
+
   setPhase(phase) {
     this._phaseIndicator.setPhase(phase);
   }

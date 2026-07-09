@@ -27,6 +27,11 @@ export class PhysicsEngine {
     this._fallbackRate = 0;
     this._fallbackStartTime = -1;
     this._fallbackMass = 0;
+    this._bhPairs = [];
+    this._particleTrails = new Map();
+    this._trailMaxLength = 50;
+    this._gwRippleFadeStrain = 0;
+    this._gwRippleFadeTime = 0;
   }
 
   get playing() { return this._playing; }
@@ -71,6 +76,10 @@ export class PhysicsEngine {
     this._fallbackRate = 0;
     this._fallbackStartTime = -1;
     this._fallbackMass = 0;
+    this._bhPairs = [];
+    this._particleTrails = new Map();
+    this._gwRippleFadeStrain = 0;
+    this._gwRippleFadeTime = 0;
   }
 
   loadPreset(presetData) {
@@ -118,6 +127,8 @@ export class PhysicsEngine {
           body.updateTrail();
         }
       }
+      this._computeBHPairs();
+      this._updateParticleTrails();
       this.simTime += subDt;
       this._snapshotCounter++;
       if (this._snapshotCounter >= Constants.snapshotInterval) {
@@ -596,6 +607,44 @@ export class PhysicsEngine {
     }
   }
 
+  _computeBHPairs() {
+    const bhs = this.bodies.filter(b => b.type === 'blackhole');
+    this._bhPairs = [];
+    for (let i = 0; i < bhs.length; i++) {
+      for (let j = i + 1; j < bhs.length; j++) {
+        const dx = bhs[j].position[0] - bhs[i].position[0];
+        const dy = bhs[j].position[1] - bhs[i].position[1];
+        const dz = bhs[j].position[2] - bhs[i].position[2];
+        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        this._bhPairs.push({ a: i, b: j, distance });
+      }
+    }
+  }
+
+  _updateParticleTrails() {
+    for (const gp of this.gasParticles) {
+      if (gp.accreted) continue;
+      if (!this._particleTrails.has(gp.id)) {
+        this._particleTrails.set(gp.id, []);
+      }
+      const trail = this._particleTrails.get(gp.id);
+      trail.push([...gp.position]);
+      if (trail.length > this._trailMaxLength) {
+        trail.shift();
+      }
+    }
+    for (const jp of this.jetParticles) {
+      if (!this._particleTrails.has(jp.id)) {
+        this._particleTrails.set(jp.id, []);
+      }
+      const trail = this._particleTrails.get(jp.id);
+      trail.push([...jp.position]);
+      if (trail.length > this._trailMaxLength) {
+        trail.shift();
+      }
+    }
+  }
+
   _saveSnapshot() {
     const snapshot = {
       time: this.simTime,
@@ -628,7 +677,9 @@ export class PhysicsEngine {
       accretionRate: this.accretionRate,
       fallbackRate: this._fallbackRate,
       fallbackStartTime: this._fallbackStartTime,
-      fallbackMass: this._fallbackMass
+      fallbackMass: this._fallbackMass,
+      gwRippleFadeStrain: this._gwRippleFadeStrain,
+      gwRippleFadeTime: this._gwRippleFadeTime
     };
     this._snapshots.push(snapshot);
     if (this._snapshots.length > Constants.maxSnapshots) {
@@ -688,6 +739,8 @@ export class PhysicsEngine {
     if (snapshot.fallbackRate !== undefined) this._fallbackRate = snapshot.fallbackRate;
     if (snapshot.fallbackStartTime !== undefined) this._fallbackStartTime = snapshot.fallbackStartTime;
     if (snapshot.fallbackMass !== undefined) this._fallbackMass = snapshot.fallbackMass;
+    if (snapshot.gwRippleFadeStrain !== undefined) this._gwRippleFadeStrain = snapshot.gwRippleFadeStrain;
+    if (snapshot.gwRippleFadeTime !== undefined) this._gwRippleFadeTime = snapshot.gwRippleFadeTime;
 
     let dt = targetTime - snapshot.time;
     const steps = Math.min(Constants.maxRecomputeSteps, Math.ceil(Math.abs(dt) / Constants.dt_max));
@@ -737,7 +790,9 @@ export class PhysicsEngine {
       },
       accretionRate: this.accretionRate,
       fallbackRate: this._fallbackRate,
-      simTime: this.simTime
+      simTime: this.simTime,
+      bhPairs: this._bhPairs,
+      particleTrails: Object.fromEntries(this._particleTrails)
     };
   }
 

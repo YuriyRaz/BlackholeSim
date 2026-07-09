@@ -7,6 +7,10 @@ uniform vec3 u_camDir;
 uniform vec2 u_resolution;
 uniform int u_stepCount;
 uniform int u_bhCount;
+uniform vec3 u_gwSourcePosition;
+uniform float u_gwFrequency;
+uniform float u_gwStrain;
+uniform float u_time;
 
 struct BlackHole { vec3 pos; float mass; float spin; float rs; };
 uniform BlackHole u_bhs[4];
@@ -28,6 +32,20 @@ vec3 screenRay(vec2 uv) {
   return normalize(dir.x * right + dir.y * up + dir.z * u_camDir);
 }
 
+vec3 gwRippleDeflection(vec3 pos, float t) {
+  if (u_gwStrain <= 0.0001) return vec3(0.0);
+  vec3 toSource = pos - u_gwSourcePosition;
+  float dist = length(toSource);
+  if (dist < 0.001) return vec3(0.0);
+  float amplitude = u_gwStrain * 0.02 / max(dist, 1.0);
+  float phase = dist * u_gwFrequency * 0.01 - u_time * u_gwFrequency;
+  float ripple = sin(phase) * amplitude;
+  vec3 dir = normalize(toSource);
+  vec3 perp1 = normalize(cross(dir, vec3(0.0, 1.0, 0.0)));
+  vec3 perp2 = normalize(cross(dir, perp1));
+  return (perp1 * ripple + perp2 * ripple * 0.7);
+}
+
 void main() {
   vec3 rayOri = u_camPos;
   vec3 rayDir = screenRay(v_uv);
@@ -39,6 +57,8 @@ void main() {
 
   for (int i = 0; i < u_stepCount; i++) {
     vec3 pos = rayOri + rayDir * t;
+    vec3 gwDefl = gwRippleDeflection(pos, u_time);
+    rayDir = normalize(rayDir + gwDefl * dt * 0.0005);
     bool absorbed = false;
 
     for (int bh = 0; bh < u_bhCount; bh++) {

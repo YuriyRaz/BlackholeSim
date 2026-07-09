@@ -10,6 +10,7 @@ export class LensingPass {
     this._fbo = null;
     this._quadVBO = null;
     this._uniforms = {};
+    this._gwRipplesEnabled = true;
     this._init();
   }
 
@@ -36,6 +37,10 @@ export class LensingPass {
       uniform vec2 u_resolution;
       uniform int u_stepCount;
       uniform int u_bhCount;
+      uniform vec3 u_gwSourcePosition;
+      uniform float u_gwFrequency;
+      uniform float u_gwStrain;
+      uniform float u_time;
       struct BlackHole { vec3 pos; float mass; float spin; float rs; };
       uniform BlackHole u_bhs[4];
       in vec2 v_uv; out vec4 fragColor;
@@ -45,12 +50,27 @@ export class LensingPass {
         vec3 up = cross(right, u_camDir);
         return normalize((uv.x*2.0-1.0)*aspect*right + (uv.y*2.0-1.0)*up + u_camDir);
       }
+      vec3 gwRippleDeflection(vec3 pos, float t) {
+        if (u_gwStrain <= 0.0001) return vec3(0.0);
+        vec3 toSource = pos - u_gwSourcePosition;
+        float dist = length(toSource);
+        if (dist < 0.001) return vec3(0.0);
+        float amplitude = u_gwStrain * 0.02 / max(dist, 1.0);
+        float phase = dist * u_gwFrequency * 0.01 - u_time * u_gwFrequency;
+        float ripple = sin(phase) * amplitude;
+        vec3 dir = normalize(toSource);
+        vec3 perp1 = normalize(cross(dir, vec3(0.0, 1.0, 0.0)));
+        vec3 perp2 = normalize(cross(dir, perp1));
+        return (perp1 * ripple + perp2 * ripple * 0.7);
+      }
       void main() {
         vec3 rayOri = u_camPos;
         vec3 rayDir = screenRay(v_uv);
         float t = 0.0; float dt = 50.0;
         for (int i = 0; i < u_stepCount; i++) {
           vec3 pos = rayOri + rayDir * t;
+          vec3 gwDefl = gwRippleDeflection(pos, u_time);
+          rayDir = normalize(rayDir + gwDefl * dt * 0.0005);
           bool absorbed = false;
           for (int bh = 0; bh < u_bhCount; bh++) {
             vec3 d = pos - u_bhs[bh].pos;
@@ -80,7 +100,8 @@ export class LensingPass {
     this._quadVBO = buf;
 
     this._uniforms = {};
-    const names = ['u_sceneTex','u_camPos','u_camDir','u_resolution','u_stepCount','u_bhCount'];
+    const names = ['u_sceneTex','u_camPos','u_camDir','u_resolution','u_stepCount','u_bhCount',
+      'u_gwSourcePosition','u_gwFrequency','u_gwStrain','u_time'];
     names.forEach(n => { this._uniforms[n] = gl.getUniformLocation(this._program, n); });
     for (let i = 0; i < 4; i++) {
       this._uniforms[`u_bhs[${i}].pos`] = gl.getUniformLocation(this._program, `u_bhs[${i}].pos`);
@@ -120,17 +141,37 @@ export class LensingPass {
        @group(0)@binding(4) var<uniform> resolution: vec2<f32>;
        @group(0)@binding(5) var<uniform> stepCount: u32;
        @group(0)@binding(6) var<uniform> bhCount: u32;
+       @group(0)@binding(7) var<uniform> gwSourcePosition: vec3<f32>;
+       @group(0)@binding(8) var<uniform> gwFrequency: f32;
+       @group(0)@binding(9) var<uniform> gwStrain: f32;
+       @group(0)@binding(10) var<uniform> time: f32;
        struct BlackHole { pos: vec3<f32>; mass: f32; spin: f32; rs: f32; _p1: f32; _p2: f32; };
-       @group(0)@binding(7) var<uniform> bhs: array<BlackHole,4>;
+       @group(0)@binding(11) var<uniform> bhs: array<BlackHole,4>;
        struct VSOut { @builtin(position) pos: vec4<f32>; @location(0) uv: vec2<f32>; };
        @vertex fn vs(@builtin(vertex_index) vi: u32) -> VSOut {
          var o: VSOut; let x = f32(i32(vi&1u)*2-1); let y = f32(i32(vi>>1u)*2-1);
          o.pos = vec4<f32>(x,y,0,1); o.uv = vec2<f32>((x+1)*0.5,(1-y)*0.5); return o;
        }
+       fn gwDeflection(pos: vec3<f32>, t: f32) -> vec3<f32> {
+         if (gwStrain <= 0.0001) { return vec3<f32>(0.0); }
+         let toSource = pos - gwSourcePosition;
+         let dist = length(toSource);
+         if (dist < 0.001) { return vec3<f32>(0.0); }
+         let amp = gwStrain * 0.02 / max(dist, 1.0);
+         let phase = dist * gwFrequency * 0.01 - t * gwFrequency;
+         let ripple = sin(phase) * amp;
+         let dir = normalize(toSource);
+         let perp1 = normalize(cross(dir, vec3<f32>(0.0, 1.0, 0.0)));
+         let perp2 = normalize(cross(dir, perp1));
+         return perp1 * ripple + perp2 * ripple * 0.7;
+       }
        @fragment fn fs(in: VSOut) -> @location(0) vec4<f32> {
          var ro = camPos; var rd = normalize(vec3<f32>((in.uv.x*2-1),(in.uv.y*2-1),1));
          var t = 0f; for(var i:u32=0u;i<stepCount;i++){
-           let p = ro+rd*t; var absorbed = false;
+           let p = ro+rd*t;
+           let gwD = gwDeflection(p, time);
+           rd = normalize(rd + gwD * 0.5);
+           var absorbed = false;
            for(var b:u32=0u;b<bhCount;b++){
              let d = p-bhs[b].pos; let dist=length(d);
              if(dist<bhs[b].rs*0.5){absorbed=true;break;}
@@ -150,11 +191,11 @@ export class LensingPass {
     this._stepCount = settings.lensingSteps;
 
     if (this.renderer.backend === 'webgl2') {
-      this._renderGL(camState, settings, sceneTexture);
+      this._renderGL(camState, settings, sceneTexture, time);
     }
   }
 
-  _renderGL(camState, settings, sceneTexture) {
+  _renderGL(camState, settings, sceneTexture, time) {
     const gl = this.renderer.gl;
     const fbo = this._halfRes ? this._fbo : { fbo: null, w: this.renderer.width, h: this.renderer.height };
 
@@ -175,6 +216,17 @@ export class LensingPass {
     gl.uniform2f(this._uniforms.u_resolution, this.renderer.width, this.renderer.height);
     gl.uniform1i(this._uniforms.u_stepCount, this._stepCount);
     gl.uniform1i(this._uniforms.u_bhCount, camState.blackHoles?.length || 0);
+
+    if (this._gwRipplesEnabled && camState.gw) {
+      const gw = camState.gw;
+      const sourcePos = camState.gwSourcePosition || [0, 0, 0];
+      gl.uniform3f(this._uniforms.u_gwSourcePosition, sourcePos[0], sourcePos[1], sourcePos[2]);
+      gl.uniform1f(this._uniforms.u_gwFrequency, gw.frequency);
+      gl.uniform1f(this._uniforms.u_gwStrain, gw.strain);
+      gl.uniform1f(this._uniforms.u_time, time || 0);
+    } else {
+      gl.uniform1f(this._uniforms.u_gwStrain, 0);
+    }
 
     if (camState.blackHoles) {
       for (let i = 0; i < Math.min(camState.blackHoles.length, 4); i++) {

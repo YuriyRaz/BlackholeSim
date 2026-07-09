@@ -1,7 +1,7 @@
 #version 300 es
 precision highp float;
 
-struct Particle { vec3 pos; vec3 vel; vec3 color; float size; };
+struct Particle { vec3 pos; vec3 vel; vec3 color; float size; float temperature; };
 layout(std140, binding = 0) buffer ParticleBuffer { Particle particles[]; };
 
 uniform mat4 u_viewProj;

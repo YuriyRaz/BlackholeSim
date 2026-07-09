@@ -74,6 +74,16 @@ function animate() {
 
   camState.bodies = physState.bodies;
   camState.time = clock.elapsed;
+  camState.gw = physState.gw;
+  camState.gwSourcePosition = physState.bodies.filter(b => b.type === 'blackhole')[0]?.position || [0,0,0];
+  camState.particleTrails = display.trails ? physState.particleTrails : null;
+  camState.particles = physState.gasParticles;
+
+  const mergerFlash = computeMergerFlash(physState.bhPairs, physState.bodies);
+  postProcessor.setFlashIntensity(mergerFlash);
+  postProcessor.updateFlash(dt);
+
+  lensingPass._gwRipplesEnabled = display.gwRipples;
 
   renderer.beginFrame();
 
@@ -92,6 +102,24 @@ function animate() {
   renderer.endFrame();
   ui.updateFPS(profiler.fps);
   ui.update(physState);
+  ui.derivePhase(physState);
+}
+
+function computeMergerFlash(bhPairs, bodies) {
+  if (!bhPairs || bhPairs.length === 0) return 0;
+  let maxFlash = 0;
+  for (const pair of bhPairs) {
+    const bhA = bodies.filter(b => b.type === 'blackhole')[pair.a];
+    const bhB = bodies.filter(b => b.type === 'blackhole')[pair.b];
+    if (!bhA || !bhB) continue;
+    const rs = Math.max(bhA.rs || 1, bhB.rs || 1);
+    const threshold = rs * 5;
+    if (pair.distance < threshold) {
+      const flash = Math.min(1, (threshold - pair.distance) / threshold);
+      maxFlash = Math.max(maxFlash, flash);
+    }
+  }
+  return maxFlash;
 }
 
 window.addEventListener('beforeunload', () => renderer.destroy());

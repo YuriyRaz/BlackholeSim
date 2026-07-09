@@ -8,6 +8,8 @@ export class PostProcessor {
     this._fb2 = null;
     this._programs = {};
     this._quadVAO = null;
+    this._flashIntensity = 0;
+    this._flashDecay = 0;
     this._init();
   }
 
@@ -106,6 +108,21 @@ export class PostProcessor {
     this._applyVignette(gl);
   }
 
+  setFlashIntensity(intensity) {
+    this._flashIntensity = intensity;
+  }
+
+  updateFlash(dt) {
+    if (this._flashIntensity > 0) {
+      this._flashDecay += dt;
+      this._flashIntensity *= Math.exp(-this._flashDecay / 0.5);
+      if (this._flashIntensity < 0.01) {
+        this._flashIntensity = 0;
+        this._flashDecay = 0;
+      }
+    }
+  }
+
   _applyTonemap(gl) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._screenFBO.fbo);
     gl.useProgram(this._programs.tonemap);
@@ -125,6 +142,7 @@ export class PostProcessor {
       gl.bindTexture(gl.TEXTURE_2D, this._sceneTexture);
       gl.uniform1i(gl.getUniformLocation(this._programs.bloomPrefilter, 'u_sceneTex'), 0);
     }
+    gl.uniform1f(gl.getUniformLocation(this._programs.bloomPrefilter, 'u_flashIntensity'), this._flashIntensity);
     this._drawQuad(gl);
 
     const horizontal = [1.0 / this._fb2.w, 0.0];
@@ -190,10 +208,11 @@ const BLOOM_PREFILTER_FS = `#version 300 es
 precision highp float;
 in vec2 v_uv; out vec4 fragColor;
 uniform sampler2D u_sceneTex;
-uniform vec2 u_texelSize;
+uniform float u_flashIntensity;
 void main(){
   vec3 c = texture(u_sceneTex, v_uv).rgb;
   float brightness = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  brightness *= (1.0 + u_flashIntensity * 5.0);
   float soft = smoothstep(0.6, 1.0, brightness);
   fragColor = vec4(c * soft, 1.0);
 }`;

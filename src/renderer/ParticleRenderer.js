@@ -24,6 +24,7 @@ export class ParticleRenderer {
       layout(location=0) in vec3 a_pos;
       layout(location=1) in vec3 a_color;
       layout(location=2) in float a_size;
+      layout(location=3) in float a_temperature;
       uniform mat4 u_viewProj;
       uniform vec3 u_camPos;
       uniform vec2 u_resolution;
@@ -63,10 +64,10 @@ export class ParticleRenderer {
     const count = Math.min(particles.length, this._maxCount);
     if (count === 0) return;
 
-    const data = new Float32Array(count * 7);
+    const data = new Float32Array(count * 8);
     for (let i = 0; i < count; i++) {
       const p = particles[i];
-      const off = i * 7;
+      const off = i * 8;
       data[off] = p.position[0];
       data[off+1] = p.position[1];
       data[off+2] = p.position[2];
@@ -74,6 +75,7 @@ export class ParticleRenderer {
       data[off+4] = p.color[1];
       data[off+5] = p.color[2];
       data[off+6] = p.size || 1.0;
+      data[off+7] = p.temperature || 0;
     }
 
     gl.useProgram(this._program);
@@ -84,13 +86,15 @@ export class ParticleRenderer {
     gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
 
-    const stride = 7 * 4;
+    const stride = 8 * 4;
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, stride, 0);
     gl.enableVertexAttribArray(1);
     gl.vertexAttribPointer(1, 3, gl.FLOAT, false, stride, 12);
     gl.enableVertexAttribArray(2);
     gl.vertexAttribPointer(2, 1, gl.FLOAT, false, stride, 24);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 1, gl.FLOAT, false, stride, 28);
 
     gl.uniformMatrix4fv(this._uniforms.u_viewProj, false, camState.viewProjection);
     gl.uniform3f(this._uniforms.u_camPos, ...camState.position);

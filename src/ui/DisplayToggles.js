@@ -8,7 +8,8 @@ export class DisplayToggles {
     this._el = document.createElement('div');
     const items = [
       ['lensing', 'Lensing'], ['particles', 'Particles'], ['stars', 'Stars'],
-      ['bodies', 'Bodies'], ['postProcessing', 'Post-FX']
+      ['bodies', 'Bodies'], ['postProcessing', 'Post-FX'],
+      ['gwRipples', 'GW Ripples'], ['trails', 'Particle Trails']
     ];
     items.forEach(([key, label]) => {
       const div = document.createElement('label');
