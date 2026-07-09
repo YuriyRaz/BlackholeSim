@@ -1,8 +1,8 @@
 {
   "acceptance_criteria": [
-    "Changes committed and pushed"
+    "Change archived successfully"
   ],
-  "action_id": "ACT-4e2a1cd2e1edfd5037c1",
+  "action_id": "ACT-2b94980568a1078af33c",
   "allowed_edit_roots": [
     "C:\\Projects\\BlackholeSim"
   ],
@@ -13,65 +13,65 @@
   ],
   "checkpoint_sha256": null,
   "contract_revision": 1,
-  "created_at": "2026-07-09T20:34:05.948219Z",
-  "dispatch_id": "DSP-25e5fc41da0ac5e5992a",
+  "created_at": "2026-07-09T20:57:24.294878Z",
+  "dispatch_id": "DSP-f3a46592e5aecd545cca",
   "estimated_minutes": 60,
-  "job_id": "J001",
+  "job_id": "J003",
   "last_progress_at": null,
-  "nonce": "NONCE-3af706a90a7b7df16ea7",
+  "nonce": "NONCE-9cae7b5004c23e19fe48",
   "prohibited_actions": [
     "Do not begin later workflow nodes"
   ],
   "protocol_sha256": "be41cdf4f05fc94d330f63b3d9139fe3254e912ab0d983d3b450850018c8486e",
-  "recovery_check": "commit_pushed",
+  "recovery_check": "change_archived",
   "required_checks": [
     "Validate produced artifacts"
   ],
   "result": {
     "acceptance_evidence": [
-      "Git commit and push successful"
+      "audio-polish-04 archived"
     ],
     "artifacts": [
       {
         "path": "report.md",
         "purpose": "worker report",
-        "sha256": "b59233fa217314b931c2ceee4d77c4fe794f8c9aefb150a9966407090400389e"
+        "sha256": "bd9827920b6cc5dfccd5f30d0e3689820452d41d2008cf37a573716b1e2a6ef2"
       },
       {
         "path": "checkpoint.md",
         "purpose": "current checkpoint",
-        "sha256": "8c4e73dc3e723d0124a59d8f17199fda6b944307046bdc84af0bd9af0befc90a"
+        "sha256": "029b81ef15c5e894a8ec1b33695649245634725d7024be501111490d3f6d59a0"
       },
       {
         "path": "progress.json",
         "purpose": "machine-readable progress",
-        "sha256": "8fb681157d2c3affe49e7de15b29bca16ab533f5ce82c81572d0bcf7f308bee0"
+        "sha256": "ba98a2f5c8e388f078d37586b13f96238cf331ab30eebc000135f492b61f8f8c"
       }
     ],
     "blocking_issues": [],
-    "checkpoint_sha256": "8c4e73dc3e723d0124a59d8f17199fda6b944307046bdc84af0bd9af0befc90a",
+    "checkpoint_sha256": "029b81ef15c5e894a8ec1b33695649245634725d7024be501111490d3f6d59a0",
     "completed_work_units": [
-      "commit"
+      "archive"
     ],
-    "created_at": "2026-07-09T20:34:54.982873Z",
-    "dispatch_id": "DSP-25e5fc41da0ac5e5992a",
+    "created_at": "2026-07-09T20:59:15.487637Z",
+    "dispatch_id": "DSP-f3a46592e5aecd545cca",
     "improvement_observations": [],
-    "nonce": "NONCE-3af706a90a7b7df16ea7",
+    "nonce": "NONCE-9cae7b5004c23e19fe48",
     "proposed_jobs": [],
     "schema_version": 3,
     "status": "completed",
-    "summary": "Changes committed and pushed"
+    "summary": "Change archived"
   },
   "schema_version": 3,
-  "session_id": "ses_bootstrap_J001",
-  "side_effect_class": "repository",
+  "session_id": "ses_bootstrap_J003",
+  "side_effect_class": "workspace_write",
   "started_at": null,
   "status": "resolved",
   "transport": {},
   "unbounded_override": null,
   "work_units": [
-    "commit"
+    "archive"
   ],
-  "workflow_node_id": "commit-push",
+  "workflow_node_id": "archive",
   "workspace": "C:\\Projects\\BlackholeSim"
 }

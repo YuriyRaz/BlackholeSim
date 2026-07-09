@@ -108,7 +108,135 @@ class CoherenceHardeningTest(unittest.TestCase):
             "--contract-revision", "--current-node",
         ):
             self.assertIn(flag, prompt)
-        self.assertNotIn("<transport-session-id>", prompt)
+        self.assertIn("--session-id", prompt)
+        self.assertIn("<transport-session-id>", prompt)
+
+    def test_transcript_style_definition_is_normalized_before_dispatch(self) -> None:
+        run = self.new_run()
+        definition = self.base / "transcript-definition.json"
+        write_json(definition, {"jobs": [{
+            "id": "J001",
+            "title": "visual-effects-03 Implementation",
+            "goal": "Verify, fix, sync, archive, and commit",
+            "role": "Implementation",
+            "workflow": {"nodes": [
+                {
+                    "id": "verify",
+                    "title": "Verify visual-effects-03 implementation",
+                    "position": 1,
+                    "run_in": "job_session",
+                    "work_units": [{
+                        "id": "verify-change",
+                        "description": "Run openspec-verify-change",
+                        "command": "/openspec-verify-change",
+                    }],
+                    "checks": ["verification completes"],
+                    "prohibited_later_actions": ["do not sync yet"],
+                    "checkpoint_policy": "after_batch",
+                    "side_effect_class": "read_only",
+                    "recovery_check": "verify_change_exists",
+                },
+                {
+                    "id": "fix-findings",
+                    "title": "Fix verification findings",
+                    "position": 2,
+                    "run_in": "job_session",
+                    "work_units": ["fix-issues"],
+                    "checkpoint_policy": "after_batch",
+                    "side_effect_class": "code_change",
+                    "recovery_check": "fixes_applied",
+                },
+                {
+                    "id": "commit-push",
+                    "title": "Commit and push to main",
+                    "position": 3,
+                    "run_in": "job_session",
+                    "work_units": ["commit"],
+                    "checkpoint_policy": "after_batch",
+                    "side_effect_class": "external_effect",
+                    "recovery_check": "commit_pushed",
+                },
+            ]},
+        }]})
+
+        self.assertEqual(
+            jobctl.compile_jobs(argparse.Namespace(
+                run=run, definition=definition, controller="test",
+            ))["compiled"],
+            ["J001"],
+        )
+        state = jobctl.replay(run)
+        nodes = state["workflows"]["J001"]["nodes"]
+        self.assertEqual(nodes[0]["work_units"], ["verify-change"])
+        self.assertEqual(nodes[0]["required_checks"], ["verification completes"])
+        self.assertEqual(nodes[0]["prohibited_actions"], ["do not sync yet"])
+        self.assertEqual(nodes[0]["checkpoint_policy"], ["after_batch"])
+        self.assertEqual(nodes[1]["side_effect_class"], "workspace_write")
+        self.assertEqual(nodes[2]["side_effect_class"], "repository")
+
+        bootstrap = jobctl.next_action(argparse.Namespace(
+            run=run, controller="test",
+        ))
+        response_path = self.base / "ack-normalized.json"
+        write_json(response_path, workerctl.acknowledge(argparse.Namespace(
+            contract=run / "jobs/J001/contract.json",
+            current_node="verify", session_id="session",
+        )))
+        jobctl.record(argparse.Namespace(
+            run=run, action_id=bootstrap["action_id"],
+            response=response_path, controller="test",
+        ))
+        dispatch = jobctl.next_action(argparse.Namespace(
+            run=run, controller="test",
+        ))
+        dispatch_doc = load_json(
+            run / "jobs/J001/dispatches" / f"{dispatch['dispatch_id']}.json"
+        )
+        self.assertEqual(dispatch_doc["work_units"], ["verify-change"])
+        self.assertEqual(dispatch_doc["checkpoint_policy"], ["after_batch"])
+
+    def test_invalid_definition_is_rejected_before_journal_mutation(self) -> None:
+        run = self.new_run()
+        definition = self.base / "bad-definition.json"
+        write_json(definition, {"jobs": [{
+            "id": "J001",
+            "title": "Bad",
+            "goal": "Bad",
+            "role": "Implementation",
+            "workflow": {"nodes": [{
+                "id": "apply",
+                "position": 1,
+                "work_units": [{"description": "missing stable id"}],
+            }]},
+        }]})
+        before = read_jsonl(run / "events.jsonl")
+        with self.assertRaisesRegex(OrchestratorError, "work_units"):
+            jobctl.compile_jobs(argparse.Namespace(
+                run=run, definition=definition, controller="test",
+            ))
+        self.assertEqual(read_jsonl(run / "events.jsonl"), before)
+        self.assertTrue(jobctl.audit(argparse.Namespace(
+            run=run, rebuild=False,
+        ))["ok"])
+
+    def test_repeated_compile_skips_existing_jobs_without_correlation_error(self) -> None:
+        run = self.new_run()
+        definition = self.base / "definition.json"
+        write_json(definition, {"jobs": [{
+            "id": "J001", "title": "One", "goal": "Do one thing",
+            "role": "worker", "workflow": {"nodes": [{
+                "id": "apply", "position": 1, "work_units": ["U1"],
+            }]},
+        }]})
+        first = jobctl.compile_jobs(argparse.Namespace(
+            run=run, definition=definition, controller="test",
+        ))
+        second = jobctl.compile_jobs(argparse.Namespace(
+            run=run, definition=definition, controller="test",
+        ))
+        self.assertEqual(first["compiled"], ["J001"])
+        self.assertEqual(second["compiled"], [])
+        self.assertEqual(second["already_compiled"], ["J001"])
 
     def test_audit_detects_static_contract_content_mutation(self) -> None:
         run = self.new_run()

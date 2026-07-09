@@ -41,6 +41,29 @@ AUTOMATIC_RECOVERY_FINDINGS = {
     "interrupted_dispatch_recorded_not_sent",
     "completed_result_not_applied",
 }
+VALID_SIDE_EFFECT_CLASSES = {
+    "read_only",
+    "workspace_write",
+    "repository",
+    "external_idempotent",
+    "external_non_idempotent",
+}
+SIDE_EFFECT_ALIASES = {
+    "code_change": "workspace_write",
+    "code-change": "workspace_write",
+    "workspace-write": "workspace_write",
+    "repo": "repository",
+    "git": "repository",
+    "external_effect": "external_non_idempotent",
+    "external-effect": "external_non_idempotent",
+    "external": "external_non_idempotent",
+}
+NODE_ARRAY_DEFAULTS = {
+    "acceptance_criteria": ["Complete assigned work units"],
+    "required_checks": ["Validate produced artifacts"],
+    "prohibited_actions": ["Do not begin later workflow nodes"],
+    "checkpoint_policy": ["after_discovery", "after_each_batch", "before_blocker"],
+}
 
 
 def emit(value: Any) -> None:
@@ -52,6 +75,124 @@ def render(name: str, **values: Any) -> str:
     for key, value in values.items():
         text = text.replace("{{" + key + "}}", str(value))
     return text
+
+
+def _string_list(value: Any, field: str, *, default: list[str] | None = None) -> list[str]:
+    if value is None:
+        if default is None:
+            raise OrchestratorError(f"{field} must be a non-empty array of strings")
+        return list(default)
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list) or not value:
+        raise OrchestratorError(f"{field} must be a non-empty array of strings")
+    normalized = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise OrchestratorError(f"{field} entries must be non-empty strings")
+        normalized.append(item.strip())
+    if len(normalized) != len(set(normalized)):
+        raise OrchestratorError(f"{field} entries must be unique")
+    return normalized
+
+
+def _normalize_work_units(node: dict[str, Any]) -> list[str]:
+    raw = node.get("work_units")
+    if not isinstance(raw, list) or not raw:
+        raise OrchestratorError(f"node {node.get('id')} requires work_units")
+    units = []
+    for item in raw:
+        if isinstance(item, str):
+            unit = item
+        elif isinstance(item, dict) and isinstance(item.get("id"), str):
+            unit = item["id"]
+        else:
+            raise OrchestratorError(
+                f"node {node.get('id')} work_units must be strings or objects with string id"
+            )
+        if not unit.strip():
+            raise OrchestratorError(f"node {node.get('id')} work_units contain an empty id")
+        units.append(unit.strip())
+    if len(units) != len(set(units)):
+        raise OrchestratorError(f"node {node.get('id')} work_units must be unique")
+    return units
+
+
+def _normalize_side_effect_class(value: Any, node: dict[str, Any]) -> str:
+    if value is None:
+        return "workspace_write"
+    if not isinstance(value, str) or not value.strip():
+        raise OrchestratorError(
+            f"node {node.get('id')} side_effect_class must be a non-empty string"
+        )
+    key = value.strip()
+    normalized = SIDE_EFFECT_ALIASES.get(key, key)
+    if normalized == "external_non_idempotent":
+        text = " ".join(str(node.get(field, "")) for field in ("id", "title")).lower()
+        if "commit" in text or "push" in text:
+            normalized = "repository"
+    if normalized not in VALID_SIDE_EFFECT_CLASSES:
+        raise OrchestratorError(
+            f"node {node.get('id')} side_effect_class must be one of "
+            f"{', '.join(sorted(VALID_SIDE_EFFECT_CLASSES))}"
+        )
+    return normalized
+
+
+def _normalize_node(raw: dict[str, Any], job_id: str) -> dict[str, Any]:
+    if not isinstance(raw, dict):
+        raise OrchestratorError(f"job {job_id} workflow nodes must be objects")
+    node = copy.deepcopy(raw)
+    if not isinstance(node.get("id"), str) or not node["id"].strip():
+        raise OrchestratorError(f"job {job_id} workflow node requires id")
+    if not isinstance(node.get("position"), int) or node["position"] < 1:
+        raise OrchestratorError(f"node {node.get('id')} requires a positive integer position")
+    if node.get("run_in", "job_session") not in {"job_session", "child_job"}:
+        raise OrchestratorError("unsupported workflow execution target")
+    node["work_units"] = _normalize_work_units(node)
+    if "required_checks" not in node and "checks" in node:
+        node["required_checks"] = node["checks"]
+    if "prohibited_actions" not in node and "prohibited_later_actions" in node:
+        node["prohibited_actions"] = node["prohibited_later_actions"]
+    node.pop("checks", None)
+    node.pop("prohibited_later_actions", None)
+    for field, default in NODE_ARRAY_DEFAULTS.items():
+        node[field] = _string_list(node.get(field), field, default=default)
+    node["side_effect_class"] = _normalize_side_effect_class(
+        node.get("side_effect_class"), node
+    )
+    if not isinstance(node.get("recovery_check"), str) or not node["recovery_check"].strip():
+        if node["side_effect_class"] == "read_only":
+            node["recovery_check"] = "Confirm no side effects before retry"
+        else:
+            node["recovery_check"] = "Inspect workspace changes and checkpoint before retry"
+    if "estimated_minutes" in node and (
+        not isinstance(node["estimated_minutes"], int) or node["estimated_minutes"] < 0
+    ):
+        raise OrchestratorError(f"node {node['id']} estimated_minutes must be a non-negative integer")
+    return node
+
+
+def _normalize_jobs(document: dict[str, Any]) -> list[dict[str, Any]]:
+    jobs = document.get("jobs")
+    if not isinstance(jobs, list) or not jobs:
+        raise OrchestratorError("definition must contain a non-empty jobs array")
+    normalized_jobs = []
+    for job in jobs:
+        if not isinstance(job, dict):
+            raise OrchestratorError("jobs entries must be objects")
+        normalized = copy.deepcopy(job)
+        for field in ("id", "title", "goal", "role", "workflow"):
+            if not normalized.get(field):
+                raise OrchestratorError(f"job {normalized.get('id')} missing {field}")
+        nodes = normalized["workflow"].get("nodes", [])
+        if not isinstance(nodes, list) or not nodes:
+            raise OrchestratorError(f"job {normalized['id']} requires workflow nodes")
+        normalized["workflow"]["nodes"] = [
+            _normalize_node(node, normalized["id"]) for node in nodes
+        ]
+        normalized_jobs.append(normalized)
+    return normalized_jobs
 
 
 def init_run(args: argparse.Namespace) -> dict[str, Any]:
@@ -96,28 +237,18 @@ def init_run(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def _validate_jobs(document: dict[str, Any]) -> list[dict[str, Any]]:
-    jobs = document.get("jobs")
-    if not isinstance(jobs, list) or not jobs:
-        raise OrchestratorError("definition must contain a non-empty jobs array")
+    jobs = _normalize_jobs(document)
     ids = [job.get("id") for job in jobs]
     if None in ids or len(ids) != len(set(ids)):
         raise OrchestratorError("job IDs must be present and unique")
     known = set(ids)
     for sequence, job in enumerate(jobs, 1):
-        for field in ("title", "goal", "role", "workflow"):
-            if not job.get(field):
-                raise OrchestratorError(f"job {job['id']} missing {field}")
         if any(dep not in known for dep in job.get("depends_on", [])):
             raise OrchestratorError(f"job {job['id']} has unknown dependency")
         nodes = job["workflow"].get("nodes", [])
         positions = [node.get("position") for node in nodes]
         if not nodes or None in positions or len(positions) != len(set(positions)):
             raise OrchestratorError(f"job {job['id']} needs unique workflow positions")
-        for node in nodes:
-            if node.get("run_in", "job_session") not in {"job_session", "child_job"}:
-                raise OrchestratorError("unsupported workflow execution target")
-            if not node.get("work_units"):
-                raise OrchestratorError(f"node {node.get('id')} requires work_units")
         job.setdefault("sequence", sequence)
     visiting: set[str] = set()
     visited: set[str] = set()
@@ -140,7 +271,12 @@ def compile_jobs(args: argparse.Namespace) -> dict[str, Any]:
     run_root = args.run.resolve()
     document = load_json(args.definition)
     jobs = _validate_jobs(document)
+    state = replay(run_root)
+    already_compiled = []
     for raw in jobs:
+        if raw["id"] in state["jobs"]:
+            already_compiled.append(raw["id"])
+            continue
         now = utc_now()
         nodes = sorted(raw["workflow"]["nodes"], key=lambda item: item["position"])
         for index, node in enumerate(nodes):
@@ -185,7 +321,12 @@ def compile_jobs(args: argparse.Namespace) -> dict[str, Any]:
             "job": job, "workflow": workflow, "steps": steps,
         })
         mutate(run_root, args.controller, event)
-    return {"compiled": [job["id"] for job in jobs]}
+        state = replay(run_root)
+    compiled = [job["id"] for job in jobs if job["id"] not in already_compiled]
+    response = {"compiled": compiled}
+    if already_compiled:
+        response["already_compiled"] = already_compiled
+    return response
 
 
 def _unresolved(state: dict[str, Any]) -> dict[str, Any] | None:
@@ -472,6 +613,10 @@ def _materialize_child_jobs(
             created.append(child_id)
             known.add(child_id)
             continue
+        nodes = [
+            _normalize_node(node, child_id)
+            for node in nodes
+        ]
         if not tracked:
             mutate(run_root, controller, make_event(
                 run_root, "child_job_requested", request_id,

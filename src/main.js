@@ -12,16 +12,42 @@ import { LensingPass } from './renderer/LensingPass.js';
 import { BackgroundPass } from './renderer/BackgroundPass.js';
 import { PhysicsEngine } from './physics/PhysicsEngine.js';
 import { TrailRenderer } from './renderer/TrailRenderer.js';
+import { AudioEngine } from './audio/AudioEngine.js';
+import { SpacetimeHum } from './audio/SpacetimeHum.js';
+import { GWSound } from './audio/GWSound.js';
+import { EventSounds } from './audio/EventSounds.js';
+import { SpatialAudio } from './audio/SpatialAudio.js';
+import { TouchControls } from './ui/TouchControls.js';
+import { LoadingScreen } from './ui/LoadingScreen.js';
+import { ErrorHandler } from './core/ErrorHandler.js';
+import { AccessibilityManager } from './ui/AccessibilityManager.js';
+import { CinematicPostProcess } from './renderer/CinematicPostProcess.js';
 
 const canvas = document.getElementById('viewport');
 const clock = new Clock();
 const physics = new PhysicsEngine();
 
-const renderer = await Renderer.create(canvas);
-if (!renderer) {
-  document.body.innerHTML = '<div style="color:#fff;font-size:24px;text-align:center;margin-top:40vh">WebGPU and WebGL 2.0 are not supported in this browser.</div>';
-  throw new Error('No GPU backend available');
+const loadingScreen = new LoadingScreen();
+loadingScreen.show();
+
+const errorHandler = new ErrorHandler();
+
+let renderer;
+try {
+  renderer = await Renderer.create(canvas);
+  if (!renderer) {
+    loadingScreen.showError('WebGPU and WebGL 2.0 are not supported in this browser.', () => {
+      window.location.reload();
+    });
+    throw new Error('No GPU backend available');
+  }
+} catch (error) {
+  loadingScreen.showError(`Failed to initialize renderer: ${error.message}`, () => {
+    window.location.reload();
+  });
+  throw error;
 }
+
 if (renderer.backend === 'webgpu') {
   const fallback = document.createElement('div');
   fallback.style.cssText = 'position:fixed;top:0;left:0;right:0;background:rgba(255,0,0,0.8);color:#fff;text-align:center;padding:10px;z-index:9999;font-size:16px';
@@ -29,10 +55,14 @@ if (renderer.backend === 'webgpu') {
   document.body.appendChild(fallback);
 }
 
+errorHandler.setupWebGLContextLoss(canvas, renderer);
+
 const profiler = new Profiler();
 const quality = new AdaptiveQuality(profiler);
 const cameraManager = new CameraManager(canvas);
 const shaderModule = new ShaderModule(renderer);
+
+loadingScreen.setProgress(0.3, 'textures');
 
 const lensingPass = new LensingPass(renderer, shaderModule);
 const backgroundPass = new BackgroundPass(renderer, shaderModule);
@@ -40,8 +70,30 @@ const particleRenderer = new ParticleRenderer(renderer, shaderModule);
 const bodyRenderer = new BodyRenderer(renderer, shaderModule);
 const trailRenderer = new TrailRenderer(renderer, shaderModule);
 const postProcessor = new PostProcessor(renderer, shaderModule);
+const cinematicPostProcess = new CinematicPostProcess(renderer, shaderModule);
 
-const ui = new UIManager({ cameraManager, quality, profiler, physicsEngine: physics });
+loadingScreen.setProgress(0.6, 'shaders');
+
+const audioEngine = new AudioEngine();
+const spacetimeHum = new SpacetimeHum(audioEngine);
+const gwSound = new GWSound(audioEngine);
+const eventSounds = new EventSounds(audioEngine);
+const spatialAudio = new SpatialAudio(audioEngine);
+
+const touchControls = new TouchControls(canvas, cameraManager);
+const accessibilityManager = new AccessibilityManager();
+
+loadingScreen.setProgress(1.0, 'shaders');
+
+const ui = new UIManager({ 
+  cameraManager, 
+  quality, 
+  profiler, 
+  physicsEngine: physics,
+  audioEngine,
+  touchControls,
+  accessibilityManager
+});
 
 renderer.onResize((w, h) => {
   cameraManager.resize(w, h);
@@ -51,11 +103,29 @@ renderer.onResize((w, h) => {
   bodyRenderer.resize(w, h);
   trailRenderer.resize(w, h);
   postProcessor.resize(w, h);
+  cinematicPostProcess.resize(w, h);
 });
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) clock.reset();
 });
+
+function initAudio() {
+  if (audioEngine._initialized) return;
+  
+  audioEngine.init();
+  spacetimeHum.start();
+  gwSound.start();
+  eventSounds.start();
+  spatialAudio.start();
+  
+  audioEngine.muted = false;
+  
+  ui.updateMuteButton();
+}
+
+canvas.addEventListener('click', initAudio, { once: true });
+canvas.addEventListener('touchstart', initAudio, { once: true });
 
 function animate() {
   requestAnimationFrame(animate);
@@ -79,6 +149,16 @@ function animate() {
   camState.particleTrails = display.trails ? physState.particleTrails : null;
   camState.particles = physState.gasParticles;
 
+  if (audioEngine._initialized && !audioEngine.muted) {
+    const camPosition = cameraManager.free.position || [0, 0, 0];
+    const camVelocity = [0, 0, 0];
+    
+    spacetimeHum.update(dt, camPosition, physState.bodies);
+    gwSound.update(dt, physState.gwFrequency, physState.gwStrain, physState.bhPairs);
+    eventSounds.update(dt, physState);
+    spatialAudio.update(dt, camPosition, camVelocity, physState.bodies);
+  }
+
   const mergerFlash = computeMergerFlash(physState.bhPairs, physState.bodies);
   postProcessor.setFlashIntensity(mergerFlash);
   postProcessor.updateFlash(dt);
@@ -97,6 +177,7 @@ function animate() {
 
   if (display.postProcessing) {
     postProcessor.render(settings);
+    cinematicPostProcess.render(renderer.getCurrentTexture());
   }
 
   renderer.endFrame();
@@ -123,5 +204,18 @@ function computeMergerFlash(bhPairs, bodies) {
   return maxFlash;
 }
 
-window.addEventListener('beforeunload', () => renderer.destroy());
+window.addEventListener('beforeunload', () => {
+  audioEngine.destroy();
+  spacetimeHum.stop();
+  gwSound.stop();
+  eventSounds.stop();
+  spatialAudio.stop();
+  touchControls.destroy();
+  errorHandler.destroy();
+  accessibilityManager.destroy();
+  cinematicPostProcess.destroy();
+  renderer.destroy();
+});
+
+loadingScreen.hide();
 animate();

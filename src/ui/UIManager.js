@@ -10,11 +10,14 @@ import { TimeControl } from './TimeControl.js';
 import { ObjectList } from './ObjectList.js';
 
 export class UIManager {
-  constructor({ cameraManager, quality, profiler, physicsEngine }) {
+  constructor({ cameraManager, quality, profiler, physicsEngine, audioEngine, touchControls, accessibilityManager }) {
     this.cameraManager = cameraManager;
     this.quality = quality;
     this.profiler = profiler;
     this.physics = physicsEngine;
+    this.audioEngine = audioEngine;
+    this.touchControls = touchControls;
+    this.accessibilityManager = accessibilityManager;
     this._selectedBody = null;
     this._displaySettings = {
       lensing: true, particles: true, stars: true, bodies: true,
@@ -35,7 +38,13 @@ export class UIManager {
     this._createCSS();
     this._createLayout();
     this._createMuteButton();
+    this._createAudioControls();
     this._setupClickHandler();
+    
+    if (this.accessibilityManager) {
+      this.accessibilityManager.addAriaLabels();
+      this.accessibilityManager.addKeyboardShortcuts();
+    }
   }
 
   _createCSS() {
@@ -55,9 +64,12 @@ export class UIManager {
       .ui-toggle input { accent-color: #6af; }
       .ui-label { font-size: 11px; color: #aaa; }
       .mute-btn { position: absolute; bottom: 60px; left: 10px; }
+      .audio-controls { position: absolute; bottom: 100px; left: 10px; display: flex; flex-direction: column; gap: 4px; }
+      .audio-slider { width: 100px; }
       @media (max-width: 1024px) {
         .ui-btn { padding: 4px 6px; font-size: 10px; }
         .ui-label { display: none; }
+        .audio-controls { bottom: 80px; }
       }
     `;
     document.head.appendChild(style);
@@ -105,11 +117,81 @@ export class UIManager {
 
   _createMuteButton() {
     const app = document.getElementById('app');
-    const btn = document.createElement('button');
-    btn.className = 'ui-btn mute-btn';
-    btn.textContent = '🔊';
-    btn.title = 'Mute (audio not implemented)';
-    app.appendChild(btn);
+    this._muteBtn = document.createElement('button');
+    this._muteBtn.className = 'ui-btn mute-btn';
+    this._muteBtn.textContent = '🔇';
+    this._muteBtn.title = 'Toggle audio';
+    this._muteBtn.setAttribute('aria-label', 'Toggle audio mute');
+    this._muteBtn.addEventListener('click', () => this._toggleMute());
+    app.appendChild(this._muteBtn);
+  }
+
+  _createAudioControls() {
+    const app = document.getElementById('app');
+    this._audioControls = document.createElement('div');
+    this._audioControls.className = 'audio-controls ui-panel';
+    this._audioControls.style.display = 'none';
+    
+    const layers = ['hum', 'gw', 'events'];
+    const labels = { hum: 'Spacetime Hum', gw: 'GW Sound', events: 'Events' };
+    
+    for (const layer of layers) {
+      const control = document.createElement('div');
+      control.className = 'ui-toggle';
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = true;
+      checkbox.id = `audio-${layer}`;
+      checkbox.setAttribute('aria-label', `Toggle ${labels[layer]}`);
+      
+      const label = document.createElement('label');
+      label.htmlFor = `audio-${layer}`;
+      label.className = 'ui-label';
+      label.textContent = labels[layer];
+      
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = '0';
+      slider.max = '100';
+      slider.value = '100';
+      slider.className = 'audio-slider';
+      slider.setAttribute('aria-label', `${labels[layer]} volume`);
+      
+      slider.addEventListener('input', (e) => {
+        const volume = e.target.value / 100;
+        if (this.audioEngine) {
+          this.audioEngine.setLayerVolume(layer, volume);
+        }
+      });
+      
+      checkbox.addEventListener('change', (e) => {
+        if (this.audioEngine) {
+          this.audioEngine.setLayerMuted(layer, !e.target.checked);
+        }
+      });
+      
+      control.appendChild(checkbox);
+      control.appendChild(label);
+      control.appendChild(slider);
+      this._audioControls.appendChild(control);
+    }
+    
+    app.appendChild(this._audioControls);
+  }
+
+  _toggleMute() {
+    if (!this.audioEngine) return;
+    
+    this.audioEngine.muted = !this.audioEngine.muted;
+    this.updateMuteButton();
+  }
+
+  updateMuteButton() {
+    if (!this._muteBtn || !this.audioEngine) return;
+    
+    this._muteBtn.textContent = this.audioEngine.muted ? '🔇' : '🔊';
+    this._audioControls.style.display = this.audioEngine.muted ? 'none' : 'block';
   }
 
   _setupClickHandler() {

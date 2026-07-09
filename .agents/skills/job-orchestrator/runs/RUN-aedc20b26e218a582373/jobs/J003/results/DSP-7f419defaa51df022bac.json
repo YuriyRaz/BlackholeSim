@@ -1,0 +1,35 @@
+{
+  "acceptance_evidence": [
+    "Verification findings documented"
+  ],
+  "artifacts": [
+    {
+      "path": "report.md",
+      "purpose": "worker report",
+      "sha256": "bd9827920b6cc5dfccd5f30d0e3689820452d41d2008cf37a573716b1e2a6ef2"
+    },
+    {
+      "path": "checkpoint.md",
+      "purpose": "current checkpoint",
+      "sha256": "e2c110e9f92d5840c76d2c55b673f318f0e5e106e8643185022bc0a72503145a"
+    },
+    {
+      "path": "progress.json",
+      "purpose": "machine-readable progress",
+      "sha256": "7721e0b3ca8ffb0edecc1bd471c07bae29d45892b108b4e4293446ed8fcdf0aa"
+    }
+  ],
+  "blocking_issues": [],
+  "checkpoint_sha256": "e2c110e9f92d5840c76d2c55b673f318f0e5e106e8643185022bc0a72503145a",
+  "completed_work_units": [
+    "verify-change"
+  ],
+  "created_at": "2026-07-09T20:51:02.011916Z",
+  "dispatch_id": "DSP-7f419defaa51df022bac",
+  "improvement_observations": [],
+  "nonce": "NONCE-29a3bc1bd655d0df15d5",
+  "proposed_jobs": [],
+  "schema_version": 3,
+  "status": "completed",
+  "summary": "Verification complete"
+}

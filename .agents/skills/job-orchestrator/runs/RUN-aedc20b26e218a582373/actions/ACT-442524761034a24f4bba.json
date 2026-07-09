@@ -1,0 +1,13 @@
+{
+  "action_id": "ACT-442524761034a24f4bba",
+  "correlation_id": "J003:apply-tasks",
+  "created_at": "2026-07-09T20:36:45.016986Z",
+  "dispatch_id": "DSP-907896cd098a49edd974",
+  "job_id": "J003",
+  "prompt": "Worker subagent execution payload. The root orchestrator must send this text to the job subagent; the root must not execute it.\nExecute exactly one immutable dispatch using the command below.\nDo not begin any later workflow node.\nFirst run: python C:\\Projects\\BlackholeSim\\.agents\\skills\\job-orchestrator\\scripts\\workerctl.py inspect --dispatch \"C:\\Projects\\ai-skills\\skills\\job-orchestrator\\runs\\RUN-aedc20b26e218a582373\\jobs\\J003\\dispatches\\DSP-907896cd098a49edd974.json\" --nonce \"NONCE-f50955fe297919ae1d10\" --session-id \"ses_bootstrap_J003\" --current-node \"apply-tasks\"\nCheckpoint at every policy milestone with workerctl checkpoint, passing the same inspected dispatch, a phase, and one next action.\nWhen finished, run workerctl finalize with the same inspected dispatch and --session-id \"ses_bootstrap_J003\", then return that validated result only.\n",
+  "response_hash": "762efc68708ae60c24bb19e39fc87d1eb4ac0d29b201e66be09fdad7f4c57022",
+  "run_id": "RUN-aedc20b26e218a582373",
+  "schema_version": 3,
+  "status": "resolved",
+  "type": "send_dispatch"
+}
