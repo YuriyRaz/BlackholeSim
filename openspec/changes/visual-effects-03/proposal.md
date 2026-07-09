@@ -12,12 +12,18 @@ This proposal adds those visual effects. None of them are scenario-specific. GW 
 - **Phase indicator**: UI element that derives phase from physics state (separation, accretion rate, GW strain).
 - **Timeline scrubber enhancement**: Full timeline control with snapshot caching.
 
+## Dependencies
+
+- **physics-engine-02**: Requires `bhPairs` array in `getState()` output (DESIGN.md §7.3 defines it; implementation must add it). `bhPairs` provides `[{ a: index, b: index, distance: float }]` for all black hole pairs.
+- **physics-engine-02**: Requires particle trail history buffer (new array `particleTrails` storing last N positions per particle, exposed in `getState()`).
+- **core-renderer-01**: Existing `LensingPass`, `PostProcessor`, `TrailRenderer`, `ParticleRenderer` are extended.
+
 ## Capabilities
 
 ### New Capabilities
 
 - `gw-visualization`: Gravitational wave ripple distortion shader. Driven by gwStrain from physics engine.
-- `merger-flash`: Bloom effect when BHs are close. Driven by BH separation distance.
+- `merger-flash`: Bloom effect when BHs are close. Driven by BH separation distance via `bhPairs`.
 - `particle-trails`: Fading trail lines for any particle type. Reads history buffer from physics engine.
 - `phase-indicator`: UI element that derives phase from physics state. No hardcoded transitions.
 
@@ -25,6 +31,7 @@ This proposal adds those visual effects. None of them are scenario-specific. GW 
 
 - `gravitational-lensing`: Add GW ripple distortion pass to lensing shader.
 - `ui-shell`: Add phase indicator, particle trails toggle, GW ripples toggle, jet rendering toggle.
+- `timeline-controls`: Add snapshot cache for scrubbing through simulation history.
 
 ## Impact
 
@@ -32,3 +39,4 @@ This proposal adds those visual effects. None of them are scenario-specific. GW 
 - **New modules**: ~5 JavaScript modules (shaders/, ui/ additions).
 - **No scenario classes**: All effects emerge from physics state.
 - **Performance**: GW ripple adds ~1ms per frame. Merger flash is bloom spike. Trails add ~0.5ms.
+- **WebGPU**: GW ripple shader and particle trail renderer are GL-only for MVP; WebGPU paths noted as follow-up.

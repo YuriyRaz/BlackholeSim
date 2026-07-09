@@ -12,15 +12,19 @@ The system SHALL render particles as point sprites with per-particle position, s
 - **THEN** its screen-space size SHALL decrease proportionally to distance
 
 ### Requirement: Particle color from temperature
-Each particle's color SHALL be derived from its temperature property: blue-white (>5×10⁶ K), white (1-5×10⁶ K), yellow-white (5×10⁵-10⁶ K), orange (1-5×10⁵ K), deep red (<10⁵ K).
+Each particle's color SHALL be derived from its temperature property: blue-white (>5×10⁶ K), white (1-5×10⁶ K), yellow-white (5×10⁵-10⁶ K), orange (1-5×10⁵ K), deep red (<10⁵ K). The temperature-to-color mapping SHALL be implemented in the fragment shader (not in JS) for performance with 35K particles.
 
 #### Scenario: Hot particles are blue-white
-- **WHEN** a particle has high temperature
+- **WHEN** a particle has high temperature (>5×10⁶ K)
 - **THEN** its color SHALL be blue-white
 
 #### Scenario: Cool particles are red
-- **WHEN** a particle has low temperature
+- **WHEN** a particle has low temperature (<10⁵ K)
 - **THEN** its color SHALL be deep red
+
+#### Scenario: Color mapping in shader
+- **WHEN** particles are rendered
+- **THEN** the fragment shader SHALL map the `temperature` attribute to a color using a smooth gradient or stepped color bands
 
 ### Requirement: Additive blending for jet/glow particles
 The renderer SHALL support additive blending mode for particles that should glow (jet particles, bright disk particles). This is controlled by a per-particle or per-group flag.

@@ -103,12 +103,13 @@ export class PhysicsEngine {
     const effectiveDt = dt * this._speedMultiplier;
     const substeps = Math.max(1, Math.ceil(effectiveDt / Constants.dt_max));
     const subDt = effectiveDt / substeps;
+    this._blackHoles = this.bodies.filter(b => b.type === 'blackhole');
 
     for (let s = 0; s < substeps; s++) {
       this._integrateGravity(subDt);
       this._integrateGas(subDt);
       this._computeAccretion(subDt);
-      this._computeGravitationalWaves();
+      this._computeGravitationalWaves(subDt);
       this._handleTidalDisruption();
       this._computeFallbackRate();
       this._updateJets(subDt);
@@ -138,8 +139,6 @@ export class PhysicsEngine {
     const T_fallback = 10.0;
     const tRatio = t / T_fallback;
     this._fallbackRate = this._fallbackMass * Math.pow(tRatio, -5/3) * 0.001;
-    
-    this.accretionRate += this._fallbackRate;
   }
 
   _integrateGravity(dt) {
@@ -244,7 +243,7 @@ export class PhysicsEngine {
   }
 
   _integrateGas(dt) {
-    const blackHoles = this.bodies.filter(b => b.type === 'blackhole');
+    const blackHoles = this._blackHoles;
 
     const accelerations = [];
     for (const gp of this.gasParticles) {
@@ -281,10 +280,17 @@ export class PhysicsEngine {
             dy * spinDir[0] - dx * spinDir[1]
           ];
           const perpLen = Math.sqrt(perp[0] ** 2 + perp[1] ** 2 + perp[2] ** 2);
-          if (perpLen > 0.001) {
-            gp.velocity[0] = perp[0] / perpLen * speed;
-            gp.velocity[1] = perp[1] / perpLen * speed;
-            gp.velocity[2] = perp[2] / perpLen * speed;
+          if (perpLen > 0.001 && speed > 0.001) {
+            const targetSpeed = speed;
+            const targetVel = [
+              perp[0] / perpLen * targetSpeed,
+              perp[1] / perpLen * targetSpeed,
+              perp[2] / perpLen * targetSpeed
+            ];
+            const ergoStrength = 0.5;
+            ax += ergoStrength * (targetVel[0] - gp.velocity[0]) / dt;
+            ay += ergoStrength * (targetVel[1] - gp.velocity[1]) / dt;
+            az += ergoStrength * (targetVel[2] - gp.velocity[2]) / dt;
           }
         }
       }
@@ -353,7 +359,7 @@ export class PhysicsEngine {
     for (let i = 0; i < this.gasParticles.length; i++) {
       const gp = this.gasParticles[i];
       if (gp.accreted) continue;
-      const blackHoles = this.bodies.filter(b => b.type === 'blackhole');
+      const blackHoles = this._blackHoles;
       for (const bh of blackHoles) {
         const dx = gp.position[0] - bh.position[0];
         const dy = gp.position[1] - bh.position[1];
@@ -365,8 +371,15 @@ export class PhysicsEngine {
         const H = r * Constants.gasDiskThickness;
         const viscousTimescale = orbitalPeriod * (r / H) * (r / H);
         const viscousAccel = Constants.alpha_visc * r / (viscousTimescale * viscousTimescale + 1);
-        const tangential = [-dy / r, dx / r, 0];
-        const inward = [-dx / r, -dy / r, -dz / r];
+        const rVec = [dx / r, dy / r, dz / r];
+        const tangential = [-rVec[1], rVec[0], 0];
+        const tLen = Math.sqrt(tangential[0] ** 2 + tangential[1] ** 2 + tangential[2] ** 2);
+        if (tLen > 0.001) {
+          tangential[0] /= tLen;
+          tangential[1] /= tLen;
+          tangential[2] /= tLen;
+        }
+        const inward = [-rVec[0], -rVec[1], -rVec[2]];
         const transport = 0.001 * viscousAccel * dt;
         gp.velocity[0] += tangential[0] * transport + inward[0] * transport * 0.01;
         gp.velocity[1] += tangential[1] * transport + inward[1] * transport * 0.01;
@@ -376,7 +389,7 @@ export class PhysicsEngine {
   }
 
   _computeAccretion(dt) {
-    const blackHoles = this.bodies.filter(b => b.type === 'blackhole');
+    const blackHoles = this._blackHoles;
     let accretedThisStep = 0;
 
     for (const gp of this.gasParticles) {
@@ -450,7 +463,7 @@ export class PhysicsEngine {
       jp.age += dt;
     }
 
-    const blackHoles = this.bodies.filter(b => b.type === 'blackhole');
+    const blackHoles = this._blackHoles;
     this.jetParticles = this.jetParticles.filter(jp => {
       for (const bh of blackHoles) {
         const dx = jp.position[0] - bh.position[0];
@@ -464,7 +477,7 @@ export class PhysicsEngine {
   }
 
   _handleTidalDisruption() {
-    const blackHoles = this.bodies.filter(b => b.type === 'blackhole');
+    const blackHoles = this._blackHoles;
     const stars = this.bodies.filter(b => b.type === 'star' && !b.disrupted);
 
     for (const star of stars) {
@@ -511,7 +524,7 @@ export class PhysicsEngine {
     }
   }
 
-  _computeGravitationalWaves() {
+  _computeGravitationalWaves(subDt) {
     const bodies = this.bodies.filter(b => !b.fixed && !b.disrupted);
     let maxFreq = 0;
     let maxStrain = 0;
@@ -541,24 +554,26 @@ export class PhysicsEngine {
         const luminosity = (32 / 5) * Math.pow(Constants.G, 7 / 3) *
           Math.pow(Mc, 10 / 3) * Math.pow(Math.PI * fGW, 10 / 3) / Math.pow(Constants.c, 5);
 
-        const daDt = -(64 / 5) * Math.pow(Constants.G, 3) * bi.mass * bj.mass *
-          MKg * (Mc / MKg) * (1 + (3 / 2) * Math.pow(bj.mass / bi.mass, 2)) /
-          (Math.pow(Constants.c, 5) * Math.pow(r, 3));
-
         if (!bi.fixed) {
-          const rVec = [dx / r, dy / r, dz / r];
-          const decayAccel = daDt * 0.0001;
-          bi.position[0] += rVec[0] * decayAccel;
-          bi.position[1] += rVec[1] * decayAccel;
-          bi.position[2] += rVec[2] * decayAccel;
+          const v2_bi = bi.velocity[0] ** 2 + bi.velocity[1] ** 2 + bi.velocity[2] ** 2;
+          const v_bi = Math.sqrt(v2_bi);
+          if (v_bi > 0.001) {
+            const dvDt = luminosity / (MKg * v_bi);
+            bi.velocity[0] += (dx / r) * dvDt * subDt;
+            bi.velocity[1] += (dy / r) * dvDt * subDt;
+            bi.velocity[2] += (dz / r) * dvDt * subDt;
+          }
         }
 
         if (!bj.fixed) {
-          const rVec = [-dx / r, -dy / r, -dz / r];
-          const decayAccel = daDt * 0.0001;
-          bj.position[0] += rVec[0] * decayAccel;
-          bj.position[1] += rVec[1] * decayAccel;
-          bj.position[2] += rVec[2] * decayAccel;
+          const v2_bj = bj.velocity[0] ** 2 + bj.velocity[1] ** 2 + bj.velocity[2] ** 2;
+          const v_bj = Math.sqrt(v2_bj);
+          if (v_bj > 0.001) {
+            const dvDt = luminosity / (MKg * v_bj);
+            bj.velocity[0] += (-dx / r) * dvDt * subDt;
+            bj.velocity[1] += (-dy / r) * dvDt * subDt;
+            bj.velocity[2] += (-dz / r) * dvDt * subDt;
+          }
         }
 
         if (fGW > maxFreq) maxFreq = fGW;
@@ -569,7 +584,7 @@ export class PhysicsEngine {
 
     this.gwFrequency = maxFreq;
     this.gwStrain = maxStrain;
-    this.gwPhase += maxFreq * 0.016;
+    this.gwPhase += maxFreq * subDt;
     this.gwLuminosity = totalLuminosity;
 
     if (this._mergedBH) {
@@ -596,7 +611,24 @@ export class PhysicsEngine {
         velocity: [...g.velocity],
         mass: g.mass,
         temperature: g.temperature
-      }))
+      })),
+      jets: this.jetParticles.map(j => ({
+        position: [...j.position],
+        velocity: [...j.velocity],
+        type: j.type,
+        age: j.age,
+        birthTime: j.birthTime
+      })),
+      gw: {
+        frequency: this.gwFrequency,
+        strain: this.gwStrain,
+        phase: this.gwPhase,
+        luminosity: this.gwLuminosity
+      },
+      accretionRate: this.accretionRate,
+      fallbackRate: this._fallbackRate,
+      fallbackStartTime: this._fallbackStartTime,
+      fallbackMass: this._fallbackMass
     };
     this._snapshots.push(snapshot);
     if (this._snapshots.length > Constants.maxSnapshots) {
@@ -625,9 +657,42 @@ export class PhysicsEngine {
       }
     }
 
+    if (snapshot.gas) {
+      this.gasParticles = snapshot.gas.map(g => ({
+        position: [...g.position],
+        velocity: [...g.velocity],
+        mass: g.mass,
+        temperature: g.temperature,
+        accreted: false
+      }));
+    }
+
+    if (snapshot.jets) {
+      this.jetParticles = snapshot.jets.map(j => ({
+        position: [...j.position],
+        velocity: [...j.velocity],
+        type: j.type,
+        age: j.age,
+        birthTime: j.birthTime
+      }));
+    }
+
+    if (snapshot.gw) {
+      this.gwFrequency = snapshot.gw.frequency;
+      this.gwStrain = snapshot.gw.strain;
+      this.gwPhase = snapshot.gw.phase;
+      this.gwLuminosity = snapshot.gw.luminosity;
+    }
+
+    if (snapshot.accretionRate !== undefined) this.accretionRate = snapshot.accretionRate;
+    if (snapshot.fallbackRate !== undefined) this._fallbackRate = snapshot.fallbackRate;
+    if (snapshot.fallbackStartTime !== undefined) this._fallbackStartTime = snapshot.fallbackStartTime;
+    if (snapshot.fallbackMass !== undefined) this._fallbackMass = snapshot.fallbackMass;
+
     let dt = targetTime - snapshot.time;
     const steps = Math.min(Constants.maxRecomputeSteps, Math.ceil(Math.abs(dt) / Constants.dt_max));
     const subDt = dt / steps;
+    this._blackHoles = this.bodies.filter(b => b.type === 'blackhole');
     for (let i = 0; i < steps; i++) {
       this._integrateGravity(subDt);
       this._integrateGas(subDt);

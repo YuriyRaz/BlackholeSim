@@ -42,3 +42,14 @@ GW ripples SHALL be toggleable via the display toggles UI.
 #### Scenario: Toggle ripples off
 - **WHEN** the user unchecks "GW Ripples"
 - **THEN** no GW ripple distortion SHALL be applied
+
+### Requirement: WebGW ripple implementation
+The GW ripple shader SHALL be implemented in the existing `LensingPass` for both WebGL 2.0 and WebGPU backends. The `LensingPass` already has both `_initGL()` and `_initWebGPU()` methods. GW uniforms (gwSourcePosition, gwFrequency, gwStrain, time) SHALL be added to both backends.
+
+#### Scenario: Ripples work in WebGL 2.0
+- **WHEN** the renderer backend is WebGL 2.0
+- **THEN** GW ripples SHALL render correctly in the lensing shader
+
+#### Scenario: Ripples work in WebGPU
+- **WHEN** the renderer backend is WebGPU
+- **THEN** GW ripples SHALL render correctly in the lensing shader
