@@ -1355,6 +1355,65 @@ def migrate(args: argparse.Namespace) -> dict[str, Any]:
     return {"migrated": True, "from": 2, "to": 3, "sessions_require_bootstrap": True}
 
 
+def abort_dangling_dispatch(run_root: Path, dispatch_id: str) -> dict[str, Any]:
+    events = read_jsonl(run_root / "events.jsonl")
+    
+    dispatch_event = next((e for e in events if e["type"] == "dispatch_created" and e["data"]["dispatch"]["dispatch_id"] == dispatch_id), None)
+    if not dispatch_event:
+        raise OrchestratorError(f"dispatch not found: {dispatch_id}")
+    
+    worker_result_event = next((e for e in events if e["type"] == "worker_result" and e["data"]["dispatch_id"] == dispatch_id), None)
+    if worker_result_event:
+        raise OrchestratorError(f"dispatch is already resolved or not active: {dispatch_id}")
+    
+    action_event = next((e for e in events if e["type"] == "action_created" and e["data"]["action"].get("dispatch_id") == dispatch_id), None)
+    if not action_event:
+        raise OrchestratorError(f"action for dispatch not found: {dispatch_id}")
+    action_id = action_event["data"]["action"]["action_id"]
+    nonce = dispatch_event["data"]["dispatch"]["nonce"]
+
+    result_data = {
+        "schema_version": 3,
+        "dispatch_id": dispatch_id,
+        "nonce": nonce,
+        "status": "failed",
+        "summary": "aborted_by_operator",
+        "completed_work_units": [],
+        "artifacts": [],
+        "acceptance_evidence": ["aborted by operator"],
+        "blocking_issues": ["aborted by operator"],
+        "proposed_jobs": [],
+        "improvement_observations": [],
+        "checkpoint_sha256": content_hash(b"aborted"),
+        "created_at": utc_now(),
+    }
+    worker_result = make_event(
+        run_root, "worker_result", action_id,
+        {"dispatch_id": dispatch_id, "result": result_data}
+    )
+    append_event(run_root, worker_result)
+
+    action_resolved = make_event(
+        run_root, "action_resolved", action_id,
+        {"action_id": action_id, "response_hash": content_hash(result_data)}
+    )
+    append_event(run_root, action_resolved)
+    
+    return {"repaired": True, "dispatch_id": dispatch_id, "action_id": action_id}
+
+
+def repair_run(args: argparse.Namespace) -> dict[str, Any]:
+    run_root = args.run.resolve()
+    with run_lease(run_root, args.controller):
+        if args.abort_dispatch:
+            res = abort_dangling_dispatch(run_root, args.abort_dispatch)
+            write_snapshots(run_root, replay(run_root))
+            return res
+        else:
+            raise OrchestratorError("repair requires a specific action flag, e.g., --abort-dispatch")
+
+
+
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser()
     sub = root.add_subparsers(dest="command", required=True)
@@ -1388,6 +1447,9 @@ def parser() -> argparse.ArgumentParser:
     migration.add_argument("--run", type=Path, required=True)
     migration.add_argument("--authorized-by", required=True)
     migration.add_argument("--reason", required=True)
+    repair = sub.add_parser("repair", parents=[common])
+    repair.add_argument("--run", type=Path, required=True)
+    repair.add_argument("--abort-dispatch", required=True)
     return root
 
 
@@ -1395,7 +1457,7 @@ def main() -> int:
     args = parser().parse_args()
     handlers = {"init": init_run, "compile": compile_jobs, "next": next_action,
                 "record": record, "audit": audit, "recover": recover,
-                "migrate-v2": migrate}
+                "migrate-v2": migrate, "repair": repair_run}
     try:
         emit(handlers[args.command](args))
         return 0

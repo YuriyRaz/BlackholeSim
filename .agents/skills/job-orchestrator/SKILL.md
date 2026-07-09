@@ -5,10 +5,38 @@ description: Run complex work through a durable, resumable, script-enforced queu
 
 # Job Orchestrator
 
+## Overview
+
 Use the root session only as a transport-neutral control plane. Domain
 investigation, implementation, verification, decisions, and synthesis belong
 in explicit jobs. Read [protocol.md](references/protocol.md) for the model and
 [recovery.md](references/recovery.md) before recovering interrupted work.
+
+The root session MUST NEVER execute a job dispatch itself. For
+`spawn_and_bootstrap` and `send_dispatch`, the generated prompt is worker
+payload: create or resume the appropriate subagent session, send that prompt to
+the subagent verbatim, and record only the subagent response. If the root
+session starts reading application files, applying changes, running job checks,
+answering a job question, or invoking a job-specific skill directly, stop and
+route that work into the active job session instead.
+
+> [!CAUTION]
+> **NEVER MANUALLY READ, WRITE, OR PARSE THE JSON STATE FILES** in the `<run-root>` (e.g. `run.json`, `queue.json`, `events.jsonl`, etc.) using tools like `read_file`, `cat`, or `grep`. These files can be hundreds of kilobytes and will cause context truncation or tool errors. All interaction with the durable state **MUST** be performed exclusively via the `scripts/jobctl.py` CLI commands described below.
+
+## Parameters/Arguments
+
+- `--request-file <path>`: Path to the initialization request payload.
+- `--goal "<goal>"`: The top-level goal for the run.
+- `--run <run-root>`: Directory containing the job orchestrator run state.
+- `--definition <jobs.json>`: Path to the normalized job definition JSON.
+- `--action-id <action-id>`: The ID of the action being recorded.
+- `--response <response.json>`: The worker or transport response payload.
+- `--rebuild`: Rebuild snapshots from the journal during an audit.
+- `--dry-run`: Evaluate recovery actions without mutating state.
+- `--evidence <file>`: External evidence of transport state for recovery.
+- `--authorized-by <identity>`: The identity authorizing a v2-to-v3 migration.
+- `--reason "<reason>"`: The justification for migrating a run.
+- `--abort-dispatch <dispatch-id>`: The ID of a dangling dispatch to abort during a repair.
 
 ## Create And Compile
 
@@ -38,8 +66,10 @@ python scripts/jobctl.py next --run <run-root>
 
 Perform exactly the returned external action (`spawn_and_bootstrap`,
 `send_dispatch`, `wait`, `request_status`, `route_resolution`, `ask_user`, or
-`run_complete`). Use its generated prompt verbatim. Persist the transport or
-worker response to JSON, then:
+`run_complete`). For `spawn_and_bootstrap` and `send_dispatch`, perform means
+transport the generated prompt to the job's subagent session; it never means
+executing the prompt in the root session. Use the generated prompt verbatim.
+Persist the transport or worker response to JSON, then:
 
 ```text
 python scripts/jobctl.py record --run <run-root> \
@@ -55,6 +85,31 @@ Workers use only [job-protocol.md](references/job-protocol.md) and
 `scripts/workerctl.py`. They checkpoint worker-owned artifacts and return
 validated results; the control plane decides advancement and schedules another
 bounded dispatch when a workflow node has remaining work.
+
+## Returns/Output
+
+- **`jobctl next`**: Outputs exactly one unresolved action containing a generated prompt or system instruction.
+- **`jobctl record`**: Outputs the updated run state or workflow advancement.
+- **Worker Checkpoints**: Write atomically to `checkpoint.md` and `progress.json` within the worker's restricted root.
+
+## Error Handling
+
+If a command fails, it emits a non-zero exit code and error details. 
+- **Validation Errors**: If `compile` or `record` rejects inputs, fix the invalid JSON or response and retry. The journal remains unmutated on rejection.
+- **Schema Validation Errors**: If schema validation fails, read the error message to identify the missing or invalid field. Cross-reference the relevant schema in `schemas/v3/` and apply targeted edits to correct the drift instead of rewriting the entire file.
+- **Truncated JSON**: If JSON parsing fails due to truncation, the orchestrator will output the line of failure and a partial read count. Inspect the end of the file and use file append or targeted edits to add the missing data (e.g. closing brackets or missing objects). Do NOT rewrite the entire file.
+- **Interrupted Work**: Do not manually retry. Use `jobctl recover --dry-run` to classify the interruption safely.
+- **State Corruption**: If snapshots drift, use `jobctl audit --rebuild` to deterministically reconstruct state from the append-only journal.
+
+## Repair State
+
+If the orchestrator is stuck due to a dangling dispatch (e.g. failing validation with `run active dispatch pointer disagrees with dispatch state`), repair the state by aborting it:
+
+```text
+python scripts/jobctl.py repair --run <run-root> --abort-dispatch <dispatch-id>
+```
+
+This safely constructs synthetic failure events to abort the hanging dispatch and resolve the inconsistency without manual editing.
 
 ## Audit And Recover
 

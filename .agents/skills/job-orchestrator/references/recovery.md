@@ -1,23 +1,26 @@
 # Recovery Protocol
 
+> [!CAUTION]
+> **DO NOT PERFORM THESE STEPS MANUALLY.**
+> The steps below describe the mechanical actions performed by the `jobctl.py` script. The LLM agent MUST NOT attempt to read JSON files, manually replay events, or manually reconstruct state. Just run the corresponding `jobctl.py` commands.
+
 ## Resume A Run
 
-1. Locate the run by explicit run ID. Do not guess when multiple active runs
-   match the same workspace.
-2. Run `jobctl audit`; replay the authoritative event journal and compare all
-   derived snapshots.
-3. Hash `protocol/job-protocol.md` and compare it with the manifest.
-4. Replay `improvements.jsonl` and identify unresolved observations and active
-   maintenance jobs.
-5. Let `jobctl recover` acquire or safely take over the renewable lease.
-6. Validate every indexed job directory, contract, and report path.
-7. Rebuild disposable indexes if they disagree with authoritative job files.
-8. Reconstruct parent/child waits from `workflow.json`, child request events,
-   and child report paths.
-9. Use `jobctl recover --dry-run --evidence <file>` to classify any active
-   dispatch before scheduling new work.
-10. Persist `recovering`, perform reconciliation, then return the run to
-   `active`, `waiting_for_user`, or `blocked`.
+To resume a run, the agent must ONLY use `jobctl.py`. Internally, the script will:
+
+1. Locate the run by explicit run ID.
+2. When you run `jobctl audit`, it will replay the authoritative event journal and compare all derived snapshots.
+3. It will hash `protocol/job-protocol.md` and compare it with the manifest.
+4. It will replay `improvements.jsonl` and identify unresolved observations and active maintenance jobs.
+5. When you run `jobctl recover`, it will acquire or safely take over the renewable lease.
+6. It will validate every indexed job directory, contract, and report path.
+7. It will rebuild disposable indexes if they disagree with authoritative job files.
+8. It will reconstruct parent/child waits from `workflow.json`, child request events, and child report paths.
+
+Your only tasks are to:
+1. Run `jobctl audit` to ensure state consistency.
+2. Use `jobctl recover --dry-run --evidence <file>` to classify any active dispatch before scheduling new work.
+3. Review the script's output and then run `jobctl recover` to let the script persist `recovering`, perform reconciliation, and return the run to `active`, `waiting_for_user`, or `blocked`.
 
 ## Classify Interrupted Dispatches
 

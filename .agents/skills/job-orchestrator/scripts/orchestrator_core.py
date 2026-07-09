@@ -89,10 +89,53 @@ def random_id(prefix: str) -> str:
     return f"{prefix}-{uuid.uuid4().hex[:20]}"
 
 
+def _analyze_json_failure(text: str, exc: json.JSONDecodeError) -> str:
+    lines = text.splitlines()
+    error_line = exc.lineno
+    context = lines[error_line - 1].strip() if 0 < error_line <= len(lines) else ""
+    
+    partial_info = ""
+    text_stripped = text.lstrip()
+    if text_stripped.startswith("["):
+        depth = 0
+        count = 0
+        in_string = False
+        escape = False
+        for char in text_stripped:
+            if escape:
+                escape = False
+                continue
+            if char == '\\':
+                escape = True
+            elif char == '"':
+                in_string = not in_string
+            elif not in_string:
+                if char in '[{':
+                    depth += 1
+                elif char in ']}':
+                    depth -= 1
+                    if depth == 1 and char == '}':
+                        count += 1
+        partial_info = f"\nBest effort partial read: Found {count} complete top-level objects before failure."
+
+    return (
+        f"JSON truncation or syntax error at line {error_line} (col {exc.colno}): {exc.msg}.\n"
+        f"Context: `{context}`{partial_info}\n"
+        f"Please append missing data or use targeted edits instead of rewriting the entire file."
+    )
+
+
 def load_json(path: Path) -> Any:
+    text = ""
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(r"^\s*```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```\s*$", "", text)
+        return json.loads(text)
     except (OSError, json.JSONDecodeError) as exc:
+        if isinstance(exc, json.JSONDecodeError):
+            message = _analyze_json_failure(text, exc)
+            raise OrchestratorError(f"cannot read valid JSON from {path}:\n{message}") from exc
         raise OrchestratorError(f"cannot read valid JSON from {path}: {exc}") from exc
 
 
@@ -357,49 +400,46 @@ def _matches_type(value: Any, expected: str) -> bool:
 
 
 def _validate_schema(value: Any, schema: dict[str, Any], location: str) -> None:
+    def _raise(msg: str) -> None:
+        raise OrchestratorError(f"Schema validation error at `{location}`: {msg}. Please cross-reference `schemas/v3/` and apply targeted edits to fix.")
+
     expected = schema.get("type")
     if expected is not None:
         choices = [expected] if isinstance(expected, str) else expected
         if not any(_matches_type(value, choice) for choice in choices):
-            raise OrchestratorError(f"{location} must have type {' or '.join(choices)}")
+            _raise(f"must have type {' or '.join(choices)}")
     if "const" in schema and value != schema["const"]:
-        raise OrchestratorError(f"{location} must equal {schema['const']!r}")
+        _raise(f"must equal {schema['const']!r}")
     if "enum" in schema and value not in schema["enum"]:
-        raise OrchestratorError(f"{location} must be one of {schema['enum']!r}")
+        _raise(f"must be one of {schema['enum']!r}")
     if isinstance(value, dict):
         required = schema.get("required", [])
         missing = [name for name in required if name not in value]
         if missing:
-            raise OrchestratorError(f"{location} missing fields: {', '.join(missing)}")
+            _raise(f"missing fields: {', '.join(missing)}")
         properties = schema.get("properties", {})
         if schema.get("additionalProperties") is False:
             extra = sorted(set(value) - set(properties))
             if extra:
-                raise OrchestratorError(
-                    f"{location} has unexpected fields: {', '.join(extra)}"
-                )
+                _raise(f"has unexpected fields: {', '.join(extra)}")
         for name, child in properties.items():
             if name in value:
                 _validate_schema(value[name], child, f"{location}.{name}")
     elif isinstance(value, list):
         if len(value) < schema.get("minItems", 0):
-            raise OrchestratorError(
-                f"{location} must contain at least {schema['minItems']} items"
-            )
+            _raise(f"must contain at least {schema['minItems']} items")
         if schema.get("uniqueItems"):
             encoded = [canonical_bytes(item) for item in value]
             if len(encoded) != len(set(encoded)):
-                raise OrchestratorError(f"{location} must contain unique items")
+                _raise(f"must contain unique items")
         if "items" in schema:
             for index, item in enumerate(value):
                 _validate_schema(item, schema["items"], f"{location}[{index}]")
     elif isinstance(value, str):
         if len(value) < schema.get("minLength", 0):
-            raise OrchestratorError(
-                f"{location} must contain at least {schema['minLength']} characters"
-            )
+            _raise(f"must contain at least {schema['minLength']} characters")
         if "pattern" in schema and re.fullmatch(schema["pattern"], value) is None:
-            raise OrchestratorError(f"{location} has an invalid format")
+            _raise(f"has an invalid format")
         if schema.get("format") == "date-time":
             parse_time(value)
     if (
@@ -408,7 +448,7 @@ def _validate_schema(value: Any, schema: dict[str, Any], location: str) -> None:
         and "minimum" in schema
         and value < schema["minimum"]
     ):
-        raise OrchestratorError(f"{location} must be at least {schema['minimum']}")
+        _raise(f"must be at least {schema['minimum']}")
 
 
 def validate_record(kind: str, value: dict[str, Any]) -> None:

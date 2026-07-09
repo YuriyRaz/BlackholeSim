@@ -1,5 +1,11 @@
 # Orchestration Protocol
 
+> [!CAUTION]
+> **INFORMATIONAL ONLY.**
+> The protocol described here is mechanically enforced by the `scripts/jobctl.py` control plane script.
+> The LLM agent acts as the operator invoking the script, not the manual parser of the state files.
+> Do NOT manually parse, edit, or interact with the JSON state files directly.
+
 ## Core Model
 
 A run consists of:
@@ -36,6 +42,26 @@ profiles, workflows, priorities, and inputs.
     before receiving domain work.
 14. Every job reports improvement observations; only an explicitly authorized
     skill-maintenance job may modify the canonical skill.
+15. The root orchestrator session never performs job execution. Domain
+    investigation, code edits, verification, technical answers, architecture
+    decisions, and final synthesis are executed only inside tracked job
+    sessions or child jobs.
+
+## Root Session Boundary
+
+`jobctl next` returns control-plane actions, not permission for the root
+session to do job work. When the action type is `spawn_and_bootstrap` or
+`send_dispatch`, the action prompt is a payload for the worker subagent. The
+root session must create or resume the job's subagent session, send that prompt
+there verbatim, wait for the worker response, and record that response with
+`jobctl record`.
+
+If the root session notices itself starting to inspect domain code, apply a
+change, run job acceptance checks, invoke a job-specific skill, answer an
+architecture or implementation question, synthesize job output, or continue
+after a user points out this violation, it must stop immediately. The only
+valid recovery is to persist or report the protocol deviation as required and
+route the remaining work through the active job session or a new explicit job.
 
 ## Initial Prompt Normalization
 

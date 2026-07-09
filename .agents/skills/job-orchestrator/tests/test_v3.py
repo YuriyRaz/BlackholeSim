@@ -95,9 +95,13 @@ class V3Test(unittest.TestCase):
     def test_prompt_separation_and_exactly_one_dispatch(self):
         bootstrap = self.next()
         self.assertNotIn("work_units", bootstrap["prompt"])
+        self.assertIn("job subagent", bootstrap["prompt"])
+        self.assertIn("root must not execute", bootstrap["prompt"])
         self.bootstrap_record_existing(bootstrap)
         action = self.next()
         self.assertEqual(action["type"], "send_dispatch")
+        self.assertIn("job subagent", action["prompt"])
+        self.assertIn("root must not execute", action["prompt"])
         self.assertEqual(action["prompt"].count(".json"), 1)
         state = replay(self.run)
         self.assertEqual(len(state["dispatches"]), 1)

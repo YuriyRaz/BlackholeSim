@@ -149,6 +149,22 @@ class FoundationTest(unittest.TestCase):
                 ],
             )
 
+    def test_load_json_strips_markdown_wrappers(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "wrapped.json"
+            path.write_text("```json\n{\"a\": 1}\n```", encoding="utf-8")
+            self.assertEqual(load_json(path), {"a": 1})
+            
+            path.write_text("  ```\n{\"b\": 2}\n```  ", encoding="utf-8")
+            self.assertEqual(load_json(path), {"b": 2})
+
+    def test_analyze_json_failure_provides_heuristic_count(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "truncated.json"
+            path.write_text('[\n  {"a": 1},\n  {"b": 2},\n  {"c": 3', encoding="utf-8")
+            with self.assertRaisesRegex(OrchestratorError, "Best effort partial read: Found 2 complete top-level objects"):
+                load_json(path)
+
 
 if __name__ == "__main__":
     unittest.main()

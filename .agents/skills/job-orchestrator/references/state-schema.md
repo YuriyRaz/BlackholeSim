@@ -1,5 +1,10 @@
 # Durable State Schema
 
+> [!CAUTION]
+> **INFORMATIONAL ONLY: DO NOT PARSE OR EDIT THESE FILES.**
+> This schema describes the internal data model managed exclusively by `scripts/jobctl.py`.
+> **NEVER** use tools like `read_file`, `cat`, or `grep` to manually inspect JSON files (e.g. `run.json`, `queue.json`, `events.jsonl`) as they can be hundreds of kilobytes and will cause context truncation or tool errors. Always use `jobctl` commands to query state.
+
 ## Directory Layout
 
 ```text
