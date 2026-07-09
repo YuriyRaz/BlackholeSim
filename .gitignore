@@ -37,4 +37,5 @@ Thumbs.db
 .agents/skills/*/runs/*/.orchestrator.lock*
 .agents/skills/*/runs/*/*.py
 __pycache__/
+.pytest_cache/
 *.py[cod]
