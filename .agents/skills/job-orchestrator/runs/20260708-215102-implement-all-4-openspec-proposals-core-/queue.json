@@ -48,28 +48,31 @@
       "sequence": 5,
       "depends_on": ["J004"],
       "waiting_on": [],
-      "status": "running"
+      "status": "completed"
     },
     {
       "job_id": "J006",
       "priority": 50,
       "sequence": 6,
       "depends_on": ["J005"],
-      "waiting_on": []
+      "waiting_on": [],
+      "status": "completed"
     },
     {
       "job_id": "J007",
       "priority": 50,
       "sequence": 7,
       "depends_on": ["J006"],
-      "waiting_on": []
+      "waiting_on": [],
+      "status": "completed"
     },
     {
       "job_id": "J008",
       "priority": 50,
       "sequence": 8,
       "depends_on": ["J007"],
-      "waiting_on": []
+      "waiting_on": [],
+      "status": "running"
     },
     {
       "job_id": "J009",

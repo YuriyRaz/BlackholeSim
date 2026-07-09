@@ -1,28 +1,41 @@
-# J005 Archive Report
+# J005 Publish Report
 
-## Summary
+## Status: completed
 
-Archived the `physics-engine-02` OpenSpec change after confirming all planning artifacts and implementation tasks were complete.
+## Commit
 
-## Status
+- **SHA**: `01109a9`
+- **Message**: `feat(physics-engine-02): implement N-body gravity, gas dynamics, accretion, tidal disruption, GW emission, BH spin effects, and jet emission`
+- **Files changed**: 67
+- **Insertions**: 5170
+- **Deletions**: 327
 
-- **All 4 planning artifacts**: proposal, design, specs (11 spec files), tasks — all present and complete
-- **All 132 implementation tasks**: checked off (every task marked `[x]`)
-- **Artifact verification**: `openspec status` confirmed `isComplete: true`
-- **Sync step**: skipped per instruction (already done)
-- **Archive move**: `openspec/changes/physics-engine-02/` → `openspec/changes/archive/2026-07-09-physics-engine-02/`
-- **Verification**: archive path confirmed present; original path confirmed removed
+## Push
 
-## Artifacts
+- **Remote**: `origin/main`
+- **Result**: Success (`dc3b5b1..01109a9`)
 
-| Path | Purpose |
-|------|---------|
-| `openspec/changes/archive/2026-07-09-physics-engine-02/` | Archived change directory |
+## Scope of Changes
 
-## Concerns
+### Source code (new files)
+- `src/physics/PhysicsEngine.js` — N-body gravity with Barnes-Hut, gas dynamics, accretion, tidal disruption, GW emission, BH spin effects, jet emission
+- `src/physics/BarnesHut.js` — O(N log N) Barnes-Hut tree for gravitational force computation
+- `src/objects/BlackHole.js` — BlackHole class with spin, jet, and accretion parameters
+- `src/objects/Star.js`, `NeutronStar.js`, `GasParticle.js`, `Body.js` — Typed celestial objects
+- `src/presets/presets.js` — Initial system presets
+- `src/renderer/TrailRenderer.js` — Trail rendering for orbit visualization
+- `src/ui/ObjectList.js`, `TimeControl.js` — New UI panels
+- `test/` — Unit tests for constants, objects, and physics
 
-None. All tasks complete, archive successful.
+### Source code (modified)
+- `src/main.js`, `src/core/Constants.js` — Integration of new physics engine
+- `src/camera/CameraManager.js` — Updated for new object types
+- `src/renderer/Renderer.js`, `FrameBuffer.js`, `PostProcessor.js` — Rendering pipeline updates
+- `src/ui/UIManager.js`, `PhysicsInfo.js`, `PresetSelector.js`, `KeyboardShortcuts.js` — UI integration
 
-## Notes
+### OpenSpec
+- Change `physics-engine-02` archived to `openspec/changes/archive/2026-07-09-physics-engine-02/`
+- 11 delta specs synced to `openspec/specs/`
 
-This archive was part of the `implement-all-4-openspec-proposals-core` orchestrator run. The change contained a comprehensive physics engine implementation covering N-body gravity, gas dynamics, accretion, tidal forces, gravitational waves, BH spin effects, presets, celestial objects, time controls, and object interaction.
+### Configuration
+- `package.json` — New dependencies added
