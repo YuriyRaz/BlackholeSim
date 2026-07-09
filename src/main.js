@@ -115,7 +115,8 @@ function computeMergerFlash(bhPairs, bodies) {
     const rs = Math.max(bhA.rs || 1, bhB.rs || 1);
     const threshold = rs * 5;
     if (pair.distance < threshold) {
-      const flash = Math.min(1, (threshold - pair.distance) / threshold);
+      const linear = Math.min(1, (threshold - pair.distance) / threshold);
+      const flash = linear * linear;
       maxFlash = Math.max(maxFlash, flash);
     }
   }

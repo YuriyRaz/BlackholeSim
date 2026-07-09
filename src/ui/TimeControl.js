@@ -7,6 +7,7 @@ export class TimeControl {
     this._playPauseBtn = null;
     this._scrubber = null;
     this._scrubbing = false;
+    this._wasPlayingBeforeScrub = false;
   }
 
   mount(container) {
@@ -48,7 +49,11 @@ export class TimeControl {
     });
 
     this._scrubber.addEventListener('input', (e) => {
-      this._scrubbing = true;
+      if (!this._scrubbing) {
+        this._wasPlayingBeforeScrub = this.physics.playing;
+        this.physics.playing = false;
+        this._scrubbing = true;
+      }
       const maxTime = this.physics.simTime;
       const targetTime = (e.target.value / 1000) * maxTime;
       this.physics.scrubTo(targetTime);
@@ -56,6 +61,7 @@ export class TimeControl {
 
     this._scrubber.addEventListener('change', () => {
       this._scrubbing = false;
+      this.physics.playing = this._wasPlayingBeforeScrub;
     });
 
     window.addEventListener('keydown', (e) => {

@@ -1,0 +1,169 @@
+{
+  "nodes": [
+    {
+      "acceptance_criteria": [
+        "All task groups implemented",
+        "Code compiles"
+      ],
+      "checkpoint_policy": [
+        "after_discovery",
+        "after_each_batch"
+      ],
+      "completed_work_units": [],
+      "dispatch_ids": [],
+      "id": "apply-tasks",
+      "position": 1,
+      "prohibited_actions": [
+        "Do not begin later workflow nodes"
+      ],
+      "recovery_check": "tasks_applied",
+      "required_checks": [
+        "Validate produced artifacts"
+      ],
+      "run_in": "job_session",
+      "side_effect_class": "workspace_write",
+      "status": "ready",
+      "title": "Apply all audio-polish-04 task groups",
+      "work_units": [
+        "apply-all"
+      ]
+    },
+    {
+      "acceptance_criteria": [
+        "Verification completes with findings list"
+      ],
+      "checkpoint_policy": [
+        "after_discovery",
+        "after_each_batch"
+      ],
+      "completed_work_units": [],
+      "dispatch_ids": [],
+      "id": "verify",
+      "position": 2,
+      "prohibited_actions": [
+        "Do not begin later workflow nodes"
+      ],
+      "recovery_check": "verify_complete",
+      "required_checks": [
+        "Validate produced artifacts"
+      ],
+      "run_in": "job_session",
+      "side_effect_class": "read_only",
+      "status": "pending",
+      "title": "Verify audio-polish-04 implementation",
+      "work_units": [
+        "verify-change"
+      ]
+    },
+    {
+      "acceptance_criteria": [
+        "All findings fixed",
+        "Code compiles"
+      ],
+      "checkpoint_policy": [
+        "after_discovery",
+        "after_each_batch"
+      ],
+      "completed_work_units": [],
+      "dispatch_ids": [],
+      "id": "fix-findings",
+      "position": 3,
+      "prohibited_actions": [
+        "Do not begin later workflow nodes"
+      ],
+      "recovery_check": "fixes_applied",
+      "required_checks": [
+        "Validate produced artifacts"
+      ],
+      "run_in": "job_session",
+      "side_effect_class": "workspace_write",
+      "status": "pending",
+      "title": "Fix verification findings",
+      "work_units": [
+        "fix-issues"
+      ]
+    },
+    {
+      "acceptance_criteria": [
+        "Delta specs merged into main specs"
+      ],
+      "checkpoint_policy": [
+        "after_discovery",
+        "after_each_batch"
+      ],
+      "completed_work_units": [],
+      "dispatch_ids": [],
+      "id": "sync-specs",
+      "position": 4,
+      "prohibited_actions": [
+        "Do not begin later workflow nodes"
+      ],
+      "recovery_check": "specs_synced",
+      "required_checks": [
+        "Validate produced artifacts"
+      ],
+      "run_in": "job_session",
+      "side_effect_class": "workspace_write",
+      "status": "pending",
+      "title": "Sync delta specs to main specs",
+      "work_units": [
+        "sync"
+      ]
+    },
+    {
+      "acceptance_criteria": [
+        "Change archived successfully"
+      ],
+      "checkpoint_policy": [
+        "after_discovery",
+        "after_each_batch"
+      ],
+      "completed_work_units": [],
+      "dispatch_ids": [],
+      "id": "archive",
+      "position": 5,
+      "prohibited_actions": [
+        "Do not begin later workflow nodes"
+      ],
+      "recovery_check": "change_archived",
+      "required_checks": [
+        "Validate produced artifacts"
+      ],
+      "run_in": "job_session",
+      "side_effect_class": "workspace_write",
+      "status": "pending",
+      "title": "Archive audio-polish-04 change",
+      "work_units": [
+        "archive"
+      ]
+    },
+    {
+      "acceptance_criteria": [
+        "Changes committed and pushed"
+      ],
+      "checkpoint_policy": [
+        "after_discovery",
+        "after_each_batch"
+      ],
+      "completed_work_units": [],
+      "dispatch_ids": [],
+      "id": "commit-push",
+      "position": 6,
+      "prohibited_actions": [
+        "Do not begin later workflow nodes"
+      ],
+      "recovery_check": "commit_pushed",
+      "required_checks": [
+        "Validate produced artifacts"
+      ],
+      "run_in": "job_session",
+      "side_effect_class": "repository",
+      "status": "pending",
+      "title": "Commit and push to main",
+      "work_units": [
+        "commit"
+      ]
+    }
+  ],
+  "session_policy": "persistent"
+}

@@ -1,0 +1,20 @@
+{
+  "acceptance_criteria": [],
+  "goal": "Complete visual-effects-03 and audio-polish-04 OpenSpec changes with full orchestration pipeline",
+  "job_types": {},
+  "policies": {
+    "dispatch_bounds": {
+      "max_edit_roots": 4,
+      "max_estimated_minutes": 90,
+      "max_work_units": 8,
+      "require_override_when_exceeded": true
+    },
+    "liveness": {
+      "lease_seconds": 30,
+      "stale_after_seconds": 900,
+      "status_timeout_seconds": 300
+    }
+  },
+  "requirements": [],
+  "roles": {}
+}

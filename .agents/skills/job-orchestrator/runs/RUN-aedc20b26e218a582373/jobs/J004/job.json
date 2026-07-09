@@ -1,0 +1,21 @@
+{
+  "checkpoint_path": "jobs/J004/checkpoint.md",
+  "contract_sha256": "b4522dfeea4a009ab559fbd6c0b6d6a20af2ea2d16e051ff0f1beec58f74c41a",
+  "created_at": "2026-07-09T20:06:27.081940Z",
+  "current_workflow_node_id": "explore",
+  "depends_on": [
+    "J003"
+  ],
+  "goal": "Review the implemented audio-polish-04 change for architecture correctness, documentation consistency, and potential improvements.",
+  "id": "J004",
+  "job_type": "implement",
+  "priority": 40,
+  "report_path": "jobs/J004/report.md",
+  "revision": 1,
+  "role": "Architect",
+  "sequence": 4,
+  "session": null,
+  "status": "queued",
+  "title": "audio-polish-04 Architect Review",
+  "updated_at": "2026-07-09T20:06:27.081940Z"
+}

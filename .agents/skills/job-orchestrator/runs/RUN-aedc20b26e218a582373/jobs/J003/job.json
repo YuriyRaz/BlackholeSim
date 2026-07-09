@@ -1,0 +1,19 @@
+{
+  "checkpoint_path": "jobs/J003/checkpoint.md",
+  "contract_sha256": "294acc549041cdbd9bd921778bf307c825b1c6795470e453b62ec4ab31a5a9c3",
+  "created_at": "2026-07-09T20:06:26.949183Z",
+  "current_workflow_node_id": "apply-tasks",
+  "depends_on": [],
+  "goal": "Implement the full audio-polish-04 OpenSpec change: apply all task groups, verify, fix findings, sync specs, archive, and commit.",
+  "id": "J003",
+  "job_type": "implement",
+  "priority": 50,
+  "report_path": "jobs/J003/report.md",
+  "revision": 1,
+  "role": "Implementation",
+  "sequence": 3,
+  "session": null,
+  "status": "queued",
+  "title": "audio-polish-04 Implementation",
+  "updated_at": "2026-07-09T20:06:26.949183Z"
+}

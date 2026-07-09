@@ -1,0 +1,13 @@
+{
+  "protocol_ack": {
+    "schema_version": 3,
+    "protocol_version": 3,
+    "protocol_sha256": "be41cdf4f05fc94d330f63b3d9139fe3254e912ab0d983d3b450850018c8486e",
+    "job_id": "J001",
+    "contract_revision": 1,
+    "current_workflow_node_id": "verify",
+    "acknowledged_at": "2026-07-09T20:03:40.832807Z",
+    "session_id": "ses_517415a0ad3640a6"
+  },
+  "session_id": "ses_517415a0ad3640a6"
+}

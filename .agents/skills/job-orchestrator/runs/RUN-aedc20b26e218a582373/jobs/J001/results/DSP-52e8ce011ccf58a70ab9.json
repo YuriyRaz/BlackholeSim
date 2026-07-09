@@ -1,0 +1,35 @@
+{
+  "acceptance_evidence": [
+    "visual-effects-03 archived"
+  ],
+  "artifacts": [
+    {
+      "path": "report.md",
+      "purpose": "worker report",
+      "sha256": "b59233fa217314b931c2ceee4d77c4fe794f8c9aefb150a9966407090400389e"
+    },
+    {
+      "path": "checkpoint.md",
+      "purpose": "current checkpoint",
+      "sha256": "bf802feaba0da7a3a67a591e349e3c3408a777cde27f3276eb425658c7b9b592"
+    },
+    {
+      "path": "progress.json",
+      "purpose": "machine-readable progress",
+      "sha256": "32cd19761f4db4483ccddcbd83cbcf457c2dd84e83a50c70dcd1f635ec662b4c"
+    }
+  ],
+  "blocking_issues": [],
+  "checkpoint_sha256": "bf802feaba0da7a3a67a591e349e3c3408a777cde27f3276eb425658c7b9b592",
+  "completed_work_units": [
+    "archive"
+  ],
+  "created_at": "2026-07-09T20:33:05.800672Z",
+  "dispatch_id": "DSP-52e8ce011ccf58a70ab9",
+  "improvement_observations": [],
+  "nonce": "NONCE-edea07504fdf2192d204",
+  "proposed_jobs": [],
+  "schema_version": 3,
+  "status": "completed",
+  "summary": "Change archived"
+}

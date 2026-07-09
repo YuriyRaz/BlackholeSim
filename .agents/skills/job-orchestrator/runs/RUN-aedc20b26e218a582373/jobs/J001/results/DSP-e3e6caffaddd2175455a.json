@@ -1,0 +1,35 @@
+{
+  "acceptance_evidence": [
+    "Delta specs merged to main"
+  ],
+  "artifacts": [
+    {
+      "path": "report.md",
+      "purpose": "worker report",
+      "sha256": "b59233fa217314b931c2ceee4d77c4fe794f8c9aefb150a9966407090400389e"
+    },
+    {
+      "path": "checkpoint.md",
+      "purpose": "current checkpoint",
+      "sha256": "9bab98d1dd3163c626845a01473e44232daf1b6697ab7f741428bef5cd9731f1"
+    },
+    {
+      "path": "progress.json",
+      "purpose": "machine-readable progress",
+      "sha256": "e29019c55d3a1d7ac91d83321505974fc22b417cb97e1cab6a73f60eb7410cae"
+    }
+  ],
+  "blocking_issues": [],
+  "checkpoint_sha256": "9bab98d1dd3163c626845a01473e44232daf1b6697ab7f741428bef5cd9731f1",
+  "completed_work_units": [
+    "sync"
+  ],
+  "created_at": "2026-07-09T20:27:12.206462Z",
+  "dispatch_id": "DSP-e3e6caffaddd2175455a",
+  "improvement_observations": [],
+  "nonce": "NONCE-97dc72ba0b66ac9f42e4",
+  "proposed_jobs": [],
+  "schema_version": 3,
+  "status": "completed",
+  "summary": "Specs synced"
+}

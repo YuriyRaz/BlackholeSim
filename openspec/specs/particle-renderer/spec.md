@@ -18,19 +18,19 @@ The system SHALL render all particles (gas, jet, debris, tidal stream, test) as 
 - **THEN** the renderer SHALL draw them as standard point sprites (normal alpha blending)
 
 ### Requirement: Particle color from temperature
-Each particle's color SHALL be determined by its temperature. The color mapping SHALL follow a blackbody-inspired gradient: blue-white (>5×10⁶ K), white (1-5×10⁶ K), yellow-white (5×10⁵-10⁶ K), orange (1-5×10⁵ K), deep red (<10⁵ K).
+Each particle's color SHALL be derived from its temperature property: blue-white (>5×10⁶ K), white (1-5×10⁶ K), yellow-white (5×10⁵-10⁶ K), orange (1-5×10⁵ K), deep red (<10⁵ K). The temperature-to-color mapping SHALL be implemented in the fragment shader (not in JS) for performance with 35K particles.
 
-#### Scenario: Hot inner disk particles are blue-white
-- **WHEN** a gas particle has temperature > 5×10⁶ K (inner disk region)
-- **THEN** its color SHALL be blue-white (approximately 0.7, 0.8, 1.0)
+#### Scenario: Hot particles are blue-white
+- **WHEN** a particle has high temperature (>5×10⁶ K)
+- **THEN** its color SHALL be blue-white
 
-#### Scenario: Cool outer disk particles are red
-- **WHEN** a gas particle has temperature < 10⁵ K (outer disk region)
-- **THEN** its color SHALL be deep red (approximately 1.0, 0.3, 0.1)
+#### Scenario: Cool particles are red
+- **WHEN** a particle has low temperature (<10⁵ K)
+- **THEN** its color SHALL be deep red
 
-#### Scenario: Temperature color interpolation
-- **WHEN** a gas particle has temperature between color thresholds
-- **THEN** the color SHALL be linearly interpolated between adjacent color stops
+#### Scenario: Color mapping in shader
+- **WHEN** particles are rendered
+- **THEN** the fragment shader SHALL map the `temperature` attribute to a color using a smooth gradient or stepped color bands
 
 ### Requirement: Soft-circle particle fragment shader
 The particle fragment shader SHALL render each point sprite as a soft circle with alpha falloff at the edges, producing a smooth, anti-aliased particle appearance.
@@ -72,6 +72,28 @@ The system SHALL enforce a maximum particle count per quality level. Particles e
 #### Scenario: Minimum quality particle budget
 - **WHEN** quality is "Minimum"
 - **THEN** the maximum rendered particle count SHALL be 6,000
+
+### Requirement: Additive blending for jet/glow particles
+The renderer SHALL support additive blending mode for particles that should glow (jet particles, bright disk particles). This is controlled by a per-particle or per-group flag.
+
+#### Scenario: Jet particles use additive blend
+- **WHEN** jet particles are rendered
+- **THEN** they SHALL use additive blending for a bright glow effect
+
+#### Scenario: No jet particles without accretion + spin
+- **WHEN** the physics engine has no jet particles (no spin or no accretion)
+- **THEN** no jet rendering SHALL occur
+
+### Requirement: Particle data from physics engine
+The renderer SHALL read particle positions, velocities, temperatures, and sizes from the physics engine's particle arrays each frame. The renderer SHALL NOT manage particle physics or lifecycle.
+
+#### Scenario: Renderer reads from physics
+- **WHEN** each frame begins
+- **THEN** the renderer SHALL read particle state from the physics engine
+
+#### Scenario: Renderer does not manage physics
+- **WHEN** particles move
+- **THEN** their movement SHALL be computed by the physics engine, not the renderer
 
 ### Requirement: Accretion disk particle rendering
 The accretion disk SHALL be rendered as a collection of gas particles using the generic particle renderer. The disk shape SHALL emerge from the particle positions — no geometric ring mesh or dedicated disk shader SHALL be used.

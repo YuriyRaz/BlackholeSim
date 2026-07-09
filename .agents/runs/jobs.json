@@ -1,0 +1,237 @@
+{
+  "jobs": [
+    {
+      "id": "J001",
+      "title": "visual-effects-03 Implementation",
+      "goal": "Verify, fix, sync, archive, and commit the visual-effects-03 OpenSpec change. Implementation code is already committed (efdc047). Start from verification.",
+      "role": "Implementation",
+      "priority": 60,
+      "depends_on": [],
+      "workspace": "C:\\Projects\\BlackholeSim",
+      "allowed_edit_roots": ["C:\\Projects\\BlackholeSim"],
+      "capabilities": [],
+      "artifact_paths": ["report.md", "checkpoint.md", "progress.json", "results"],
+      "workflow": {
+        "nodes": [
+          {
+            "id": "verify",
+            "title": "Verify visual-effects-03 implementation",
+            "position": 1,
+            "run_in": "job_session",
+            "work_units": ["verify-change"],
+            "acceptance_criteria": ["Verification completes with findings list"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "read_only",
+            "recovery_check": "verify_change_exists"
+          },
+          {
+            "id": "fix-findings",
+            "title": "Fix verification findings",
+            "position": 2,
+            "run_in": "job_session",
+            "work_units": ["fix-issues"],
+            "acceptance_criteria": ["All findings fixed", "Code compiles"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "workspace_write",
+            "recovery_check": "fixes_applied"
+          },
+          {
+            "id": "sync-specs",
+            "title": "Sync delta specs to main specs",
+            "position": 3,
+            "run_in": "job_session",
+            "work_units": ["sync"],
+            "acceptance_criteria": ["Delta specs merged into main specs"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "workspace_write",
+            "recovery_check": "specs_synced"
+          },
+          {
+            "id": "archive",
+            "title": "Archive visual-effects-03 change",
+            "position": 4,
+            "run_in": "job_session",
+            "work_units": ["archive"],
+            "acceptance_criteria": ["Change archived successfully"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "workspace_write",
+            "recovery_check": "change_archived"
+          },
+          {
+            "id": "commit-push",
+            "title": "Commit and push to main",
+            "position": 5,
+            "run_in": "job_session",
+            "work_units": ["commit"],
+            "acceptance_criteria": ["Changes committed and pushed"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "repository",
+            "recovery_check": "commit_pushed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "J002",
+      "title": "visual-effects-03 Architect Review",
+      "goal": "Review the implemented visual-effects-03 change for architecture correctness, documentation consistency, and potential improvements.",
+      "role": "Architect",
+      "priority": 40,
+      "depends_on": ["J001"],
+      "workspace": "C:\\Projects\\BlackholeSim",
+      "allowed_edit_roots": ["C:\\Projects\\BlackholeSim"],
+      "capabilities": [],
+      "artifact_paths": ["report.md", "checkpoint.md", "progress.json"],
+      "workflow": {
+        "nodes": [
+          {
+            "id": "explore",
+            "title": "Explore visual-effects-03 implementation",
+            "position": 1,
+            "run_in": "job_session",
+            "work_units": ["investigate"],
+            "acceptance_criteria": ["Architecture review complete"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "read_only",
+            "recovery_check": "explore_complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "J003",
+      "title": "audio-polish-04 Implementation",
+      "goal": "Implement the full audio-polish-04 OpenSpec change: apply all task groups, verify, fix findings, sync specs, archive, and commit.",
+      "role": "Implementation",
+      "priority": 50,
+      "depends_on": [],
+      "workspace": "C:\\Projects\\BlackholeSim",
+      "allowed_edit_roots": ["C:\\Projects\\BlackholeSim"],
+      "capabilities": [],
+      "artifact_paths": ["report.md", "checkpoint.md", "progress.json", "results"],
+      "workflow": {
+        "nodes": [
+          {
+            "id": "apply-tasks",
+            "title": "Apply all audio-polish-04 task groups",
+            "position": 1,
+            "run_in": "job_session",
+            "work_units": ["apply-all"],
+            "acceptance_criteria": ["All task groups implemented", "Code compiles"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "workspace_write",
+            "recovery_check": "tasks_applied"
+          },
+          {
+            "id": "verify",
+            "title": "Verify audio-polish-04 implementation",
+            "position": 2,
+            "run_in": "job_session",
+            "work_units": ["verify-change"],
+            "acceptance_criteria": ["Verification completes with findings list"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "read_only",
+            "recovery_check": "verify_complete"
+          },
+          {
+            "id": "fix-findings",
+            "title": "Fix verification findings",
+            "position": 3,
+            "run_in": "job_session",
+            "work_units": ["fix-issues"],
+            "acceptance_criteria": ["All findings fixed", "Code compiles"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "workspace_write",
+            "recovery_check": "fixes_applied"
+          },
+          {
+            "id": "sync-specs",
+            "title": "Sync delta specs to main specs",
+            "position": 4,
+            "run_in": "job_session",
+            "work_units": ["sync"],
+            "acceptance_criteria": ["Delta specs merged into main specs"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "workspace_write",
+            "recovery_check": "specs_synced"
+          },
+          {
+            "id": "archive",
+            "title": "Archive audio-polish-04 change",
+            "position": 5,
+            "run_in": "job_session",
+            "work_units": ["archive"],
+            "acceptance_criteria": ["Change archived successfully"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "workspace_write",
+            "recovery_check": "change_archived"
+          },
+          {
+            "id": "commit-push",
+            "title": "Commit and push to main",
+            "position": 6,
+            "run_in": "job_session",
+            "work_units": ["commit"],
+            "acceptance_criteria": ["Changes committed and pushed"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "repository",
+            "recovery_check": "commit_pushed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "J004",
+      "title": "audio-polish-04 Architect Review",
+      "goal": "Review the implemented audio-polish-04 change for architecture correctness, documentation consistency, and potential improvements.",
+      "role": "Architect",
+      "priority": 40,
+      "depends_on": ["J003"],
+      "workspace": "C:\\Projects\\BlackholeSim",
+      "allowed_edit_roots": ["C:\\Projects\\BlackholeSim"],
+      "capabilities": [],
+      "artifact_paths": ["report.md", "checkpoint.md", "progress.json"],
+      "workflow": {
+        "nodes": [
+          {
+            "id": "explore",
+            "title": "Explore audio-polish-04 implementation",
+            "position": 1,
+            "run_in": "job_session",
+            "work_units": ["investigate"],
+            "acceptance_criteria": ["Architecture review complete"],
+            "required_checks": ["Validate produced artifacts"],
+            "prohibited_actions": ["Do not begin later workflow nodes"],
+            "checkpoint_policy": ["after_discovery", "after_each_batch"],
+            "side_effect_class": "read_only",
+            "recovery_check": "explore_complete"
+          }
+        ]
+      }
+    }
+  ]
+}

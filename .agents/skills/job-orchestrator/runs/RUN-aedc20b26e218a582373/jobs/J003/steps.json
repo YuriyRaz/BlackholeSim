@@ -1,0 +1,46 @@
+{
+  "steps": [
+    {
+      "attempts": [],
+      "id": "apply-tasks",
+      "result_path": null,
+      "status": "ready",
+      "workflow_node_id": "apply-tasks"
+    },
+    {
+      "attempts": [],
+      "id": "verify",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "verify"
+    },
+    {
+      "attempts": [],
+      "id": "fix-findings",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "fix-findings"
+    },
+    {
+      "attempts": [],
+      "id": "sync-specs",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "sync-specs"
+    },
+    {
+      "attempts": [],
+      "id": "archive",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "archive"
+    },
+    {
+      "attempts": [],
+      "id": "commit-push",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "commit-push"
+    }
+  ]
+}
