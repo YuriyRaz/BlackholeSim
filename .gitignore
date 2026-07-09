@@ -32,4 +32,9 @@ Thumbs.db
 # Local tool state
 .vite/
 *.tsbuildinfo
-
+.agents/skills/*/runs/test-*/
+.agents/skills/*/runs/request-temp.md
+.agents/skills/*/runs/*/.orchestrator.lock*
+.agents/skills/*/runs/*/*.py
+__pycache__/
+*.py[cod]
