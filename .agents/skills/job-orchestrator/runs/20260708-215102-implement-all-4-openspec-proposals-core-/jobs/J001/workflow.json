@@ -1,26 +1,40 @@
 {
   "nodes": [
     {
+      "attempt": 1,
+      "child_job_ids": [],
+      "child_request_ids": [],
+      "command": "openspec explore",
+      "completed_work_units": [
+        "openspec explore"
+      ],
+      "dispatch_ids": [],
       "id": "explore",
       "position": 1,
-      "status": "completed_with_concerns",
-      "run_in": "job_session",
-      "command": "openspec explore",
-      "child_request_ids": [],
-      "child_job_ids": [],
       "required_report_paths": [],
-      "attempt": 1
+      "run_in": "job_session",
+      "status": "completed",
+      "work_units": [
+        "openspec explore"
+      ]
     },
     {
+      "attempt": 0,
+      "child_job_ids": [],
+      "child_request_ids": [],
+      "command": "openspec proposal",
+      "completed_work_units": [
+        "openspec proposal"
+      ],
+      "dispatch_ids": [],
       "id": "create-proposal",
       "position": 2,
-      "status": "pending",
-      "run_in": "job_session",
-      "command": "openspec proposal",
-      "child_request_ids": [],
-      "child_job_ids": [],
       "required_report_paths": [],
-      "attempt": 0
+      "run_in": "job_session",
+      "status": "completed",
+      "work_units": [
+        "openspec proposal"
+      ]
     }
   ],
   "session_policy": "persistent"

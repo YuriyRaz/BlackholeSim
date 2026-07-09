@@ -1,20 +1,31 @@
 {
-  "contract_version": 2,
-  "revision": 1,
-  "job_id": "J013",
-  "role": "Architect",
-  "goal": "Investigate missing particle-renderer and body-renderer specs, resolve blocking question Q001, and provide architecture guidance",
-  "protocol": {
-    "path": "../../protocol/job-protocol.md",
-    "version": 2,
-    "sha256": "2df135370cad9df0c9dd68c6784e85e31dba061c0d38878c6244d54051e34429"
-  },
-  "report_path": "report.md",
+  "allowed_edit_roots": [],
+  "artifact_paths": [
+    "report.md",
+    "checkpoint.md",
+    "progress.json",
+    "results"
+  ],
+  "capabilities": [],
   "checkpoint_path": "checkpoint.md",
+  "contract_version": 3,
+  "goal": "Investigate missing particle-renderer and body-renderer specs, resolve blocking question Q001, and provide architecture guidance",
+  "job_id": "J013",
+  "may_contact_user": false,
   "may_propose_jobs": true,
   "may_spawn_untracked_agents": false,
-  "may_contact_user": false,
   "may_update_skill": false,
+  "protocol": {
+    "path": "../../protocol/job-protocol.md",
+    "sha256": "525bf5390a8baa9783cdfb6b486a642bf9c7658d195a450816ae9b27b59e13e4",
+    "version": 3
+  },
+  "related_reports": [
+    "jobs/J001/report.md"
+  ],
+  "report_path": "report.md",
+  "revision": 2,
+  "role": "Architect",
   "skill_source_path": null,
-  "related_reports": ["jobs/J001/report.md"]
+  "workspace": "C:\\Projects\\BlackholeSim"
 }

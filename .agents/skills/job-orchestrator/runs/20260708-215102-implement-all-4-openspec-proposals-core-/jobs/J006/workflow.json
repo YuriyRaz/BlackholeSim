@@ -1,22 +1,46 @@
 {
   "nodes": [
     {
-      "status": "completed",
-      "run_in": "job_session",
+      "command": "openspec explore to investigate issues",
+      "completed_work_units": [
+        "openspec explore to investigate issues"
+      ],
+      "dispatch_ids": [],
       "id": "investigate",
-      "command": "openspec explore to investigate issues"
-    },
-    {
+      "position": 1,
+      "run_in": "job_session",
       "status": "completed",
-      "run_in": "job_session",
-      "id": "review",
-      "command": "Architecture review of implemented work"
+      "work_units": [
+        "openspec explore to investigate issues"
+      ]
     },
     {
-      "status": "queued",
+      "command": "Architecture review of implemented work",
+      "completed_work_units": [
+        "Architecture review of implemented work"
+      ],
+      "dispatch_ids": [],
+      "id": "review",
+      "position": 2,
       "run_in": "job_session",
+      "status": "completed",
+      "work_units": [
+        "Architecture review of implemented work"
+      ]
+    },
+    {
+      "command": "Make corrections using sub jobs",
+      "completed_work_units": [
+        "Make corrections using sub jobs"
+      ],
+      "dispatch_ids": [],
       "id": "correct",
-      "command": "Make corrections using sub jobs"
+      "position": 3,
+      "run_in": "job_session",
+      "status": "completed",
+      "work_units": [
+        "Make corrections using sub jobs"
+      ]
     }
   ],
   "session_policy": "persistent"

@@ -1,7 +1,10 @@
 {
-  "protocol_version": 2,
+  "authorized_by": "user",
   "file": "job-protocol.md",
-  "sha256": "2df135370cad9df0c9dd68c6784e85e31dba061c0d38878c6244d54051e34429",
-  "source": "references/job-protocol.md",
-  "snapshotted_at": "2026-07-08T21:51:02.086022Z"
+  "migrated_at": "2026-07-09T15:04:19.082616Z",
+  "protocol_version": 3,
+  "reason": "Skill updated to v3, resuming stacked run",
+  "sha256": "525bf5390a8baa9783cdfb6b486a642bf9c7658d195a450816ae9b27b59e13e4",
+  "snapshotted_at": "2026-07-08T21:51:02.086022Z",
+  "source": "references/job-protocol.md"
 }

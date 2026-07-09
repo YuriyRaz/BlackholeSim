@@ -1,16 +1,18 @@
 {
   "steps": [
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "explore",
-      "status": "pending"
+      "attempts": [],
+      "id": "explore",
+      "result_path": null,
+      "status": "ready",
+      "workflow_node_id": "explore"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "create-proposal",
-      "status": "pending"
+      "attempts": [],
+      "id": "create-proposal",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "create-proposal"
     }
   ]
 }

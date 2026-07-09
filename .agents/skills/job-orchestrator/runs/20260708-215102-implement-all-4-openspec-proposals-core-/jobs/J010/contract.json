@@ -1,20 +1,29 @@
 {
-  "role": "Proposal",
-  "may_contact_user": false,
-  "revision": 1,
-  "skill_source_path": null,
+  "allowed_edit_roots": [],
+  "artifact_paths": [
+    "report.md",
+    "checkpoint.md",
+    "progress.json",
+    "results"
+  ],
+  "capabilities": [],
   "checkpoint_path": "checkpoint.md",
+  "contract_version": 3,
   "goal": "Explore and propose audio-polish-04 changes",
-  "contract_version": 2,
-  "may_update_skill": false,
+  "job_id": "J010",
+  "may_contact_user": false,
   "may_propose_jobs": true,
   "may_spawn_untracked_agents": false,
-  "report_path": "report.md",
+  "may_update_skill": false,
   "protocol": {
-    "version": 2,
-    "sha256": "2df135370cad9df0c9dd68c6784e85e31dba061c0d38878c6244d54051e34429",
-    "path": "../../protocol/job-protocol.md"
+    "path": "../../protocol/job-protocol.md",
+    "sha256": "525bf5390a8baa9783cdfb6b486a642bf9c7658d195a450816ae9b27b59e13e4",
+    "version": 3
   },
-  "job_id": "J010",
-  "related_reports": []
+  "related_reports": [],
+  "report_path": "report.md",
+  "revision": 2,
+  "role": "Proposal",
+  "skill_source_path": null,
+  "workspace": "C:\\Projects\\BlackholeSim"
 }

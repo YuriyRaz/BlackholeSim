@@ -1,0 +1,20 @@
+{
+  "result": {
+    "schema_version": 3,
+    "dispatch_id": "DSP-27d4b135a0c9c8bb47d0",
+    "nonce": "NONCE-3ac486ac4fcdb56d6bd3",
+    "status": "completed",
+    "summary": "Applied all visual-effects-03 tasks",
+    "completed_work_units": ["openspec-apply-change"],
+    "artifacts": [
+      {"path": "report.md", "purpose": "worker report"},
+      {"path": "checkpoint.md", "purpose": "current checkpoint"},
+      {"path": "progress.json", "purpose": "machine-readable progress"}
+    ],
+    "acceptance_evidence": ["All 49 tasks marked complete in tasks.md"],
+    "blocking_issues": [],
+    "proposed_jobs": [],
+    "improvement_observations": [],
+    "checkpoint_sha256": "b666f9e0e4d3d65f27e4a1e8bb06b9a0e51d53b33ec386b6f034f5a15a370e72"
+  }
+}

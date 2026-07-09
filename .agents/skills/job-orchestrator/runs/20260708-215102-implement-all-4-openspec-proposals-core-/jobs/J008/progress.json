@@ -1,0 +1,19 @@
+{
+  "schema_version": 3,
+  "dispatch_id": "DSP-a2229e21cdd376ab636b",
+  "nonce": "NONCE-4d9e278059943b73049d",
+  "phase": "verification_complete",
+  "completed_work_units": ["openspec-verify-change"],
+  "checkpoint_sha256": "0f19fad993dd4b120ec1b4140ffac4d37fb112e14649460df024e402d31ea944",
+  "updated_at": "2026-07-09T17:00:00Z",
+  "checkpoint": {
+    "schema_version": 3,
+    "dispatch_id": "DSP-a2229e21cdd376ab636b",
+    "phase": "verification_complete",
+    "completed_work_units": ["openspec-verify-change"],
+    "decisions": ["Verified all 49 tasks against 6 delta specs", "3 non-blocking warnings noted in report"],
+    "unresolved_issues": ["GW ripple fade propagation logic missing", "Particle trail color is uniform not per-particle", "Temperature-to-color in JS not shader"],
+    "artifact_paths": ["report.md", "checkpoint.md", "progress.json"],
+    "next_permitted_action": "finalize"
+  }
+}

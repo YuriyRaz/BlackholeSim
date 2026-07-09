@@ -1,16 +1,23 @@
 {
-  "session_policy": "persistent",
   "nodes": [
     {
+      "attempt": 0,
+      "child_job_ids": [],
+      "child_request_ids": [],
+      "command": "Investigate missing specs and resolve Q001",
+      "completed_work_units": [
+        "Investigate missing specs and resolve Q001"
+      ],
+      "dispatch_ids": [],
       "id": "investigate",
       "position": 1,
-      "status": "pending",
-      "run_in": "job_session",
-      "command": "Investigate missing specs and resolve Q001",
-      "child_request_ids": [],
-      "child_job_ids": [],
       "required_report_paths": [],
-      "attempt": 0
+      "run_in": "job_session",
+      "status": "completed",
+      "work_units": [
+        "Investigate missing specs and resolve Q001"
+      ]
     }
-  ]
+  ],
+  "session_policy": "persistent"
 }

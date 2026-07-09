@@ -1,16 +1,32 @@
 {
   "nodes": [
     {
-      "status": "completed",
-      "run_in": "job_session",
+      "command": "openspec explore",
+      "completed_work_units": [
+        "openspec explore"
+      ],
+      "dispatch_ids": [],
       "id": "explore",
-      "command": "openspec explore"
+      "position": 1,
+      "run_in": "job_session",
+      "status": "completed",
+      "work_units": [
+        "openspec explore"
+      ]
     },
     {
-      "status": "queued",
-      "run_in": "job_session",
+      "command": "openspec proposal",
+      "completed_work_units": [
+        "openspec proposal"
+      ],
+      "dispatch_ids": [],
       "id": "create-proposal",
-      "command": "openspec proposal"
+      "position": 2,
+      "run_in": "job_session",
+      "status": "completed",
+      "work_units": [
+        "openspec proposal"
+      ]
     }
   ],
   "session_policy": "persistent"

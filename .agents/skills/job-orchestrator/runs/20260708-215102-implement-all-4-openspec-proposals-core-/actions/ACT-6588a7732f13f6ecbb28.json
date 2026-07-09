@@ -1,0 +1,13 @@
+{
+  "action_id": "ACT-6588a7732f13f6ecbb28",
+  "correlation_id": "J008:apply",
+  "created_at": "2026-07-09T15:05:57.475895Z",
+  "dispatch_id": "DSP-27d4b135a0c9c8bb47d0",
+  "job_id": "J008",
+  "prompt": "Execute exactly one immutable dispatch using the command below.\nDo not begin any later workflow node.\nFirst run: python C:\\Projects\\BlackholeSim\\.agents\\skills\\job-orchestrator\\scripts\\workerctl.py inspect --dispatch \"C:\\Projects\\ai-skills\\skills\\job-orchestrator\\runs\\20260708-215102-implement-all-4-openspec-proposals-core-\\jobs\\J008\\dispatches\\DSP-27d4b135a0c9c8bb47d0.json\" --nonce \"NONCE-3ac486ac4fcdb56d6bd3\" --session-id \"opencode-session-J008\" --current-node \"apply\"\nCheckpoint at every policy milestone with workerctl checkpoint, passing the same inspected dispatch, a phase, and one next action.\nWhen finished, run workerctl finalize with the same inspected dispatch and --session-id \"opencode-session-J008\", then return that validated result only.\n",
+  "response_hash": "19deec091baceb8f93ca0359888d037f7cc5c594cb63a458e879e9b23eb024c8",
+  "run_id": "20260708-215102-implement-all-4-openspec-proposals-core-",
+  "schema_version": 3,
+  "status": "resolved",
+  "type": "send_dispatch"
+}

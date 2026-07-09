@@ -1,22 +1,25 @@
 {
   "steps": [
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "investigate",
-      "status": "pending"
+      "attempts": [],
+      "id": "investigate",
+      "result_path": null,
+      "status": "completed",
+      "workflow_node_id": "investigate"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "review",
-      "status": "pending"
+      "attempts": [],
+      "id": "review",
+      "result_path": null,
+      "status": "completed",
+      "workflow_node_id": "review"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "correct",
-      "status": "pending"
+      "attempts": [],
+      "id": "correct",
+      "result_path": null,
+      "status": "completed",
+      "workflow_node_id": "correct"
     }
   ]
 }

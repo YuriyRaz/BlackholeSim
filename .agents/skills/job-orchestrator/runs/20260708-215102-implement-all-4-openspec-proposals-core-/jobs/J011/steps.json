@@ -1,40 +1,46 @@
 {
   "steps": [
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "apply",
-      "status": "pending"
+      "attempts": [],
+      "id": "apply",
+      "result_path": null,
+      "status": "ready",
+      "workflow_node_id": "apply"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "verify",
-      "status": "pending"
+      "attempts": [],
+      "id": "verify",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "verify"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "fix",
-      "status": "pending"
+      "attempts": [],
+      "id": "fix",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "fix"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "sync",
-      "status": "pending"
+      "attempts": [],
+      "id": "sync",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "sync"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "archive",
-      "status": "pending"
+      "attempts": [],
+      "id": "archive",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "archive"
     },
     {
-      "started_at": null,
-      "completed_at": null,
-      "node_id": "publish",
-      "status": "pending"
+      "attempts": [],
+      "id": "publish",
+      "result_path": null,
+      "status": "pending",
+      "workflow_node_id": "publish"
     }
   ]
 }

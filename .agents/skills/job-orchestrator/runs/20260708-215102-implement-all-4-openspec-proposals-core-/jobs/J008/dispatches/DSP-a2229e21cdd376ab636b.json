@@ -1,0 +1,41 @@
+{
+  "acceptance_criteria": [
+    "Complete assigned work units"
+  ],
+  "action_id": "ACT-297b1d8cbc0f77a35760",
+  "allowed_edit_roots": [],
+  "capabilities": [],
+  "checkpoint_policy": [
+    "after_discovery",
+    "after_each_batch",
+    "before_blocker"
+  ],
+  "checkpoint_sha256": null,
+  "contract_revision": 2,
+  "created_at": "2026-07-09T16:30:49.47963Z",
+  "dispatch_id": "DSP-a2229e21cdd376ab636b",
+  "estimated_minutes": 60,
+  "job_id": "J008",
+  "last_progress_at": null,
+  "nonce": "NONCE-4d9e278059943b73049d",
+  "prohibited_actions": [
+    "Do not begin later workflow nodes"
+  ],
+  "protocol_sha256": "525bf5390a8baa9783cdfb6b486a642bf9c7658d195a450816ae9b27b59e13e4",
+  "recovery_check": "Inspect workspace changes and checkpoint before retry",
+  "required_checks": [
+    "Validate produced artifacts"
+  ],
+  "schema_version": 3,
+  "session_id": "opencode-session-J008",
+  "side_effect_class": "workspace_write",
+  "started_at": null,
+  "status": "resolved",
+  "transport": {},
+  "unbounded_override": null,
+  "work_units": [
+    "openspec-verify-change"
+  ],
+  "workflow_node_id": "verify",
+  "workspace": "C:\\Projects\\BlackholeSim"
+}
