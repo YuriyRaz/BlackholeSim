@@ -23,6 +23,24 @@ SKILL_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = SKILL_ROOT / "assets" / "prompts"
 PROTOCOL = SKILL_ROOT / "references" / "job-protocol.md"
 TERMINAL_RUNS = {"completed", "failed", "cancelled"}
+RECOVERY_CLASSIFICATION_TO_FINDING = {
+    "recorded_unsent": "interrupted_dispatch_recorded_not_sent",
+    "completed_unrecorded": "completed_result_not_applied",
+    "externally_effective_unacknowledged": "external_effect_unknown",
+    "running_resumable": "interrupted_dispatch_sent_no_result",
+    "safe_retry": "interrupted_dispatch_sent_no_result",
+    "sent_unstarted": "interrupted_dispatch_sent_no_result",
+    "unsafe_retry": "external_effect_unknown",
+    "unanswered_status": "interrupted_dispatch_sent_no_result",
+    "no_interrupted_dispatch": "clean",
+}
+AUTOMATIC_RECOVERY_FINDINGS = {
+    "clean",
+    "derived_snapshot_drift",
+    "stale_index_or_queue",
+    "interrupted_dispatch_recorded_not_sent",
+    "completed_result_not_applied",
+}
 
 
 def emit(value: Any) -> None:
@@ -554,6 +572,10 @@ def next_action(args: argparse.Namespace) -> dict[str, Any]:
                 return {**existing, "expired": True,
                         "recovery_required": "unanswered_status"}
         return existing
+    if _active_idle_contradictions(run_root, state):
+        raise OrchestratorError(
+            "state integrity audit blocks normal dispatch: active-idle contradiction"
+        )
     blocked = next((item for item in state["jobs"].values()
                     if item["status"] == "blocked"), None)
     if blocked:
@@ -891,6 +913,190 @@ def classify(dispatch: dict[str, Any], evidence: dict[str, Any]) -> str:
     return "unsafe_retry"
 
 
+def _finding_for_classification(classification: str) -> str:
+    return RECOVERY_CLASSIFICATION_TO_FINDING.get(
+        classification, "journal_corrupt_or_insufficient"
+    )
+
+
+def _safe_next_action_for_finding(
+    finding: str, classification: str | None = None,
+) -> str:
+    if finding == "clean":
+        return "continue normal jobctl next loop"
+    if finding in {"derived_snapshot_drift", "stale_index_or_queue"}:
+        return "run jobctl audit --rebuild, then audit again"
+    if finding == "interrupted_dispatch_recorded_not_sent":
+        return "replace or rebootstrap the session before reusing the recorded dispatch"
+    if finding == "interrupted_dispatch_sent_no_result":
+        if classification == "running_resumable":
+            return "request status from the existing session"
+        return "classify transport and worker evidence before retry or replacement"
+    if finding == "completed_result_not_applied":
+        return "validate and reconcile the worker result through jobctl recover"
+    if finding == "external_effect_unknown":
+        return "run the configured recovery check before retry, acceptance, or replacement"
+    return "create a recovery investigation job or ask the user for authority"
+
+
+def _finding(
+    classification: str, issue: str, *, safe: bool | None = None,
+    classification_detail: str | None = None,
+) -> dict[str, Any]:
+    automatic = classification in AUTOMATIC_RECOVERY_FINDINGS if safe is None else safe
+    return {
+        "classification": classification,
+        "issue": issue,
+        "safe_for_automatic_recovery": automatic,
+        "proposed_safe_next_action": _safe_next_action_for_finding(
+            classification, classification_detail
+        ),
+    }
+
+
+def _result_response_from_evidence(
+    evidence: dict[str, Any], run_root: Path,
+) -> dict[str, Any] | None:
+    response = evidence.get("response")
+    if isinstance(response, dict) and isinstance(response.get("result"), dict):
+        return response
+    result_path = evidence.get("result_path")
+    if isinstance(result_path, str) and result_path.strip():
+        path = Path(result_path)
+        path = path if path.is_absolute() else run_root / path
+        return {"result": load_json(path), "result_path": str(path)}
+    result = evidence.get("result")
+    if isinstance(result, dict) and result.get("schema_version"):
+        return {"result": result}
+    return None
+
+
+def _validate_unapplied_result(
+    run_root: Path, state: dict[str, Any], dispatch: dict[str, Any],
+    response: dict[str, Any],
+) -> bool:
+    action = state["actions"].get(dispatch["action_id"])
+    if not action or action.get("status") != "unresolved":
+        return False
+    try:
+        _validate_worker_result(run_root, state, action, response)
+    except OrchestratorError:
+        return False
+    return True
+
+
+def _validated_unapplied_results(
+    run_root: Path, state: dict[str, Any],
+) -> list[dict[str, Any]]:
+    evidence = []
+    for path in sorted((run_root / "jobs").glob("*/results/*.json")):
+        try:
+            result = load_json(path)
+        except OrchestratorError:
+            continue
+        dispatch = state["dispatches"].get(result.get("dispatch_id"))
+        if not dispatch or dispatch.get("result"):
+            continue
+        response = {"result": result, "result_path": str(path)}
+        if _validate_unapplied_result(run_root, state, dispatch, response):
+            evidence.append({
+                "dispatch_id": dispatch["dispatch_id"],
+                "action_id": dispatch["action_id"],
+                "result_path": str(path.relative_to(run_root)),
+            })
+    return evidence
+
+
+def _progress_without_result_evidence(
+    run_root: Path, state: dict[str, Any],
+) -> list[dict[str, Any]]:
+    evidence = []
+    for path in sorted((run_root / "jobs").glob("*/progress.json")):
+        try:
+            progress = load_json(path)
+        except OrchestratorError:
+            continue
+        dispatch = state["dispatches"].get(progress.get("dispatch_id"))
+        if not dispatch or dispatch.get("result"):
+            continue
+        result_path = (
+            run_root / "jobs" / dispatch["job_id"] / "results"
+            / f"{dispatch['dispatch_id']}.json"
+        )
+        if not result_path.is_file():
+            evidence.append({
+                "dispatch_id": dispatch["dispatch_id"],
+                "progress_path": str(path.relative_to(run_root)),
+            })
+    return evidence
+
+
+def _active_idle_contradictions(
+    run_root: Path, state: dict[str, Any],
+) -> list[dict[str, Any]]:
+    try:
+        run_snapshot = load_json(run_root / "run.json")
+    except OrchestratorError:
+        return []
+    try:
+        queue_snapshot = load_json(run_root / "queue.json")
+    except OrchestratorError:
+        queue_snapshot = {"entries": []}
+    unresolved = [
+        action["action_id"] for action in state["actions"].values()
+        if action.get("status") == "unresolved"
+    ]
+    worker_evidence = _validated_unapplied_results(
+        run_root, state
+    ) + _progress_without_result_evidence(run_root, state)
+    if (
+        run_snapshot.get("status") == "active"
+        and run_snapshot.get("active_job_id") is None
+        and run_snapshot.get("active_dispatch_id") is None
+        and state["run"].get("active_job_id") is None
+        and state["run"].get("active_dispatch_id") is None
+        and not queue_snapshot.get("entries")
+        and (unresolved or worker_evidence)
+    ):
+        return [{
+            "unresolved_actions": unresolved,
+            "worker_evidence": worker_evidence,
+        }]
+    return []
+
+
+def _apply_recovered_result(
+    run_root: Path, controller: str, state: dict[str, Any],
+    dispatch: dict[str, Any], response: dict[str, Any],
+) -> dict[str, Any]:
+    action = state["actions"].get(dispatch["action_id"])
+    if not action or action.get("status") != "unresolved":
+        raise OrchestratorError("completed recovery requires an unresolved action")
+    validated_dispatch, result = _validate_worker_result(
+        run_root, state, action, response
+    )
+    if validated_dispatch["dispatch_id"] != dispatch["dispatch_id"]:
+        raise OrchestratorError("recovered result dispatch mismatch")
+    response_hash = content_hash(response)
+    if not state.get("record_responses", {}).get(action["action_id"]):
+        mutate(run_root, controller, make_event(
+            run_root, "action_response_received",
+            f"recover:{action['action_id']}",
+            {"action_id": action["action_id"], "response_hash": response_hash},
+        ))
+        state = replay(run_root)
+    mutate(run_root, controller, make_event(
+        run_root, "worker_result", action["action_id"],
+        {"dispatch_id": dispatch["dispatch_id"], "result": result, "child_job_ids": []},
+    ))
+    mutate(run_root, controller, make_event(
+        run_root, "action_resolved", action["action_id"],
+        {"action_id": action["action_id"], "response_hash": response_hash},
+    ))
+    write_snapshots(run_root, replay(run_root))
+    return {"action_id": action["action_id"], "dispatch_id": dispatch["dispatch_id"]}
+
+
 def _create_recovery_action(
     run_root: Path, controller: str, state: dict[str, Any],
     dispatch: dict[str, Any],
@@ -956,10 +1162,12 @@ def recover(args: argparse.Namespace) -> dict[str, Any]:
     # An expired status request is itself evidence only when no newer recovery
     # observations were supplied. Once evidence arrives, classify it and
     # resolve the stale request before applying the recovery transition.
+    supplied_result_response = _result_response_from_evidence(evidence, run_root)
     classification = (
         "unanswered_status" if unanswered and not evidence
-        else classify(active, evidence)
+        else "completed_unrecorded" if supplied_result_response else classify(active, evidence)
     )
+    finding = _finding_for_classification(classification)
     sent = bool(active.get("transport", {}).get("sent"))
     if sent and classification not in {
         "completed_unrecorded", "unanswered_status"
@@ -987,15 +1195,40 @@ def recover(args: argparse.Namespace) -> dict[str, Any]:
             raise OrchestratorError(
                 "sent side-effecting recovery check must pass before continuation"
             )
-    result = {"dispatch_id": active["dispatch_id"],
-              "classification": classification, "apply": not args.dry_run}
+    result = {
+        "dispatch_id": active["dispatch_id"],
+        "classification": classification,
+        "finding": finding,
+        "apply": not args.dry_run,
+        "safe_next_action": _safe_next_action_for_finding(finding, classification),
+        "automatic_recovery_safe": finding in AUTOMATIC_RECOVERY_FINDINGS,
+    }
+    if classification == "completed_unrecorded":
+        response = supplied_result_response
+        if response and _validate_unapplied_result(
+            run_root, state, active, response
+        ):
+            result["safe_next_action"] = "apply validated worker result"
+        elif response:
+            result["automatic_recovery_safe"] = False
+            result["safe_next_action"] = (
+                "create recovery investigation job; supplied result did not validate"
+            )
     if args.dry_run:
         return result
     if result["classification"] == "completed_unrecorded":
-        recovery = _create_recovery_action(
-            run_root, args.controller, state, active
-        )
-        result["required_action"] = recovery
+        response = supplied_result_response
+        if response:
+            applied = _apply_recovered_result(
+                run_root, args.controller, state, active, response
+            )
+            result["reconciled"] = applied
+            result["required_action"] = "continue normal jobctl next loop"
+        else:
+            recovery = _create_recovery_action(
+                run_root, args.controller, state, active
+            )
+            result["required_action"] = recovery
     elif result["classification"] in {"unsafe_retry", "externally_effective_unacknowledged"}:
         result["required_action"] = "reconcile external effects; retry is prohibited"
     elif result["classification"] == "unanswered_status":
@@ -1088,6 +1321,7 @@ def _reconstruct_run_seed(run_root: Path) -> dict[str, Any]:
 def audit(args: argparse.Namespace) -> dict[str, Any]:
     run_root = args.run.resolve()
     issues: list[str] = []
+    findings: list[dict[str, Any]] = []
     run_path = run_root / "run.json"
     required_run = {
         "schema_version", "run_id", "status", "goal", "created_at", "updated_at",
@@ -1101,13 +1335,34 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
     if run_corrupt:
         issues.append("run.json snapshot missing or structurally corrupt")
         if not args.rebuild:
-            return {"ok": False, "issues": issues,
-                    "events": len(read_jsonl(run_root / "events.jsonl"))}
+            findings.append(_finding(
+                "journal_corrupt_or_insufficient",
+                "run.json snapshot missing or structurally corrupt",
+                safe=False,
+            ))
+            return {
+                "ok": False,
+                "issues": issues,
+                "findings": findings,
+                "replay_health": {
+                    "replayable": False,
+                    "events": len(read_jsonl(run_root / "events.jsonl")),
+                },
+                "events": len(read_jsonl(run_root / "events.jsonl")),
+            }
         write_json(run_path, _reconstruct_run_seed(run_root))
     try:
         state = replay(run_root)
     except (OrchestratorError, KeyError, TypeError, ValueError) as exc:
-        return {"ok": False, "issues": [str(exc)]}
+        findings.append(_finding(
+            "journal_corrupt_or_insufficient", str(exc), safe=False,
+        ))
+        return {
+            "ok": False,
+            "issues": [str(exc)],
+            "findings": findings,
+            "replay_health": {"replayable": False, "error": str(exc)},
+        }
     migration = next(
         (event["data"] for event in reversed(read_jsonl(run_root / "events.jsonl"))
          if event["type"] == "protocol_migrated"),
@@ -1130,8 +1385,23 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
         if static_mismatch:
             _install_migration_static(run_root, migration)
     manifest = load_json(run_root / "protocol" / "manifest.json")
-    if content_hash((run_root / "protocol" / manifest["file"]).read_bytes()) != manifest["sha256"]:
+    protocol_path = run_root / "protocol" / manifest["file"]
+    actual_protocol_hash = (
+        content_hash(protocol_path.read_bytes()) if protocol_path.is_file() else None
+    )
+    protocol_hash_status = {
+        "expected": manifest["sha256"],
+        "actual": actual_protocol_hash,
+        "matches": actual_protocol_hash == manifest["sha256"],
+        "safe_for_automatic_recovery": actual_protocol_hash == manifest["sha256"],
+    }
+    if not protocol_hash_status["matches"]:
         issues.append("frozen protocol hash mismatch")
+        findings.append(_finding(
+            "journal_corrupt_or_insufficient",
+            "frozen protocol hash mismatch",
+            safe=False,
+        ))
     expected = _expected_snapshots(run_root, state)
     snapshot_issues: list[str] = []
     for path, projected in expected.items():
@@ -1147,6 +1417,74 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
             if content_hash(projected) != content_hash(actual):
                 snapshot_issues.append(f"{relative} snapshot disagrees with journal")
     issues.extend(snapshot_issues)
+    derived_snapshot_drift: list[str] = []
+    stale_index_or_queue: list[str] = []
+    for issue in snapshot_issues:
+        if issue.startswith("queue.json ") or issue.startswith("jobs\\index.json ") or issue.startswith("jobs/index.json "):
+            stale_index_or_queue.append(issue)
+        else:
+            derived_snapshot_drift.append(issue)
+    for issue in stale_index_or_queue:
+        findings.append(_finding("stale_index_or_queue", issue))
+    for issue in derived_snapshot_drift:
+        findings.append(_finding("derived_snapshot_drift", issue))
+    unapplied_results = _validated_unapplied_results(run_root, state)
+    for item in unapplied_results:
+        findings.append(_finding(
+            "completed_result_not_applied",
+            f"{item['dispatch_id']} has a validated result that is not applied",
+        ))
+    progress_evidence = _progress_without_result_evidence(run_root, state)
+    for item in progress_evidence:
+        findings.append(_finding(
+            "interrupted_dispatch_sent_no_result",
+            f"{item['dispatch_id']} has progress evidence without a validated result",
+            safe=False,
+            classification_detail="sent_unstarted",
+        ))
+    unresolved_action_dispatch_contradictions = []
+    side_effect_blockers = []
+    for dispatch in state["dispatches"].values():
+        if dispatch.get("status") in ACTIVE_DISPATCHES:
+            classification = classify(dispatch, {})
+            finding = _finding_for_classification(classification)
+            action = state["actions"].get(dispatch["action_id"])
+            contradiction = {
+                "dispatch_id": dispatch["dispatch_id"],
+                "action_id": dispatch["action_id"],
+                "dispatch_status": dispatch.get("status"),
+                "action_status": action.get("status") if action else None,
+                "classification": finding,
+            }
+            unresolved_action_dispatch_contradictions.append(contradiction)
+            findings.append(_finding(
+                finding,
+                f"{dispatch['dispatch_id']} is active without resolved worker result",
+                safe=finding in AUTOMATIC_RECOVERY_FINDINGS,
+                classification_detail=classification,
+            ))
+            if (
+                dispatch.get("transport", {}).get("sent")
+                and dispatch.get("side_effect_class") != "read_only"
+            ):
+                blocker = {
+                    "dispatch_id": dispatch["dispatch_id"],
+                    "side_effect_class": dispatch.get("side_effect_class"),
+                    "recovery_check": dispatch.get("recovery_check"),
+                }
+                side_effect_blockers.append(blocker)
+                findings.append(_finding(
+                    "external_effect_unknown",
+                    f"{dispatch['dispatch_id']} requires side-effect recovery check",
+                    safe=False,
+                ))
+    active_idle_contradictions = _active_idle_contradictions(run_root, state)
+    for _item in active_idle_contradictions:
+        findings.append(_finding(
+            "journal_corrupt_or_insufficient",
+            "active run has no active job, no active dispatch, empty queue, and unresolved evidence",
+            safe=False,
+        ))
     for job in state["jobs"].values():
         for name in ("contract.json", "workflow.json", "steps.json"):
             if not (run_root / "jobs" / job["id"] / name).exists():
@@ -1175,12 +1513,42 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
     if args.rebuild and snapshot_issues:
         write_snapshots(run_root, state)
         issues = [item for item in issues if item not in snapshot_issues]
+        findings = [
+            item for item in findings
+            if item["classification"] not in {
+                "derived_snapshot_drift", "stale_index_or_queue"
+            }
+        ]
+        derived_snapshot_drift = []
+        stale_index_or_queue = []
     if args.rebuild and run_corrupt:
         write_snapshots(run_root, state)
         issues = [item for item in issues
                   if item != "run.json snapshot missing or structurally corrupt"]
-    return {"ok": not issues, "issues": issues,
-            "events": len(read_jsonl(run_root / "events.jsonl"))}
+    if not findings:
+        findings.append(_finding("clean", "state integrity audit passed"))
+    blocks_normal_resume = any(
+        not item["safe_for_automatic_recovery"]
+        or item["classification"] not in {"clean"}
+        for item in findings
+    )
+    return {
+        "ok": not issues and not active_idle_contradictions,
+        "issues": issues,
+        "findings": findings,
+        "replay_health": {
+            "replayable": True,
+            "events": len(read_jsonl(run_root / "events.jsonl")),
+        },
+        "protocol_hash_status": protocol_hash_status,
+        "derived_snapshot_drift": derived_snapshot_drift,
+        "stale_index_or_queue": stale_index_or_queue,
+        "unresolved_action_dispatch_contradictions": unresolved_action_dispatch_contradictions,
+        "active_idle_contradictions": active_idle_contradictions,
+        "side_effect_blockers": side_effect_blockers,
+        "blocks_normal_resume": blocks_normal_resume,
+        "events": len(read_jsonl(run_root / "events.jsonl")),
+    }
 
 
 def _upgrade_contract(

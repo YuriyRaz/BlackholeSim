@@ -19,8 +19,51 @@ To resume a run, the agent must ONLY use `jobctl.py`. Internally, the script wil
 
 Your only tasks are to:
 1. Run `jobctl audit` to ensure state consistency.
-2. Use `jobctl recover --dry-run --evidence <file>` to classify any active dispatch before scheduling new work.
-3. Review the script's output and then run `jobctl recover` to let the script persist `recovering`, perform reconciliation, and return the run to `active`, `waiting_for_user`, or `blocked`.
+2. If audit reports `derived_snapshot_drift` or `stale_index_or_queue`, run `jobctl audit --rebuild` and then run `jobctl audit` again.
+3. Use `jobctl recover --dry-run --evidence <file>` to classify any active dispatch or unapplied worker evidence before scheduling new work.
+4. Review the script's `finding`, `safe_next_action`, blockers, and proposed repair.
+5. Run `jobctl recover` only after the dry run proves one safe action.
+6. Run a final `jobctl audit` before returning to the normal `jobctl next` loop.
+
+## State Integrity Audit Gate
+
+After any suspected interruption, session replacement, dispatch recovery, or
+post-interruption scheduling decision, the root orchestrator MUST complete this
+gate before dispatching new domain work:
+
+```text
+python scripts/jobctl.py audit --run <run-root>
+python scripts/jobctl.py audit --run <run-root> --rebuild   # only when audit says rebuild is eligible
+python scripts/jobctl.py audit --run <run-root>
+python scripts/jobctl.py recover --run <run-root> --dry-run --evidence <evidence.json>
+python scripts/jobctl.py recover --run <run-root> --evidence <evidence.json>
+python scripts/jobctl.py audit --run <run-root>
+```
+
+Do not skip the dry run. Do not dispatch new work while audit reports protocol
+hash mismatch, active-idle contradiction, unresolved dispatch evidence,
+`external_effect_unknown`, or `journal_corrupt_or_insufficient`.
+
+Audit and recovery findings use these classifications:
+
+- `clean`: replay, snapshots, protocol identity, and recovery evidence agree.
+- `derived_snapshot_drift`: replay is healthy but a derived snapshot disagrees.
+- `stale_index_or_queue`: `queue.json` or `jobs/index.json` is stale or empty
+  compared with authoritative journal or job evidence.
+- `interrupted_dispatch_recorded_not_sent`: a dispatch was recorded but no
+  transport send is proven.
+- `interrupted_dispatch_sent_no_result`: transport or progress evidence exists
+  but no validated worker result has been applied.
+- `completed_result_not_applied`: a validated result exists while the action or
+  workflow state remains unresolved.
+- `external_effect_unknown`: local state cannot prove whether repository or
+  external side effects completed.
+- `journal_corrupt_or_insufficient`: the journal, protocol identity, or
+  evidence cannot prove one safe next action.
+
+`progress.json` is evidence only. It can justify a status request or
+investigation, but it never completes a workflow node without a matching
+validated worker result.
 
 ## Classify Interrupted Dispatches
 
@@ -76,6 +119,21 @@ Examples:
 
 Record observed external state before deciding to retry, accept completion, or
 create a repair job.
+
+## Recovery Investigation Jobs
+
+Create a recovery investigation job only when audit and dry-run recovery cannot
+prove one safe automatic next action. The job is a conditional diagnostic, not
+an ordinary product architecture review. Its contract must be limited to:
+
+- run-state evidence and contradiction analysis
+- side-effect safety and recovery-check status
+- the recommended next control-plane action
+- any user authority required before mutation
+
+Do not grant state mutation authority to an investigation job unless the user
+explicitly authorizes that authority in the job contract. By default, all
+repairs remain `jobctl.py` control-plane operations.
 
 ## Session Loss
 

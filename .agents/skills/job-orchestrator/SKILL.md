@@ -101,6 +101,42 @@ If a command fails, it emits a non-zero exit code and error details.
 - **Interrupted Work**: Do not manually retry. Use `jobctl recover --dry-run` to classify the interruption safely.
 - **State Corruption**: If snapshots drift, use `jobctl audit --rebuild` to deterministically reconstruct state from the append-only journal.
 
+## Suspected Interruption Handling
+
+When a run may have been interrupted, do not dispatch new domain work and do
+not ask a worker to continue until the State Integrity Audit Gate passes:
+
+```text
+python scripts/jobctl.py audit --run <run-root>
+python scripts/jobctl.py audit --run <run-root> --rebuild
+python scripts/jobctl.py recover --run <run-root> --dry-run --evidence <evidence.json>
+python scripts/jobctl.py recover --run <run-root> --evidence <evidence.json>
+python scripts/jobctl.py audit --run <run-root>
+```
+
+Run `audit --rebuild` only when audit reports eligible
+`derived_snapshot_drift` or `stale_index_or_queue`. Review dry-run recovery
+before applying it. Do not dispatch new work while audit or recovery reports
+protocol hash mismatch, active-idle contradiction, unresolved worker evidence,
+`external_effect_unknown`, or `journal_corrupt_or_insufficient`.
+
+Use this prompt text when asking an existing or replacement job session for
+recovery status:
+
+```text
+Status check only. Do not perform domain work, do not retry side effects, and
+do not edit run state. Inspect the current dispatch with workerctl, report
+whether the session is available, whether the prior dispatch started, the latest
+checkpoint/progress identity, whether a finalized result exists, and any
+repository or external side-effect evidence required by the dispatch recovery
+check. Return evidence for jobctl recover; do not decide workflow advancement.
+```
+
+Recovery investigation jobs are conditional diagnostics for run-state evidence,
+contradictions, side-effect safety, and the recommended next control-plane
+action. They are not ordinary product architecture review jobs and receive no
+state mutation authority unless the user explicitly authorizes it.
+
 ## Repair State
 
 If the orchestrator is stuck due to a dangling dispatch (e.g. failing validation with `run active dispatch pointer disagrees with dispatch state`), repair the state by aborting it:

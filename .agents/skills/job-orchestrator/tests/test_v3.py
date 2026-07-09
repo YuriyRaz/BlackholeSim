@@ -245,6 +245,132 @@ class V3Test(unittest.TestCase):
         self.assertTrue(rebuilt["ok"])
         self.assertEqual(load_json(self.run / "run.json")["status"], "recovering")
 
+    def test_state_integrity_gate_clean_resume_uses_normal_next_loop(self):
+        self.bootstrap()
+        result = jobctl.audit(argparse.Namespace(run=self.run, rebuild=False))
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["findings"][0]["classification"], "clean")
+        self.assertFalse(result["blocks_normal_resume"])
+        self.assertEqual(self.next()["type"], "send_dispatch")
+
+    def test_audit_classifies_and_rebuilds_snapshot_drift_and_stale_indexes(self):
+        self.bootstrap()
+        write_json(self.run / "jobs/index.json", {"jobs": []})
+        write_json(self.run / "queue.json", {"mode": "sequential", "entries": []})
+        job = load_json(self.run / "jobs/J001/job.json")
+        job["status"] = "completed"
+        write_json(self.run / "jobs/J001/job.json", job)
+        result = jobctl.audit(argparse.Namespace(run=self.run, rebuild=False))
+        classes = {item["classification"] for item in result["findings"]}
+        self.assertIn("stale_index_or_queue", classes)
+        self.assertIn("derived_snapshot_drift", classes)
+        rebuilt = jobctl.audit(argparse.Namespace(run=self.run, rebuild=True))
+        self.assertNotIn("stale_index_or_queue", {
+            item["classification"] for item in rebuilt["findings"]
+        })
+        self.assertEqual(load_json(self.run / "jobs/index.json")["jobs"], ["J001"])
+
+    def test_audit_blocks_active_idle_contradiction(self):
+        action = {
+            "schema_version": 3,
+            "action_id": "ACT-idle",
+            "type": "ask_user",
+            "run_id": "test-run",
+            "job_id": "J001",
+            "status": "unresolved",
+            "correlation_id": "J001:apply",
+            "created_at": jobctl.utc_now(),
+            "prompt": "diagnose",
+        }
+        append_event(self.run, make_event(
+            self.run, "action_created", action["action_id"], {"action": action}
+        ))
+        run = load_json(self.run / "run.json")
+        run.update(status="active", active_job_id=None, active_dispatch_id=None)
+        write_json(self.run / "run.json", run)
+        write_json(self.run / "queue.json", {"mode": "sequential", "entries": []})
+        result = jobctl.audit(argparse.Namespace(run=self.run, rebuild=False))
+        self.assertTrue(result["active_idle_contradictions"])
+        self.assertTrue(result["blocks_normal_resume"])
+        self.assertIn("journal_corrupt_or_insufficient", {
+            item["classification"] for item in result["findings"]
+        })
+
+    def test_recover_reconciles_completed_result_not_applied(self):
+        self.bootstrap()
+        action = self.next()
+        dispatch_path = self.run / "jobs/J001/dispatches" / f"{action['dispatch_id']}.json"
+        workerctl.checkpoint(argparse.Namespace(
+            dispatch=dispatch_path, phase="complete",
+            completed_work_unit=["U1", "U2"], decision=[], issue=[],
+            artifact=[], next_action="finalize",
+        ))
+        (self.run / "jobs/J001/report.md").write_text("done", encoding="utf-8")
+        final = workerctl.finalize(argparse.Namespace(
+            dispatch=dispatch_path, status="completed", summary="done",
+            artifact=[], acceptance_evidence=["tests"], blocking_issue=[],
+        ))
+        audit = jobctl.audit(argparse.Namespace(run=self.run, rebuild=False))
+        self.assertIn("completed_result_not_applied", {
+            item["classification"] for item in audit["findings"]
+        })
+        evidence = self.base / "recovery-evidence.json"
+        write_json(evidence, {"response": final})
+        dry_run = jobctl.recover(argparse.Namespace(
+            run=self.run, evidence=evidence, dry_run=True, controller="test"
+        ))
+        self.assertEqual(dry_run["finding"], "completed_result_not_applied")
+        self.assertEqual(dry_run["safe_next_action"], "apply validated worker result")
+        recovered = jobctl.recover(argparse.Namespace(
+            run=self.run, evidence=evidence, dry_run=False, controller="test"
+        ))
+        self.assertEqual(recovered["required_action"], "continue normal jobctl next loop")
+        self.assertEqual(replay(self.run)["jobs"]["J001"]["status"], "completed")
+
+    def test_progress_without_validated_result_is_evidence_only(self):
+        self.bootstrap()
+        action = self.next()
+        dispatch_path = self.run / "jobs/J001/dispatches" / f"{action['dispatch_id']}.json"
+        workerctl.checkpoint(argparse.Namespace(
+            dispatch=dispatch_path, phase="complete",
+            completed_work_unit=["U1", "U2"], decision=[], issue=[],
+            artifact=[], next_action="finalize",
+        ))
+        audit = jobctl.audit(argparse.Namespace(run=self.run, rebuild=False))
+        self.assertIn("interrupted_dispatch_sent_no_result", {
+            item["classification"] for item in audit["findings"]
+        })
+        self.assertNotEqual(replay(self.run)["jobs"]["J001"]["status"], "completed")
+
+    def test_side_effect_recovery_check_blocks_unsafe_retry(self):
+        self.bootstrap()
+        action = self.next()
+        self.record(action, {"transport_ack": {"sent": True}})
+        audit = jobctl.audit(argparse.Namespace(run=self.run, rebuild=False))
+        self.assertTrue(audit["side_effect_blockers"])
+        self.assertIn("external_effect_unknown", {
+            item["classification"] for item in audit["findings"]
+        })
+        evidence = self.base / "unsafe-side-effect.json"
+        write_json(evidence, {"started": False, "session_available": False})
+        with self.assertRaisesRegex(OrchestratorError, "matching recovery_check"):
+            jobctl.recover(argparse.Namespace(
+                run=self.run, evidence=evidence, dry_run=True, controller="test"
+            ))
+
+    def test_protocol_hash_mismatch_blocks_automatic_recovery(self):
+        protocol = self.run / "protocol/job-protocol.md"
+        protocol.write_text(
+            protocol.read_text(encoding="utf-8") + "\nmutation\n",
+            encoding="utf-8",
+        )
+        result = jobctl.audit(argparse.Namespace(run=self.run, rebuild=False))
+        self.assertFalse(result["protocol_hash_status"]["matches"])
+        self.assertFalse(result["protocol_hash_status"]["safe_for_automatic_recovery"])
+        self.assertIn("journal_corrupt_or_insufficient", {
+            item["classification"] for item in result["findings"]
+        })
+
     def test_v2_run_requires_explicit_migration(self):
         manifest_path = self.run / "protocol/manifest.json"
         manifest = load_json(manifest_path)
