@@ -1,0 +1,1 @@
+{"schema_version":3,"dispatch_id":"{{DISPATCH_ID}}","nonce":"{{NONCE}}","status":"partial","summary":"","completed_work_units":[],"artifacts":[],"acceptance_evidence":[],"blocking_issues":[],"proposed_jobs":[],"improvement_observations":[],"checkpoint_sha256":"{{CHECKPOINT_SHA256}}","created_at":"{{CREATED_AT}}"}

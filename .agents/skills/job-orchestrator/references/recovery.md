@@ -4,17 +4,18 @@
 
 1. Locate the run by explicit run ID. Do not guess when multiple active runs
    match the same workspace.
-2. Read `run.json`, `request.md`, `setup.json`, `queue.json`, and the event
-   journal.
+2. Run `jobctl audit`; replay the authoritative event journal and compare all
+   derived snapshots.
 3. Hash `protocol/job-protocol.md` and compare it with the manifest.
 4. Replay `improvements.jsonl` and identify unresolved observations and active
    maintenance jobs.
-5. Acquire or safely take over the orchestrator lease.
+5. Let `jobctl recover` acquire or safely take over the renewable lease.
 6. Validate every indexed job directory, contract, and report path.
 7. Rebuild disposable indexes if they disagree with authoritative job files.
 8. Reconstruct parent/child waits from `workflow.json`, child request events,
    and child report paths.
-9. Find any active dispatch and classify it before scheduling new work.
+9. Use `jobctl recover --dry-run --evidence <file>` to classify any active
+   dispatch before scheduling new work.
 10. Persist `recovering`, perform reconciliation, then return the run to
    `active`, `waiting_for_user`, or `blocked`.
 
@@ -30,7 +31,9 @@ An interrupted dispatch may be:
 - safe to retry
 - unsafe to retry without reconciliation
 
-Never convert `running` to `pending` blindly.
+Never convert `running` to `pending` blindly. A stale threshold first creates
+one idempotent `request_status` action. Apply recovery only from persisted
+transport, checkpoint, and external-effect evidence.
 
 If the original session exists, ask it only for the status and missing result.
 If the session is lost, create a replacement job session using `job.json`,
@@ -77,10 +80,11 @@ Resume a persistent subagent only when its session ID remains valid. Otherwise:
 
 1. Mark the old session unavailable without marking the job failed.
 2. Persist a `session_replaced` event.
-3. Start a new subagent with the job checkpoint and report paths.
+3. Obtain the generated replacement bootstrap action from `jobctl next`.
 4. Send the frozen protocol path and job contract path.
 5. Require a matching protocol acknowledgement without domain work.
-6. Tell it which steps are already complete and exactly one next action.
+6. Supply the checkpoint, completed work units, and exactly one next permitted
+   action; do not create a replacement dispatch until acknowledgement.
 
 For a composite job, also provide completed and waiting workflow nodes, child
 job IDs, child report paths, and unresolved child requests.
@@ -100,9 +104,16 @@ validation evidence before retrying. Preserve unrelated working-tree changes.
 If canonical skill files changed while the job was unavailable, require the
 maintenance job to reread them and reconsider its patch.
 
-Canonical updates do not change the active run's frozen protocol. Resume active
-jobs with the original hash unless a completed migration job explicitly
-updated the run manifest, contracts, versions, and acknowledgements.
+Canonical updates do not change the active run's frozen protocol. Version-2
+runs stay on version 2 unless `jobctl migrate-v2` is explicitly authorized.
+Migration updates the manifest and every contract revision, journals the
+decision, and requires replacement acknowledgements before domain work.
+For eventless version-2 layouts, migration first imports the existing job,
+queue, workflow, and step snapshots into lifecycle events. The migration
+event carries authoritative version-3 protocol and contract content so audit
+or a repeated migration command can finish static installation after a crash
+without dropping legacy jobs. Default recovery reports
+`legacy_v2_unchanged` and does not mutate such a run.
 
 Before restoring a terminal run state, ensure every observation is resolved,
 rejected, or deferred with a reason.

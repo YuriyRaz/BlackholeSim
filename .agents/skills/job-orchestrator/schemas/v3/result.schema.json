@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Worker result v3",
+  "type": "object",
+  "required": ["schema_version", "dispatch_id", "nonce", "status", "summary", "completed_work_units", "artifacts", "acceptance_evidence", "blocking_issues", "proposed_jobs", "improvement_observations", "checkpoint_sha256", "created_at"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "dispatch_id": {"type": "string", "minLength": 1},
+    "nonce": {"type": "string", "minLength": 1},
+    "status": {"enum": ["completed", "partial", "blocked", "failed"]},
+    "summary": {"type": "string", "minLength": 1},
+    "completed_work_units": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "purpose": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "acceptance_evidence": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "blocking_issues": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "proposed_jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["workflow"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "request_id": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "goal": {"type": "string", "minLength": 1},
+          "job_type": {"type": "string", "minLength": 1},
+          "role": {"type": "string", "minLength": 1},
+          "priority": {"type": "integer"},
+          "depends_on": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          },
+          "parent_dispatch_id": {"type": "string", "minLength": 1},
+          "workflow": {
+            "type": "object",
+            "required": ["nodes"],
+            "properties": {
+              "nodes": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["id", "position", "work_units"],
+                  "properties": {
+                    "id": {"type": "string", "minLength": 1},
+                    "position": {"type": "integer", "minimum": 1},
+                    "run_in": {"enum": ["job_session", "child_job"]},
+                    "work_units": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {"type": "string", "minLength": 1},
+                      "uniqueItems": true
+                    },
+                    "acceptance_criteria": {
+                      "type": "array",
+                      "items": {"type": "string", "minLength": 1}
+                    },
+                    "required_checks": {
+                      "type": "array",
+                      "items": {"type": "string", "minLength": 1}
+                    },
+                    "prohibited_actions": {
+                      "type": "array",
+                      "items": {"type": "string", "minLength": 1}
+                    },
+                    "checkpoint_policy": {
+                      "type": "array",
+                      "items": {"type": "string", "minLength": 1}
+                    },
+                    "side_effect_class": {
+                      "enum": ["read_only", "workspace_write", "repository", "external_idempotent", "external_non_idempotent"]
+                    },
+                    "recovery_check": {"type": "string", "minLength": 1},
+                    "estimated_minutes": {"type": "integer", "minimum": 0},
+                    "unbounded_override": {
+                      "type": ["object", "null"],
+                      "properties": {
+                        "reason": {"type": "string", "minLength": 1},
+                        "authorized_by": {"type": "string", "minLength": 1},
+                        "recovery_policy": {"type": "string", "minLength": 1}
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "improvement_observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "summary"],
+        "properties": {
+          "category": {"type": "string", "minLength": 1},
+          "summary": {"type": "string", "minLength": 1},
+          "evidence": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          },
+          "impact": {"type": "string"},
+          "suggested_change": {"type": "string"},
+          "generalizable": {"type": "boolean"},
+          "confidence": {"enum": ["low", "medium", "high"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "checkpoint_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

@@ -1,4 +1,5 @@
 {
   "session_policy": "persistent",
+  "dispatch_policy": "bounded",
   "nodes": []
 }

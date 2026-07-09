@@ -102,12 +102,14 @@ Normalize a Proposal flow like this:
 }
 ```
 
-Commands inside the Verify/Fix child are still dispatched one at a time.
+Commands inside the Verify/Fix child are still dispatched as one bounded batch
+at a time. One workflow node may own multiple dispatches; partial results keep
+that node active and only remaining work units enter a later dispatch.
 
 ## Runtime Sequence
 
-1. Start or resume the composite parent.
-2. Evaluate its next workflow node.
+1. Obtain the persisted action from `jobctl next`.
+2. Perform only that generated external action.
 3. For `child_job`, create a child request record before creating the job.
 4. Enqueue accepted children and mark the parent `waiting`.
 5. Run children through the global sequential queue.
@@ -115,7 +117,8 @@ Commands inside the Verify/Fix child are still dispatched one at a time.
 7. Send child report references to the parent session.
 8. Wait for acknowledgement without combining it with the next command.
 9. Advance to the next node.
-10. For `job_session`, dispatch only that node's command.
+10. Record the response through `jobctl record`; never hand-edit parent,
+    child, workflow, or queue state.
 
 If an apply child discovers implementation tasks, it returns additional
 `proposed_jobs`. The root orchestrator creates them as grandchildren, while

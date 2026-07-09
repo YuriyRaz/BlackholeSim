@@ -76,7 +76,8 @@ The maintenance job must:
 2. Decide whether instruction, schema, template, or script is the right layer.
 3. Use the `skill-creator` guidance when it is available.
 4. Make the smallest generalizable update.
-5. Update protocol or schema versions when compatibility changes.
+5. Update protocol or schema versions when compatibility changes; never
+   rewrite frozen active-run artifacts directly.
 6. Test changed scripts and parse changed templates.
 7. Run the official skill validator.
 8. Report changed files, evidence, residual risk, and whether active runs need
@@ -103,7 +104,8 @@ Canonical skill updates apply to future runs. Active runs continue using their
 frozen worker protocol and snapshotted setup.
 
 When the current run cannot continue safely without the improvement, create a
-separate migration job. It must:
+separate migration job. For version 2 to 3, it invokes the explicitly
+authorized `jobctl migrate-v2` command and must:
 
 1. Describe old and new semantics.
 2. Update the run protocol manifest and affected contracts atomically.

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Checkpoint v3",
+  "type": "object",
+  "required": ["schema_version", "dispatch_id", "phase", "completed_work_units", "decisions", "unresolved_issues", "artifact_paths", "next_permitted_action"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "dispatch_id": {"type": "string", "minLength": 1},
+    "phase": {"type": "string", "minLength": 1},
+    "completed_work_units": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "decisions": {"type": "array", "items": {"type": "string"}},
+    "unresolved_issues": {"type": "array", "items": {"type": "string"}},
+    "artifact_paths": {"type": "array", "items": {"type": "string"}},
+    "next_permitted_action": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

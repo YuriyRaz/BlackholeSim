@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lifecycle event v3",
+  "type": "object",
+  "required": ["schema_version", "event_id", "type", "run_id", "revision", "correlation_id", "created_at", "data"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "event_id": {"type": "string", "minLength": 1},
+    "type": {"enum": ["run_status", "job_compiled", "session_acknowledged", "action_created", "action_response_received", "action_resolved", "dispatch_created", "dispatch_updated", "worker_result", "session_lost", "resolution_recorded", "user_answered", "protocol_migrated", "child_job_requested", "child_job_validated", "child_job_materialized", "child_job_acknowledged"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "integer", "minimum": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "data": {
+      "type": "object",
+      "properties": {
+        "status": {"type": "string", "minLength": 1},
+        "job": {"type": "object"},
+        "workflow": {"type": "object"},
+        "steps": {"type": "object"},
+        "schema_version": {"const": 3},
+        "protocol_version": {"const": 3},
+        "protocol_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "contract_revision": {"type": "integer", "minimum": 1},
+        "current_workflow_node_id": {"type": ["string", "null"]},
+        "acknowledged_at": {"type": "string", "format": "date-time"},
+        "session_id": {"type": ["string", "null"]},
+        "action": {"type": "object"},
+        "action_id": {"type": "string", "minLength": 1},
+        "response_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dispatch": {"type": "object"},
+        "dispatch_id": {"type": "string", "minLength": 1},
+        "changes": {
+          "type": "object",
+          "properties": {
+            "status": {"enum": ["recorded", "sent", "running", "status_requested", "interrupted", "resolved", "canceled"]},
+            "started_at": {"type": ["string", "null"], "format": "date-time"},
+            "last_progress_at": {"type": ["string", "null"], "format": "date-time"},
+            "checkpoint_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "transport": {
+              "type": "object",
+              "properties": {
+                "sent": {"type": "boolean"},
+                "sent_at": {"type": "string", "format": "date-time"},
+                "started": {"type": "boolean"},
+                "started_at": {"type": "string", "format": "date-time"},
+                "transport_id": {"type": "string", "minLength": 1},
+                "message_id": {"type": "string", "minLength": 1},
+                "controller_waited_at": {"type": "string", "format": "date-time"}
+              },
+              "additionalProperties": false
+            },
+            "interrupted_at": {"type": "string", "format": "date-time"},
+            "interruption_class": {"type": "string", "minLength": 1},
+            "session_id": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "result": {"type": "object"},
+        "child_job_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "job_id": {"type": "string", "minLength": 1},
+        "checkpoint_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "reason": {"type": "string"},
+        "response": {"type": "object"},
+        "request": {
+          "type": "object",
+          "required": ["request_id", "parent_job_id", "proposal"],
+          "properties": {
+            "request_id": {"type": "string", "minLength": 1},
+            "parent_job_id": {"type": "string", "minLength": 1},
+            "parent_dispatch_id": {"type": ["string", "null"]},
+            "proposal": {"type": "object"}
+          },
+          "additionalProperties": false
+        },
+        "request_id": {"type": "string", "minLength": 1},
+        "child_job_id": {"type": "string", "minLength": 1},
+        "report_path": {"type": "string", "minLength": 1},
+        "from": {"type": "integer", "minimum": 1},
+        "to": {"type": "integer", "minimum": 1},
+        "authorized_by": {"type": "string", "minLength": 1},
+        "protocol_text": {"type": "string", "minLength": 1},
+        "manifest": {"type": "object"},
+        "contracts": {"type": "object"},
+        "contract_hashes": {"type": "object"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

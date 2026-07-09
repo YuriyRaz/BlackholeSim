@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded dispatch v3",
+  "type": "object",
+  "required": ["schema_version", "dispatch_id", "job_id", "workflow_node_id", "nonce", "contract_revision", "protocol_sha256", "work_units", "acceptance_criteria", "required_checks", "prohibited_actions", "checkpoint_policy", "side_effect_class", "recovery_check", "status"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "dispatch_id": {"type": "string", "minLength": 1},
+    "action_id": {"type": "string", "minLength": 1},
+    "job_id": {"type": "string", "minLength": 1},
+    "workflow_node_id": {"type": "string", "minLength": 1},
+    "nonce": {"type": "string", "minLength": 1},
+    "contract_revision": {"type": "integer", "minimum": 1},
+    "protocol_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "workspace": {"type": "string", "minLength": 1},
+    "allowed_edit_roots": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "work_units": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+    "acceptance_criteria": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "required_checks": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "prohibited_actions": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "checkpoint_policy": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "side_effect_class": {"enum": ["read_only", "workspace_write", "repository", "external_idempotent", "external_non_idempotent"]},
+    "recovery_check": {"type": "string"},
+    "estimated_minutes": {"type": "integer", "minimum": 0},
+    "unbounded_override": {
+      "type": ["object", "null"],
+      "properties": {
+        "reason": {"type": "string", "minLength": 1},
+        "authorized_by": {"type": "string", "minLength": 1},
+        "recovery_policy": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "status": {"enum": ["recorded", "sent", "running", "status_requested", "interrupted", "resolved", "canceled"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "started_at": {"type": ["string", "null"], "format": "date-time"},
+    "last_progress_at": {"type": ["string", "null"], "format": "date-time"},
+    "checkpoint_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "session_id": {"type": ["string", "null"], "minLength": 1},
+    "transport": {
+      "type": "object",
+      "properties": {
+        "sent": {"type": "boolean"},
+        "sent_at": {"type": "string", "format": "date-time"},
+        "started": {"type": "boolean"},
+        "started_at": {"type": "string", "format": "date-time"},
+        "transport_id": {"type": "string", "minLength": 1},
+        "message_id": {"type": "string", "minLength": 1},
+        "controller_waited_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    },
+    "interrupted_at": {"type": "string", "format": "date-time"},
+    "interruption_class": {"type": "string", "minLength": 1},
+    "result": {"type": "object"}
+  },
+  "additionalProperties": false
+}

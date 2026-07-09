@@ -1,4 +1,4 @@
 interface:
   display_name: "Job Orchestrator"
-  short_description: "Run durable, resumable multi-agent job workflows"
-  default_prompt: "Use $job-orchestrator to execute this request through a durable sequential job queue."
+  short_description: "Run durable, bounded, recoverable job workflows"
+  default_prompt: "Use $job-orchestrator to execute this request through its script-enforced bounded job queue."

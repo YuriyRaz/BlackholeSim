@@ -24,7 +24,7 @@ profiles, workflows, priorities, and inputs.
 2. Only the orchestrator mutates the queue.
 3. Only one dispatch is active in sequential mode.
 4. Every job has a stable directory and report path.
-5. Every state transition is journaled.
+5. Every lifecycle transition is appended through `jobctl` before snapshots.
 6. A dispatch is persisted before it is sent.
 7. A response and its artifacts are persisted before dependent work starts.
 8. Jobs communicate through persisted messages and artifact references.
@@ -119,7 +119,8 @@ bootstrap request. Require:
 ```json
 {
   "protocol_ack": {
-    "protocol_version": 2,
+    "schema_version": 3,
+    "protocol_version": 3,
     "protocol_sha256": "...",
     "job_id": "J001",
     "contract_revision": 1,
@@ -147,7 +148,7 @@ Require this result:
 
 ```json
 {
-  "status": "completed | completed_with_concerns | blocked | failed",
+  "status": "completed | partial | blocked | failed",
   "summary": "brief outcome",
   "artifacts": [{"path": "...", "purpose": "..."}],
   "concerns": [{"id": "...", "summary": "...", "impact": "..."}],
@@ -161,11 +162,14 @@ Require this result:
     "priority": 50
   }],
   "improvement_observations": [],
-  "ready_for_next_step": true,
-  "checkpoint_summary": "context needed after session loss"
+  "completed_work_units": [],
+  "acceptance_evidence": [],
+  "checkpoint_sha256": "..."
 }
 ```
 
+Readiness is derived by the control plane and never asserted by a worker.
+`partial` retains the current node and schedules only remaining work units.
 Reject ambiguous completion. A subagent that performed later workflow steps
 has violated the dispatch boundary; record the deviation and reconcile actual
 side effects before continuing.

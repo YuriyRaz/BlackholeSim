@@ -1,16 +1,20 @@
 {
-  "contract_version": 2,
+  "contract_version": 3,
   "revision": 1,
   "job_id": "{{JOB_ID}}",
   "role": "{{ROLE}}",
   "goal": "{{JOB_GOAL}}",
   "protocol": {
     "path": "../../protocol/job-protocol.md",
-    "version": 2,
+    "version": 3,
     "sha256": "{{PROTOCOL_SHA256}}"
   },
   "report_path": "report.md",
   "checkpoint_path": "checkpoint.md",
+  "progress_path": "progress.json",
+  "allowed_edit_roots": [],
+  "capabilities": [],
+  "artifact_paths": ["report.md", "checkpoint.md", "progress.json", "results", "artifacts"],
   "may_propose_jobs": true,
   "may_spawn_untracked_agents": false,
   "may_contact_user": false,

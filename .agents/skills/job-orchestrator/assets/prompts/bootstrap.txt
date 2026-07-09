@@ -1,0 +1,9 @@
+Bootstrap only. Do not perform domain work.
+Read frozen protocol: {{protocol}}
+Read contract: {{contract}}
+Recovery checkpoint (if non-empty): {{checkpoint}}
+Completed work units: {{completed}}
+Exact next permitted action: {{next_permitted}}
+Validate both and emit the canonical acknowledgement with:
+python {{workerctl}} acknowledge --contract "{{contract}}" --protocol-version {{protocol_version}} --protocol-sha256 {{protocol_sha256}} --job-id "{{job_id}}" --contract-revision {{contract_revision}} --current-node "{{node}}"
+The orchestrator records the authoritative transport session ID alongside this acknowledgement.

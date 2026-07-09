@@ -9,6 +9,7 @@
     |-- request.md
     |-- setup.json
     |-- queue.json
+    |-- actions/
     |-- improvements.jsonl
     |-- protocol/
     |   |-- job-protocol.md
@@ -30,6 +31,8 @@
             |-- messages.jsonl
             |-- report.md
             |-- checkpoint.md
+            |-- progress.json
+            |-- results/
             `-- artifacts/
 ```
 
@@ -38,16 +41,16 @@ inside indexes when portability matters.
 
 ## Authority And Duplication
 
-- `run.json` is authoritative for run lifecycle and active controller.
+- `events.jsonl` is authoritative for lifecycle state.
 - `setup.json` is authoritative for normalized initial configuration.
-- `queue.json` is authoritative for scheduling order and dependencies.
+- `run.json`, `queue.json`, job/workflow/step/session/action/dispatch documents,
+  and indexes are deterministic replay snapshots.
 - `improvements.jsonl` is the append-only observation and maintenance ledger.
 - `protocol/job-protocol.md` is the immutable worker protocol for this run.
 - `protocol/manifest.json` records its version, source, and SHA-256 hash.
-- `jobs/<id>/job.json` is authoritative for job lifecycle.
+- `jobs/<id>/job.json` is a derived job-lifecycle snapshot.
 - `contract.json` is authoritative for what one job may do and access.
-- `workflow.json` is authoritative for workflow-node state and child links.
-- `steps.json` is authoritative for commands dispatched to that job session.
+- `workflow.json` and `steps.json` are derived workflow snapshots.
 - `child-requests.jsonl` records proposed, accepted, rejected, and materialized
   child jobs.
 - `events.jsonl` is the append-only audit and recovery journal.
@@ -61,7 +64,7 @@ when they disagree.
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 3,
   "run_id": "20260708-120000-example",
   "status": "initializing",
   "goal": "Deliver the requested change",
@@ -71,7 +74,7 @@ when they disagree.
   "state_root": "C:\\...\\job-orchestrator\\runs",
   "protocol": {
     "manifest_path": "protocol/manifest.json",
-    "version": 2,
+    "version": 3,
     "sha256": "..."
   },
   "skill_source": {
@@ -168,7 +171,8 @@ in the queue. Keep parent and child jobs in this same queue.
     "id": "agent-session-42",
     "resumable": true,
     "protocol_ack": {
-      "protocol_version": 2,
+      "schema_version": 3,
+      "protocol_version": 3,
       "protocol_sha256": "...",
       "contract_revision": 1,
       "acknowledged_at": "2026-07-08T12:01:00Z"
@@ -197,7 +201,7 @@ global dispatch slot.
 
 ```json
 {
-  "protocol_version": 2,
+  "protocol_version": 3,
   "file": "job-protocol.md",
   "sha256": "...",
   "source": "references/job-protocol.md",
@@ -212,7 +216,7 @@ an explicit migration decision and re-bootstrap of every affected session.
 
 ```json
 {
-  "contract_version": 2,
+  "contract_version": 3,
   "revision": 1,
   "job_id": "J001",
   "role": "Verifier",
@@ -282,8 +286,18 @@ completed_with_concerns | blocked | failed | skipped
 ```
 
 Execution targets are open for future extension, but `job_session` and
-`child_job` are the defined sequential-mode targets. A workflow node can
-advance only after its required reports and acknowledgements are persisted.
+`child_job` are the defined sequential-mode targets. A workflow node may own
+multiple bounded dispatches. A partial result persists completed work units,
+keeps the node active, and schedules only the remainder. Advancement is a
+control-plane decision after required reports and acknowledgements persist.
+
+Each child request is journaled through `proposed` (`child_job_requested`),
+`validated` (`child_job_validated`), `materialized`
+(`child_job_materialized`), and `acknowledged`
+(`child_job_acknowledged`) states. The parent remains blocked while any
+materialized child is non-terminal or its routed report is unacknowledged.
+Validation rejects a child dependency whose transitive chain reaches the
+waiting parent.
 
 ## Session Steps And Dispatches
 
@@ -323,7 +337,7 @@ Persist each dispatch before sending it:
   "job_id": "J001",
   "workflow_node_id": "verify",
   "contract_revision": 1,
-  "protocol_version": 2,
+  "protocol_version": 3,
   "protocol_sha256": "...",
   "command": "/openspec-verify-change",
   "status": "recorded",
