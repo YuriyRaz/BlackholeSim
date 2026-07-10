@@ -155,7 +155,9 @@
         "after_discovery",
         "after_each_batch"
       ],
-      "completed_work_units": [],
+      "completed_work_units": [
+        "commit"
+      ],
       "dispatch_ids": [],
       "id": "commit-push",
       "position": 6,
@@ -168,7 +170,7 @@
       ],
       "run_in": "job_session",
       "side_effect_class": "repository",
-      "status": "ready",
+      "status": "completed",
       "title": "Commit and push to main",
       "work_units": [
         "commit"

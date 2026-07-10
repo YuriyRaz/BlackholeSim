@@ -5,7 +5,8 @@
   "artifact_paths": [
     "report.md",
     "checkpoint.md",
-    "progress.json"
+    "progress.json",
+    "results/"
   ],
   "capabilities": [],
   "checkpoint_path": "checkpoint.md",

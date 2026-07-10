@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "artifact_paths": [],
+    "completed_work_units": [
+      "investigate"
+    ],
+    "decisions": [],
+    "dispatch_id": "DSP-ea481266111bbb972a3f",
+    "next_permitted_action": "finalize",
+    "phase": "explore",
+    "schema_version": 3,
+    "unresolved_issues": []
+  },
+  "checkpoint_sha256": "ae7266b8f5d24b32f3b79288268dec8a735e752f7820be1a7b1dbd1a5b4be9b7",
+  "completed_work_units": [
+    "investigate"
+  ],
+  "dispatch_id": "DSP-ea481266111bbb972a3f",
+  "nonce": "NONCE-c61db04342efeb4bda91",
+  "phase": "explore",
+  "schema_version": 3,
+  "updated_at": "2026-07-09T21:07:35.077388Z"
+}

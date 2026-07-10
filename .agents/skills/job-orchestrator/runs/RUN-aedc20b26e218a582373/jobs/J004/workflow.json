@@ -8,7 +8,9 @@
         "after_discovery",
         "after_each_batch"
       ],
-      "completed_work_units": [],
+      "completed_work_units": [
+        "investigate"
+      ],
       "dispatch_ids": [],
       "id": "explore",
       "position": 1,
@@ -21,7 +23,7 @@
       ],
       "run_in": "job_session",
       "side_effect_class": "read_only",
-      "status": "ready",
+      "status": "completed",
       "title": "Explore audio-polish-04 implementation",
       "work_units": [
         "investigate"

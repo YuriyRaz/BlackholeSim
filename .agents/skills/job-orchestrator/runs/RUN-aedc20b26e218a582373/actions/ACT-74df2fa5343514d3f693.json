@@ -1,0 +1,12 @@
+{
+  "action_id": "ACT-74df2fa5343514d3f693",
+  "correlation_id": "J004:explore",
+  "created_at": "2026-07-09T21:11:31.539595Z",
+  "job_id": "J004",
+  "prompt": "Worker subagent bootstrap payload. The root orchestrator must send this text to the job subagent; the root must not execute it.\nBootstrap only. Do not perform domain work.\nRead frozen protocol: C:\\Projects\\ai-skills\\skills\\job-orchestrator\\runs\\RUN-aedc20b26e218a582373\\protocol\\job-protocol.md\nRead contract: C:\\Projects\\ai-skills\\skills\\job-orchestrator\\runs\\RUN-aedc20b26e218a582373\\jobs\\J004\\contract.json\nRecovery checkpoint (if non-empty): C:\\Projects\\ai-skills\\skills\\job-orchestrator\\runs\\RUN-aedc20b26e218a582373\\jobs\\J004\\checkpoint.md\nCompleted work units: none\nExact next permitted action: acknowledge; do not resume domain work yet\nValidate both and emit the canonical acknowledgement with:\npython C:\\Projects\\BlackholeSim\\.agents\\skills\\job-orchestrator\\scripts\\workerctl.py acknowledge --contract \"C:\\Projects\\ai-skills\\skills\\job-orchestrator\\runs\\RUN-aedc20b26e218a582373\\jobs\\J004\\contract.json\" --protocol-version 3 --protocol-sha256 be41cdf4f05fc94d330f63b3d9139fe3254e912ab0d983d3b450850018c8486e --job-id \"J004\" --contract-revision 1 --current-node \"explore\" --session-id \"<transport-session-id>\"\nUse the exact session ID assigned by the transport in place of <transport-session-id>. Return only the JSON emitted by this command.\n",
+  "response_hash": "4e8266c6ed022bd4358dc04a669517b597409a658402f6534e7093fec227c193",
+  "run_id": "RUN-aedc20b26e218a582373",
+  "schema_version": 3,
+  "status": "resolved",
+  "type": "spawn_and_bootstrap"
+}

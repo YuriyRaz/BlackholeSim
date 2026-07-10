@@ -38,6 +38,36 @@ export class CinematicPostProcess {
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
     this._quadVBO = buf;
+
+    this._createFBOs(gl);
+  }
+
+  _createFBOs(gl) {
+    if (this._fboA) {
+      gl.deleteTexture(this._fboA.tex);
+      gl.deleteFramebuffer(this._fboA.fbo);
+    }
+    if (this._fboB) {
+      gl.deleteTexture(this._fboB.tex);
+      gl.deleteFramebuffer(this._fboB.fbo);
+    }
+    this._fboA = this._createFBO(gl, this._w, this._h);
+    this._fboB = this._createFBO(gl, this._w, this._h);
+  }
+
+  _createFBO(gl, w, h) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w || 1, h || 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return { fbo, tex };
   }
 
   _compileProgram(gl, vs, fs) {
@@ -79,22 +109,55 @@ export class CinematicPostProcess {
     this._enabled[effect] = enabled;
   }
 
-  render(sceneTexture) {
+  render() {
     const gl = this.renderer.gl;
-    if (!gl) return;
+    if (!gl || !this._fboA || !this._fboB) return;
     
     gl.disable(gl.DEPTH_TEST);
+
+    // Capture current screen into fboA by blitting
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._fboA.fbo);
+    gl.blitFramebuffer(
+      0, 0, this._w, this._h,
+      0, 0, this._w, this._h,
+      gl.COLOR_BUFFER_BIT, gl.NEAREST
+    );
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    let currentTex = this._fboA.tex;
+    let targetFBO = this._fboB;
     
-    if (this._enabled.chromaticAberration) {
-      this._renderChromaticAberration(gl, sceneTexture);
-    }
-    
-    if (this._enabled.colorGrading) {
-      this._renderColorGrading(gl, sceneTexture);
-    }
-    
-    if (this._enabled.vignette) {
-      this._renderVignette(gl, sceneTexture);
+    const effects = [];
+    if (this._enabled.chromaticAberration) effects.push('chromaticAberration');
+    if (this._enabled.colorGrading) effects.push('colorGrading');
+    if (this._enabled.vignette) effects.push('vignette');
+
+    for (let i = 0; i < effects.length; i++) {
+      const isLast = (i === effects.length - 1);
+      if (isLast) {
+        // Render final pass to screen
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      } else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO.fbo);
+      }
+
+      switch (effects[i]) {
+        case 'chromaticAberration':
+          this._renderChromaticAberration(gl, currentTex);
+          break;
+        case 'colorGrading':
+          this._renderColorGrading(gl, currentTex);
+          break;
+        case 'vignette':
+          this._renderVignette(gl, currentTex);
+          break;
+      }
+
+      if (!isLast) {
+        currentTex = targetFBO.tex;
+        targetFBO = (targetFBO === this._fboB) ? this._fboA : this._fboB;
+      }
     }
     
     gl.enable(gl.DEPTH_TEST);
@@ -144,12 +207,25 @@ export class CinematicPostProcess {
   resize(w, h) {
     this._w = w;
     this._h = h;
+    const gl = this.renderer.gl;
+    if (gl) this._createFBOs(gl);
   }
 
   destroy() {
+    const gl = this.renderer.gl;
+    if (gl) {
+      if (this._fboA) {
+        gl.deleteTexture(this._fboA.tex);
+        gl.deleteFramebuffer(this._fboA.fbo);
+      }
+      if (this._fboB) {
+        gl.deleteTexture(this._fboB.tex);
+        gl.deleteFramebuffer(this._fboB.fbo);
+      }
+    }
     for (const program of Object.values(this._programs)) {
-      if (program && this.renderer.gl) {
-        this.renderer.gl.deleteProgram(program);
+      if (program && gl) {
+        gl.deleteProgram(program);
       }
     }
     this._programs = {};

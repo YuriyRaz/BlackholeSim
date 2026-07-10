@@ -1,0 +1,11 @@
+{
+  "action_id": "ACT-9b7e4b60522f3c54b2d5",
+  "correlation_id": "RUN-aedc20b26e218a582373",
+  "created_at": "2026-07-09T21:19:12.926891Z",
+  "job_id": null,
+  "prompt": null,
+  "run_id": "RUN-aedc20b26e218a582373",
+  "schema_version": 3,
+  "status": "unresolved",
+  "type": "run_complete"
+}

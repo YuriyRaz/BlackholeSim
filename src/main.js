@@ -48,11 +48,12 @@ try {
   throw error;
 }
 
-if (renderer.backend === 'webgpu') {
+if (renderer.backend === 'webgl2') {
   const fallback = document.createElement('div');
-  fallback.style.cssText = 'position:fixed;top:0;left:0;right:0;background:rgba(255,0,0,0.8);color:#fff;text-align:center;padding:10px;z-index:9999;font-size:16px';
-  fallback.textContent = 'WebGPU rendering is not yet implemented. Falling back to WebGL 2.0.';
+  fallback.style.cssText = 'position:fixed;bottom:10px;left:10px;background:rgba(255,165,0,0.85);color:#fff;padding:8px 14px;z-index:9999;font-size:13px;border-radius:6px;pointer-events:none';
+  fallback.textContent = 'WebGPU not available — using WebGL 2.0 fallback.';
   document.body.appendChild(fallback);
+  setTimeout(() => fallback.style.opacity = '0', 5000);
 }
 
 errorHandler.setupWebGLContextLoss(canvas, renderer);
@@ -143,6 +144,7 @@ function animate() {
   const physState = physics.getState();
 
   camState.bodies = physState.bodies;
+  camState.blackHoles = physState.bodies.filter(b => b.type === 'blackhole');
   camState.time = clock.elapsed;
   camState.gw = physState.gw;
   camState.gwSourcePosition = physState.bodies.filter(b => b.type === 'blackhole')[0]?.position || [0,0,0];
@@ -150,13 +152,17 @@ function animate() {
   camState.particles = physState.gasParticles;
 
   if (audioEngine._initialized && !audioEngine.muted) {
-    const camPosition = cameraManager.free.position || [0, 0, 0];
-    const camVelocity = [0, 0, 0];
-    
-    spacetimeHum.update(dt, camPosition, physState.bodies);
-    gwSound.update(dt, physState.gwFrequency, physState.gwStrain, physState.bhPairs);
-    eventSounds.update(dt, physState);
-    spatialAudio.update(dt, camPosition, camVelocity, physState.bodies);
+    try {
+      const camPosition = cameraManager.free.getPosition();
+      const camVelocity = [0, 0, 0];
+      
+      spacetimeHum.update(dt, camPosition, physState.bodies);
+      gwSound.update(dt, physState.gw.frequency, physState.gw.strain, physState.bhPairs);
+      eventSounds.update(dt, physState);
+      spatialAudio.update(dt, camPosition, camVelocity, physState.bodies);
+    } catch (e) {
+      // Audio errors should not break the render loop
+    }
   }
 
   const mergerFlash = computeMergerFlash(physState.bhPairs, physState.bodies);
@@ -177,7 +183,7 @@ function animate() {
 
   if (display.postProcessing) {
     postProcessor.render(settings);
-    cinematicPostProcess.render(renderer.getCurrentTexture());
+    cinematicPostProcess.render();
   }
 
   renderer.endFrame();

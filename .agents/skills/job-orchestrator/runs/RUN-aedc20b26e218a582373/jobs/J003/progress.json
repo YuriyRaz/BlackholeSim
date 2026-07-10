@@ -2,22 +2,22 @@
   "checkpoint": {
     "artifact_paths": [],
     "completed_work_units": [
-      "archive"
+      "commit"
     ],
     "decisions": [],
-    "dispatch_id": "DSP-f3a46592e5aecd545cca",
+    "dispatch_id": "DSP-17b584c7c4aa7fd6cb1f",
     "next_permitted_action": "finalize",
-    "phase": "archive",
+    "phase": "commit",
     "schema_version": 3,
     "unresolved_issues": []
   },
-  "checkpoint_sha256": "029b81ef15c5e894a8ec1b33695649245634725d7024be501111490d3f6d59a0",
+  "checkpoint_sha256": "f902c51e861ab42edc2a2ea89b59382c001ef14eb2caffc18dd1e4ce0df12ff5",
   "completed_work_units": [
-    "archive"
+    "commit"
   ],
-  "dispatch_id": "DSP-f3a46592e5aecd545cca",
-  "nonce": "NONCE-9cae7b5004c23e19fe48",
-  "phase": "archive",
+  "dispatch_id": "DSP-17b584c7c4aa7fd6cb1f",
+  "nonce": "NONCE-48ae2194e56cfd79e842",
+  "phase": "commit",
   "schema_version": 3,
-  "updated_at": "2026-07-09T20:59:05.134605Z"
+  "updated_at": "2026-07-09T21:00:48.851996Z"
 }
