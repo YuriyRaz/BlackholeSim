@@ -11,28 +11,6 @@ export class Renderer {
 
   static async create(canvas) {
     const r = new Renderer(canvas);
-    const gpu = navigator.gpu;
-    if (gpu) {
-      try {
-        const adapter = await gpu.requestAdapter();
-        if (adapter) {
-          r._device = await adapter.requestDevice();
-          r._context = canvas.getContext('webgpu');
-          r._format = navigator.gpu.getPreferredCanvasFormat();
-          r._context.configure({
-            device: r._device,
-            format: r._format,
-            alphaMode: 'opaque'
-          });
-          r._backend = 'webgpu';
-          r._resize();
-          window.addEventListener('resize', () => r._resize());
-          return r;
-        }
-      } catch (e) {
-        console.warn('WebGPU init failed, falling back to WebGL 2.0', e);
-      }
-    }
     const gl = canvas.getContext('webgl2');
     if (gl) {
       r._gl = gl;
@@ -40,6 +18,10 @@ export class Renderer {
       r._resize();
       window.addEventListener('resize', () => r._resize());
       return r;
+    }
+    const gpu = navigator.gpu;
+    if (gpu) {
+      console.warn('WebGPU detected but disabled: simulation render passes currently require WebGL 2.0.');
     }
     return null;
   }

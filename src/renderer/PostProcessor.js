@@ -6,6 +6,7 @@ export class PostProcessor {
     this._h = renderer.height;
     this._fb1 = null;
     this._fb2 = null;
+    this._workingFBO = null;
     this._programs = {};
     this._quadVAO = null;
     this._flashIntensity = 0;
@@ -47,12 +48,13 @@ export class PostProcessor {
     this._fb1 = this._createFBO(gl, w, h);
     this._fb2 = this._createFBO(gl, w, h);
     this._screenFBO = this._createFBO(gl, this._w, this._h);
+    this._workingFBO = this._createFBO(gl, this._w, this._h);
   }
 
   _createFBO(gl, w, h) {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -61,6 +63,10 @@ export class PostProcessor {
     const fbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      console.warn('PostProcessor framebuffer incomplete:', status);
+    }
     return { fbo, tex, w, h };
   }
 
@@ -94,18 +100,45 @@ export class PostProcessor {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
-  render(settings, sceneTexture) {
+  render(settings) {
     const gl = this.renderer.gl;
     if (!gl) return;
     gl.disable(gl.DEPTH_TEST);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.disable(gl.BLEND);
 
-    this._sceneTexture = sceneTexture;
-    if (settings.bloom) this._applyBloom(gl);
-    if (settings.tonemap) this._applyTonemap(gl);
-    if (settings.fxaa) this._applyFXAA(gl);
-    this._applyVignette(gl);
+    this._captureScreen(gl);
+
+    let currentTex = this._screenFBO.tex;
+    const nextTarget = () => currentTex === this._screenFBO.tex ? this._workingFBO : this._screenFBO;
+
+    if (settings.bloom) {
+      const target = nextTarget();
+      this._applyBloom(gl, currentTex, target);
+      currentTex = target.tex;
+    }
+    if (settings.tonemap) {
+      const target = nextTarget();
+      this._applyTonemap(gl, currentTex, target);
+      currentTex = target.tex;
+    }
+    if (settings.fxaa) {
+      const target = nextTarget();
+      this._applyFXAA(gl, currentTex, target);
+      currentTex = target.tex;
+    }
+
+    this._applyVignette(gl, currentTex, null);
+  }
+
+  _captureScreen(gl) {
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._screenFBO.fbo);
+    gl.blitFramebuffer(
+      0, 0, this._w, this._h,
+      0, 0, this._w, this._h,
+      gl.COLOR_BUFFER_BIT, gl.NEAREST
+    );
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   setFlashIntensity(intensity) {
@@ -123,25 +156,27 @@ export class PostProcessor {
     }
   }
 
-  _applyTonemap(gl) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this._screenFBO.fbo);
+  _bindTarget(gl, target) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fbo : null);
+    gl.viewport(0, 0, target ? target.w : this.renderer.width, target ? target.h : this.renderer.height);
+  }
+
+  _applyTonemap(gl, inputTex, target) {
+    this._bindTarget(gl, target);
     gl.useProgram(this._programs.tonemap);
-    if (this._sceneTexture) {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this._sceneTexture);
-      gl.uniform1i(gl.getUniformLocation(this._programs.tonemap, 'u_sceneTex'), 0);
-    }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, inputTex);
+    gl.uniform1i(gl.getUniformLocation(this._programs.tonemap, 'u_sceneTex'), 0);
     this._drawQuad(gl);
   }
 
-  _applyBloom(gl) {
+  _applyBloom(gl, inputTex, target) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._fb1.fbo);
+    gl.viewport(0, 0, this._fb1.w, this._fb1.h);
     gl.useProgram(this._programs.bloomPrefilter);
-    if (this._sceneTexture) {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this._sceneTexture);
-      gl.uniform1i(gl.getUniformLocation(this._programs.bloomPrefilter, 'u_sceneTex'), 0);
-    }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, inputTex);
+    gl.uniform1i(gl.getUniformLocation(this._programs.bloomPrefilter, 'u_sceneTex'), 0);
     gl.uniform1f(gl.getUniformLocation(this._programs.bloomPrefilter, 'u_flashIntensity'), this._flashIntensity);
     this._drawQuad(gl);
 
@@ -149,6 +184,7 @@ export class PostProcessor {
     const vertical = [0.0, 1.0 / this._fb2.h];
     for (let i = 0; i < 4; i++) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, this._fb2.fbo);
+      gl.viewport(0, 0, this._fb2.w, this._fb2.h);
       gl.useProgram(this._programs.bloomBlur);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this._fb1.tex);
@@ -157,6 +193,7 @@ export class PostProcessor {
       this._drawQuad(gl);
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, this._fb1.fbo);
+      gl.viewport(0, 0, this._fb1.w, this._fb1.h);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this._fb2.tex);
       gl.uniform1i(gl.getUniformLocation(this._programs.bloomBlur, 'u_inputTex'), 0);
@@ -164,10 +201,10 @@ export class PostProcessor {
       this._drawQuad(gl);
     }
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this._screenFBO.fbo);
+    this._bindTarget(gl, target);
     gl.useProgram(this._programs.bloomCombine);
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this._sceneTexture);
+    gl.bindTexture(gl.TEXTURE_2D, inputTex);
     gl.uniform1i(gl.getUniformLocation(this._programs.bloomCombine, 'u_sceneTex'), 0);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this._fb1.tex);
@@ -175,18 +212,22 @@ export class PostProcessor {
     this._drawQuad(gl);
   }
 
-  _applyFXAA(gl) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  _applyFXAA(gl, inputTex, target) {
+    this._bindTarget(gl, target);
     gl.useProgram(this._programs.fxaa);
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this._screenFBO.tex);
+    gl.bindTexture(gl.TEXTURE_2D, inputTex);
     gl.uniform1i(gl.getUniformLocation(this._programs.fxaa, 'u_inputTex'), 0);
     gl.uniform2f(gl.getUniformLocation(this._programs.fxaa, 'u_texelSize'), 1.0 / this._w, 1.0 / this._h);
     this._drawQuad(gl);
   }
 
-  _applyVignette(gl) {
+  _applyVignette(gl, inputTex, target) {
+    this._bindTarget(gl, target);
     gl.useProgram(this._programs.vignette);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, inputTex);
+    gl.uniform1i(gl.getUniformLocation(this._programs.vignette, 'u_inputTex'), 0);
     this._drawQuad(gl);
   }
 
@@ -201,8 +242,12 @@ export class PostProcessor {
 const TONEMAP_FS = `#version 300 es
 precision highp float;
 in vec2 v_uv; out vec4 fragColor;
+uniform sampler2D u_sceneTex;
 vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}
-void main(){fragColor=vec4(aces(v_uv),1.0);}`;
+void main(){
+  vec3 scene = texture(u_sceneTex, v_uv).rgb;
+  fragColor=vec4(aces(scene),1.0);
+}`;
 
 const BLOOM_PREFILTER_FS = `#version 300 es
 precision highp float;
@@ -285,8 +330,10 @@ void main(){
 const VIGNETTE_FS = `#version 300 es
 precision highp float;
 in vec2 v_uv; out vec4 fragColor;
+uniform sampler2D u_inputTex;
 void main(){
   float d=length(v_uv-0.5);
   float v=smoothstep(0.8,0.3,d);
-  fragColor=vec4(vec3(v),1.0);
+  vec3 scene = texture(u_inputTex, v_uv).rgb;
+  fragColor=vec4(scene * v,1.0);
 }`;

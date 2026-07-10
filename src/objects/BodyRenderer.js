@@ -65,7 +65,14 @@ export class BodyRenderer {
         float diff = max(dot(n, light), 0.1);
         vec3 col = u_bodyColor * diff;
         if (u_bodyType == 0u) {
-          fragColor = vec4(0.0);
+          vec3 vd = normalize(u_camPos - v_worldPos);
+          float facing = max(dot(vd, n), 0.0);
+          float rim = 1.0 - facing;
+          float photonRing = smoothstep(0.45, 0.95, rim) * (1.0 - smoothstep(0.95, 1.0, rim));
+          float hotSpot = 0.5 + 0.5 * sin(atan(n.z, n.x) * 6.0 + u_time * 2.0);
+          vec3 horizon = vec3(0.003, 0.004, 0.010);
+          vec3 glow = vec3(1.0, 0.45, 0.08) * photonRing * (0.55 + hotSpot * 0.35);
+          fragColor = vec4(horizon + glow, 1.0);
         } else if (u_bodyType == 1u) {
           vec3 vd = normalize(u_camPos - v_worldPos);
           float rim = 1.0 - max(dot(vd, n), 0.0);
