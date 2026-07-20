@@ -10,7 +10,7 @@ export class FreeCamera {
     this.targetFocus = [0, 0, 0];
     this._damping = 0.08;
     this._minDist = 2;
-    this._maxDist = 5000;
+    this._maxDist = 1e10;
     this._minPhi = -85 * Math.PI / 180;
     this._maxPhi = 85 * Math.PI / 180;
     this._keys = {};

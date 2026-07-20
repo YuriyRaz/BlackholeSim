@@ -206,7 +206,7 @@ export class UIManager {
       const screenY = (e.clientY - rect.top) / rect.height;
       const ray = this.cameraManager.screenToWorldRay(screenX, screenY);
       const state = this.physics.getState();
-      const hit = this.cameraManager.pickObject(ray, state.bodies);
+      const hit = this.cameraManager.pickObject(ray, this._pickableBodies(state.bodies));
       
       for (const body of this.physics.bodies) {
         body.selected = false;
@@ -239,7 +239,7 @@ export class UIManager {
         const screenY = (e.clientY - rect.top) / rect.height;
         const ray = this.cameraManager.screenToWorldRay(screenX, screenY);
         const state = this.physics.getState();
-        const hit = this.cameraManager.pickObject(ray, state.bodies);
+        const hit = this.cameraManager.pickObject(ray, this._pickableBodies(state.bodies));
         if (hit) {
           tooltip = document.createElement('div');
           tooltip.style.cssText = `position:fixed;left:${e.clientX + 10}px;top:${e.clientY - 30}px;background:rgba(0,0,0,0.85);color:#eee;padding:4px 8px;border-radius:4px;font:11px monospace;pointer-events:none;z-index:1000;`;
@@ -257,6 +257,10 @@ export class UIManager {
 
   getDisplaySettings() { return this._displaySettings; }
   getSelectedBody() { return this._selectedBody; }
+
+  _pickableBodies(bodies) {
+    return bodies.filter(body => body.type !== 'debris' && !body.disrupted);
+  }
 
   updateFPS(fps) {
     this._physicsInfo.updateFPS(fps);

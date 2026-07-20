@@ -1,9 +1,8 @@
 export class KeyboardShortcuts {
   constructor() {
-    this._visible = true;
+    this._visible = false;
     this._el = null;
     this._create();
-    setTimeout(() => this._fadeOut(), 5000);
     window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'h' && !e.target.closest('input')) this._toggle();
     });
@@ -12,7 +11,7 @@ export class KeyboardShortcuts {
   _create() {
     this._el = document.createElement('div');
     this._el.className = 'ui-panel';
-    this._el.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;transition:opacity 0.5s;pointer-events:none;';
+    this._el.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;transition:opacity 0.5s;pointer-events:none;opacity:0;';
     this._el.innerHTML = `
       <div style="text-align:center;">
         <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">Keyboard Shortcuts</div>

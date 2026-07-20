@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authoritative job state v4",
+  "type": "object",
+  "required": ["schema_version", "id", "title", "status", "prompt_path", "session_ref", "priority", "creation_sequence", "depends_on", "parent_job_id", "waiting_on", "pending_question", "related_reports", "report_required", "report_path", "checkpoint_path", "outcome", "recovery_policy", "created_at", "updated_at", "revision"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 4},
+    "id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["queued", "starting", "running", "waiting_for_input", "waiting_for_job", "recovering", "completed", "failed", "canceled"]},
+    "prompt_path": {"type": "string", "minLength": 1},
+    "session_ref": {"type": ["string", "null"], "minLength": 1},
+    "priority": {"type": "integer"},
+    "creation_sequence": {"type": "integer", "minimum": 1},
+    "depends_on": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "parent_job_id": {"type": ["string", "null"], "minLength": 1},
+    "waiting_on": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "pending_question": {
+      "type": ["object", "null"],
+      "required": ["text"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1},
+        "context": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "question", "text"],
+        "properties": {
+          "source": {"type": "string", "enum": ["authoritative", "user"]},
+          "question": {"type": "string", "minLength": 1},
+          "context": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "related_reports": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "report_required": {"type": "boolean"},
+    "report_path": {"type": "string", "minLength": 1},
+    "checkpoint_path": {"type": ["string", "null"], "minLength": 1},
+    "outcome": {
+      "type": ["object", "null"],
+      "required": ["status", "summary"],
+      "properties": {
+        "status": {"type": "string", "enum": ["completed", "needs_input", "failed"]},
+        "summary": {"type": "string", "minLength": 1},
+        "context": {"type": "string", "minLength": 1},
+        "report_path": {"type": "string", "minLength": 1},
+        "question": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["status"],
+            "properties": {"status": {"const": "needs_input"}}
+          },
+          "then": {"required": ["question"]}
+        }
+      ],
+      "additionalProperties": false
+    },
+    "recovery_policy": {
+      "type": ["object", "null"],
+      "required": ["effect", "check"],
+      "properties": {
+        "effect": {"type": "string", "enum": ["repository", "external_non_idempotent"]},
+        "check": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Method-agnostic check for whether the effect occurred; perform it outside jobctl and supply its result as recovery evidence before retry."
+        },
+        "idempotency_key": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "repair": {
+      "type": "object",
+      "required": ["disposition", "reason", "repaired_at", "previous_status", "previous_outcome", "previous_pending_question", "previous_waiting_on"],
+      "properties": {
+        "disposition": {"type": "string", "enum": ["failed", "canceled"]},
+        "reason": {"type": "string", "minLength": 1},
+        "repaired_at": {"type": "string", "format": "date-time"},
+        "previous_status": {"type": "string", "enum": ["queued", "starting", "running", "waiting_for_input", "waiting_for_job", "recovering"]},
+        "previous_outcome": {
+          "type": ["object", "null"],
+          "required": ["status", "summary"],
+          "properties": {
+            "status": {"type": "string", "enum": ["completed", "needs_input", "failed"]},
+            "summary": {"type": "string", "minLength": 1},
+            "context": {"type": "string", "minLength": 1},
+            "report_path": {"type": "string", "minLength": 1},
+            "question": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "previous_pending_question": {
+          "type": ["object", "null"],
+          "required": ["text"],
+          "properties": {
+            "text": {"type": "string", "minLength": 1},
+            "context": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "previous_waiting_on": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 1}
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["report_required", "outcome"],
+        "properties": {
+          "report_required": {"const": true},
+          "outcome": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {"status": {"const": "completed"}}
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outcome": {"required": ["report_path"]}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Run state v4",
+  "type": "object",
+  "required": ["schema_version", "protocol_version", "run_id", "goal", "status", "job_ids", "created_at", "updated_at", "revision"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 4},
+    "protocol_version": {"type": "integer", "const": 4},
+    "run_id": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["active", "completed", "failed", "canceled"]},
+    "job_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 1}
+  },
+  "additionalProperties": false
+}

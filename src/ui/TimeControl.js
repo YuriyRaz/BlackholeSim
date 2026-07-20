@@ -84,6 +84,8 @@ export class TimeControl {
 
   _reset() {
     this.physics.reset();
+    this.physics.playing = true;
+    this.physics.speedMultiplier = 1;
     this._playPauseBtn.textContent = '⏸';
     this._el.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
     this._speedButtons[1]?.classList.add('active');

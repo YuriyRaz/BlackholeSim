@@ -224,4 +224,5 @@ window.addEventListener('beforeunload', () => {
 });
 
 loadingScreen.hide();
+clock.reset();
 animate();

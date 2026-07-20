@@ -1,1 +1,0 @@
-{"schema_version":3,"action_id":"{{ACTION_ID}}","type":"{{ACTION_TYPE}}","run_id":"{{RUN_ID}}","status":"unresolved","correlation_id":"{{CORRELATION_ID}}","created_at":"{{CREATED_AT}}","prompt":null}

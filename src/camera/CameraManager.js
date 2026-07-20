@@ -89,6 +89,19 @@ export class CameraManager {
     this._transitionTo = { theta, phi, distance, focus: focus || [...this.free.focusPoint] };
   }
 
+  jumpTo(theta, phi, distance, focus) {
+    this._transitioning = false;
+    this._transitionProgress = 1;
+    this.free.theta = theta;
+    this.free.phi = phi;
+    this.free.distance = distance;
+    this.free.focusPoint = focus ? [...focus] : [...this.free.focusPoint];
+    this.free.targetTheta = theta;
+    this.free.targetPhi = phi;
+    this.free.targetDistance = distance;
+    this.free.targetFocus = [...this.free.focusPoint];
+  }
+
   setPreset(preset) {
     const presets = {
       cinematic: { theta: 0, phi: Math.PI / 6, distance: 150, focus: [0, 0, 0] },
@@ -123,8 +136,8 @@ export class CameraManager {
 
   _updateVP(eye, dir) {
     const fov = 60 * Math.PI / 180;
-    const near = 0.1;
-    const far = 1e6;
+    const near = Math.max(0.1, Math.min(this.free.distance / 100000, 1000));
+    const far = Math.max(1e6, this.free.distance * 10);
     const f = 1 / Math.tan(fov / 2);
     const aspect = this._aspect;
     const right = this._cross(dir, [0, 1, 0]);

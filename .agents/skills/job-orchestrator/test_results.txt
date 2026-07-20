@@ -1,0 +1,29 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-8.4.2, pluggy-1.6.0
+rootdir: C:\Projects\ai-skills\skills\job-orchestrator
+plugins: anyio-4.13.0, hypothesis-6.151.9, langsmith-0.7.23, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 220 items
+
+tests\test_instruction_architecture.py .F.                               [  1%]
+tests\test_v4_advisory.py ........                                       [  5%]
+tests\test_v4_advisory_decision.py ....                                  [  6%]
+tests\test_v4_answer.py ...                                              [  8%]
+tests\test_v4_audit.py ................                                  [ 15%]
+tests\test_v4_corruption_recovery.py .....                               [ 17%]
+tests\test_v4_init.py ..                                                 [ 18%]
+tests\test_v4_loading.py .................                               [ 26%]
+tests\test_v4_next.py ....                                               [ 28%]
+tests\test_v4_outcome.py ............                                    [ 33%]
+tests\test_v4_outcome_protocol.py ...................................... [ 50%]
+.                                                                        [ 51%]
+tests\test_v4_persistence.py .....                                       [ 53%]
+tests\test_v4_recovery.py .......................                        [ 64%]
+tests\test_v4_recovery_procedures.py ........................            [ 75%]
+tests\test_v4_registration.py .......                                    [ 78%]
+tests\test_v4_repair.py .........                                        [ 82%]
+tests\test_v4_run_completion.py ......                                   [ 85%]
+tests\test_v4_run_lock.py ....                                           [ 86%]
+tests\test_v4_run_template.py ...                                        [ 88%]
+tests\test_v4_schemas.py ..............                                  [ 94%]
+tests\test_v4_session.py .....                                           [ 96%]

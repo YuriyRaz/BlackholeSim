@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Job recovery policy v4",
+  "type": "object",
+  "required": ["effect", "check"],
+  "properties": {
+    "effect": {"type": "string", "enum": ["repository", "external_non_idempotent"]},
+    "check": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Method-agnostic check for whether the effect occurred; perform it outside jobctl and supply its result as recovery evidence before retry."
+    },
+    "idempotency_key": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

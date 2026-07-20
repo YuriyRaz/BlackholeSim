@@ -89,7 +89,7 @@ export class TrailRenderer {
         if (!trail || trail.length < 2) continue;
         const vertexCount = trail.length;
         const data = new Float32Array(vertexCount * 7);
-        const color = camState.particleTrailColor || [0.5, 0.7, 1.0];
+        const color = camState.particleTrailColor || [1.0, 0.58, 0.12];
 
         for (let i = 0; i < vertexCount; i++) {
           const offset = i * 7;

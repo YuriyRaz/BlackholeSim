@@ -124,11 +124,12 @@ export class BodyRenderer {
     gl.uniform1f(this._uniforms.u_time, camState.time || 0);
 
     for (const body of bodies) {
+      if (body.type === 'debris' || body.disrupted) continue;
       const typeMap = { blackhole: 0, star: 1, neutronstar: 2 };
       gl.uniform3f(this._uniforms.u_bodyPos, ...body.position);
       gl.uniform3f(this._uniforms.u_bodyColor, ...body.color);
       gl.uniform1f(this._uniforms.u_bodyRadius, body.radius || 1.0);
-      gl.uniform1ui(this._uniforms.u_bodyType, typeMap[body.type] || 1);
+      gl.uniform1ui(this._uniforms.u_bodyType, typeMap[body.type] ?? 1);
       gl.uniform1i(this._uniforms.u_selected, body.selected ? 1 : 0);
 
       gl.drawElements(gl.TRIANGLES, this._sphereData.indices.length, gl.UNSIGNED_SHORT, 0);

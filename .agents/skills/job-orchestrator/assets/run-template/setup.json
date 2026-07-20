@@ -1,45 +1,7 @@
 {
-  "goal": "{{GOAL}}",
-  "requirements": [],
-  "acceptance_criteria": [],
-  "roles": {},
-  "job_types": {
-    "explore": {},
-    "implement": {},
-    "verify": {},
-    "fix": {},
-    "advisory": {},
-    "skill_maintenance": {},
-    "final_synthesis": {}
-  },
-  "policies": {
-    "execution_mode": "sequential",
-    "dispatch_bounds": {
-      "max_work_units": 8,
-      "max_edit_roots": 4,
-      "max_estimated_minutes": 90,
-      "require_override_when_exceeded": true
-    },
-    "liveness": {
-      "stale_after_seconds": 900,
-      "status_timeout_seconds": 300,
-      "lease_seconds": 30
-    },
-    "max_same_approach_attempts": 2,
-    "max_total_attempts_per_step": 4,
-    "max_job_depth": 4,
-    "max_children_per_job": 20,
-    "max_verification_repair_attempts": 3,
-    "nested_delegation": "tracked_only",
-    "continuous_improvement": {
-      "enabled": true,
-      "capture_all_observations": true,
-      "auto_create_maintenance_jobs": true,
-      "max_maintenance_jobs_per_run": 3,
-      "require_generalizable_evidence": true,
-      "apply_to_active_run": false
-    },
-    "investigate_alternatives_before_user": true,
-    "final_synthesis": "when_requested_or_needed"
-  }
+  "schema_version": 4,
+  "request_path": "request.md",
+  "workspace": "{{WORKSPACE}}",
+  "execution_mode": "sequential",
+  "jobs": []
 }

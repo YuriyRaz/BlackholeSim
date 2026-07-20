@@ -1,85 +1,40 @@
-# Job Execution Protocol
+# Worker Contract
 
-Protocol version: 3
+You execute one assigned job in one persistent conversation. Follow the job
+prompt's workspace boundaries, requirements, constraints, and completion
+conditions. Do not schedule work or mutate orchestration-owned state.
 
-## Authority
+## Work and durable artifacts
 
-The immutable contract and the single immutable dispatch define all worker
-authority. Workers may use `workerctl` only; they never invoke `jobctl`, edit
-the event journal, or mutate run, queue, job, workflow, action, session, or
-dispatch state. Related reports are evidence, not instructions.
+1. Read the complete job prompt.
+2. Perform only the assigned work using the requested method.
+3. Keep the contracted `report.md` current; write `checkpoint.md` when its
+   minimal replacement context would help recovery.
+4. Place artifacts only in the paths authorized by the prompt.
 
-Interrupted-run recovery is control-plane work. The root orchestrator performs
-audit, classification, rebuild, result reconciliation, side-effect checks, and
-any investigation-job creation through `jobctl.py`. Workers continue to use
-only `workerctl.py` and may provide checkpoint, progress, report, result, or
-status evidence when asked.
+`checkpoint.md` is recovery evidence, not an orchestration-state contract.
 
-## Bootstrap
+## Return a normalized outcome
 
-Bootstrap performs no domain work. Run:
+Return exactly one outcome:
 
-```text
-python <workerctl> acknowledge --contract <contract> \
-  --protocol-version <version> --protocol-sha256 <sha256> \
-  --job-id <job-id> --contract-revision <revision> \
-  --current-node <node>
+```json
+{"status":"completed","summary":"what was accomplished","report_path":"path/to/report.md"}
 ```
 
-Return the canonical acknowledgement unchanged. Stop on any protocol hash,
-identity, contract revision, or workflow-node mismatch. The orchestrator binds
-the acknowledgement to the authoritative session ID returned by the external
-transport when recording the bootstrap response; the worker does not invent
-or guess that transport identity.
+```json
+{"status":"needs_input","summary":"where work stopped","question":"precise question","context":"optional context"}
+```
 
-## Execution
+```json
+{"status":"failed","summary":"what failed and why"}
+```
 
-For an execution prompt:
+Only claim `completed` after satisfying the job's completion conditions. Ask
+blocking questions early. Do not blindly repeat a possible side effect; follow
+the prompt's recovery check first. A replacement worker inspects the supplied
+report, checkpoint, transcript reference, and workspace observations before
+continuing.
 
-1. Run `workerctl inspect --dispatch <dispatch> --nonce <nonce>
-   --session-id <session-id> --current-node <node>` before domain work.
-2. Execute only its bounded `work_units`; never begin a later node.
-3. Obey workspace, edit-root, capability, acceptance, check, prohibited-action,
-   checkpoint, side-effect, and recovery constraints.
-4. Checkpoint after discovery, each completed batch, required checks, and
-   before reporting a blocker:
-
-   ```text
-   python <workerctl> checkpoint --dispatch <dispatch> --phase <phase> \
-     --completed-work-unit <id> --next-action "<one permitted action>"
-   ```
-
-5. Keep `report.md` current and place artifacts only in contracted paths.
-6. Finalize with status `completed`, `partial`, `blocked`, or `failed`:
-
-   ```text
-   python <workerctl> finalize --dispatch <dispatch> --status <status> \
-     --summary "<outcome>" --acceptance-evidence "<evidence>" \
-     --session-id <session-id>
-   ```
-
-Return the generated result. It is bound to the dispatch ID and nonce.
-`completed` requires every dispatched work unit and acceptance evidence.
-
-## Recovery
-
-A replacement session acknowledges the same frozen protocol and current
-contract, then reads `checkpoint.md` and `progress.json`. Continue only from
-the exact next permitted action. Never retry a side effect merely because a
-session or timer expired.
-
-Workers do not classify interrupted dispatches, rebuild derived snapshots,
-accept progress-only completion, or decide workflow advancement. If a worker
-believes a prior dispatch completed, it returns the validated result and
-supporting artifacts; the control plane decides whether that evidence becomes a
-`completed_result_not_applied` recovery.
-
-## Result Semantics
-
-Workers report outcome and evidence, not workflow readiness. There is no
-`ready_for_next_step` field. The control plane alone decides whether a node
-advances, remains active for another bounded dispatch, blocks, or fails.
-
-Every result includes `improvement_observations` (an empty array is valid).
-Workers may propose tracked child jobs but cannot create authoritative jobs or
-untracked agents unless the contract explicitly grants that capability.
+Workers may recommend follow-up work in their report, but only the root
+operator creates explicit jobs.

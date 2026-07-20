@@ -8,14 +8,14 @@ export function BinaryBHPreset() {
   const sep = 20 * Rs;
   const r1 = sep * m2 / M;
   const r2 = sep * m1 / M;
-  const vOrb = Math.sqrt(Constants.G * M * Constants.M_sun / (sep * 1000)) * 1e-3;
+  const vOrb = Constants.orbitalVelocity(M, sep);
   const v1 = vOrb * m2 / M;
   const v2 = vOrb * m1 / M;
 
   return {
     bodies: [
-      { type: 'blackhole', mass: m1, position: [-r1, 0, 0], velocity: [0, 0, -v1], spin: 0, fixed: true, name: 'BH1_36Msun' },
-      { type: 'blackhole', mass: m2, position: [r2, 0, 0], velocity: [0, 0, v2], spin: 0, fixed: true, name: 'BH2_29Msun' }
+      { type: 'blackhole', mass: m1, position: [-r1, 0, 0], velocity: [0, 0, -v1], spin: 0, fixed: false, name: 'BH1_36Msun' },
+      { type: 'blackhole', mass: m2, position: [r2, 0, 0], velocity: [0, 0, v2], spin: 0, fixed: false, name: 'BH2_29Msun' }
     ],
     gas: [],
     camera: { theta: 0, phi: Math.PI / 4, distance: sep * 3, focus: [0, 0, 0] }
@@ -27,19 +27,18 @@ export function TDEPreset() {
   const m_star = 1;
   const R_star = 1;
   const dR = Constants.tidalDisruptionRadius(M_bh, R_star, m_star);
-  const a = dR * 1.5;
-  const e = 0.9;
-  const periapsis = a * (1 - e);
-  const vPeriapsis = Math.sqrt(Constants.G * M_bh * Constants.M_sun * (2 / periapsis - 1 / a)) * 1e-3;
-  const vApoapsis = Math.sqrt(Constants.G * M_bh * Constants.M_sun * (2 / (a * (1 + e)) - 1 / a)) * 1e-3;
+  const startDistance = dR * 0.82;
+  const encounterSpeed = Math.sqrt((2 * Constants.G_solar_km * M_bh) / startDistance);
+  const visualRadius = dR * 0.04;
+  const bhVisualRadius = Math.max(Constants.schwarzschildRadiusKm(M_bh) * 0.5, visualRadius);
 
   return {
     bodies: [
-      { type: 'blackhole', mass: M_bh, position: [0, 0, 0], velocity: [0, 0, 0], spin: 0, fixed: true, name: 'SMBH_1Msun' },
-      { type: 'star', mass: m_star, radius: R_star, temperature: 5778, position: [-a, 0, 0], velocity: [0, 0, -vApoapsis], name: 'Star_1Msun' }
+      { type: 'blackhole', mass: M_bh, renderRadius: bhVisualRadius, position: [0, 0, 0], velocity: [0, 0, 0], spin: 0, fixed: true, name: 'SMBH_1e6Msun' },
+      { type: 'star', mass: m_star, radius: R_star, renderRadius: visualRadius, temperature: 5778, position: [-startDistance, 0, 0], velocity: [encounterSpeed * 0.35, 0, -encounterSpeed * 0.8], name: 'Star_1Msun' }
     ],
     gas: [],
-    camera: { theta: 0, phi: Math.PI / 6, distance: a * 3, focus: [0, 0, 0] }
+    camera: { theta: 0, phi: Math.PI / 8, distance: startDistance * 0.9, focus: [-startDistance * 0.25, 0, 0] }
   };
 }
 
@@ -54,7 +53,7 @@ export function KerrPreset() {
   for (let i = 0; i < nGas; i++) {
     const r = isco + (Constants.gasMaxRadius * Rs - isco) * Math.random();
     const angle = Math.random() * Constants.TWO_PI;
-    const vOrb = Math.sqrt(Constants.G * M * Constants.M_sun / (r * 1000)) * 1e-3;
+    const vOrb = Constants.orbitalVelocity(M, r);
     const thickness = Constants.gasDiskThickness * r;
     const z = (Math.random() - 0.5) * thickness;
 

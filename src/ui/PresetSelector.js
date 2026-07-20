@@ -6,8 +6,14 @@ export class PresetSelector {
     this.physics = physicsEngine;
     this._presetKeys = Object.keys(PRESETS);
     this._labels = this._presetKeys.map(k => PRESETS[k].name);
-    this._active = this._presetKeys[0];
+    this._active = this._getInitialPresetKey();
     this._el = null;
+  }
+
+  _getInitialPresetKey() {
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get('preset');
+    return this._presetKeys.includes(requested) ? requested : this._presetKeys[0];
   }
 
   mount(container) {
@@ -22,7 +28,7 @@ export class PresetSelector {
       this._el.appendChild(btn);
     });
     container.appendChild(this._el);
-    this._loadPreset(this._active);
+    this._loadPreset(this._active, true);
   }
 
   _select(key) {
@@ -33,13 +39,14 @@ export class PresetSelector {
     });
   }
 
-  _loadPreset(key) {
+  _loadPreset(key, immediate = false) {
     const preset = PRESETS[key];
     if (!preset) return;
     const data = preset.fn();
     this.physics.loadPreset(data);
     if (data.camera) {
-      this.cameraManager.transitionTo(
+      const method = immediate ? 'jumpTo' : 'transitionTo';
+      this.cameraManager[method](
         data.camera.theta,
         data.camera.phi,
         data.camera.distance,

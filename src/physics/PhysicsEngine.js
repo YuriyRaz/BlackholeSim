@@ -32,6 +32,7 @@ export class PhysicsEngine {
     this._trailMaxLength = 50;
     this._gwRippleFadeStrain = 0;
     this._gwRippleFadeTime = 0;
+    this._binaryOrbitSeparations = new Map();
   }
 
   get playing() { return this._playing; }
@@ -80,6 +81,7 @@ export class PhysicsEngine {
     this._particleTrails = new Map();
     this._gwRippleFadeStrain = 0;
     this._gwRippleFadeTime = 0;
+    this._binaryOrbitSeparations = new Map();
   }
 
   loadPreset(presetData) {
@@ -152,6 +154,172 @@ export class PhysicsEngine {
     this._fallbackRate = this._fallbackMass * Math.pow(tRatio, -5/3) * 0.001;
   }
 
+  _computeBinaryGWMetrics(bi, bj, separationKm) {
+    const totalMassSolar = bi.mass + bj.mass;
+    const separationM = Math.max(separationKm * 1000, 1);
+    const fGW = Math.sqrt(Constants.G_solar_km * totalMassSolar / Math.pow(separationKm, 3)) / Math.PI;
+    const chirpMassKg = Constants.chirpMass(bi.mass, bj.mass) * Constants.M_sun;
+    const m1Kg = bi.mass * Constants.M_sun;
+    const m2Kg = bj.mass * Constants.M_sun;
+    const totalMassKg = totalMassSolar * Constants.M_sun;
+    const strain = (4 / separationM) *
+      Math.pow(Constants.G * chirpMassKg / (Constants.c * Constants.c), 5 / 3) *
+      Math.pow(Math.PI * fGW / Constants.c, 2 / 3);
+    const luminosity = (32 / 5) * Math.pow(Constants.G, 4) *
+      m1Kg * m1Kg * m2Kg * m2Kg * totalMassKg /
+      (Math.pow(Constants.c, 5) * Math.pow(separationM, 5));
+
+    return { frequency: fGW, strain, luminosity };
+  }
+
+  _petersDecayRateKmPerSec(m1Solar, m2Solar, separationKm) {
+    const m1Kg = m1Solar * Constants.M_sun;
+    const m2Kg = m2Solar * Constants.M_sun;
+    const totalMassKg = m1Kg + m2Kg;
+    const separationM = Math.max(separationKm * 1000, 1);
+    const daDtMeters = -(64 / 5) * Math.pow(Constants.G, 3) * m1Kg * m2Kg * totalMassKg /
+      (Math.pow(Constants.c, 5) * Math.pow(separationM, 3));
+    return daDtMeters / 1000;
+  }
+
+  _applyGWOrbitalDecay(bi, bj, dt) {
+    if (bi.fixed || bj.fixed) return;
+
+    const dx = bj.position[0] - bi.position[0];
+    const dy = bj.position[1] - bi.position[1];
+    const dz = bj.position[2] - bi.position[2];
+    const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (r < 0.001) return;
+
+    const pairKey = [bi.id, bj.id].sort((a, b) => a - b).join(':');
+    const targetR = this._binaryOrbitSeparations.get(pairKey) ?? r;
+    const decayRate = this._petersDecayRateKmPerSec(bi.mass, bj.mass, targetR);
+    if (!Number.isFinite(decayRate) || decayRate >= 0) return;
+
+    const maxShrink = targetR * 0.05;
+    const dr = Math.max(decayRate * dt, -maxShrink);
+    if (dr >= 0) return;
+
+    const totalMass = bi.mass + bj.mass;
+    const newR = Math.max(targetR + dr, 0.001);
+    this._binaryOrbitSeparations.set(pairKey, newR);
+    const n = [dx / r, dy / r, dz / r];
+    const com = [
+      (bi.position[0] * bi.mass + bj.position[0] * bj.mass) / totalMass,
+      (bi.position[1] * bi.mass + bj.position[1] * bj.mass) / totalMass,
+      (bi.position[2] * bi.mass + bj.position[2] * bj.mass) / totalMass
+    ];
+    const comVel = [
+      (bi.velocity[0] * bi.mass + bj.velocity[0] * bj.mass) / totalMass,
+      (bi.velocity[1] * bi.mass + bj.velocity[1] * bj.mass) / totalMass,
+      (bi.velocity[2] * bi.mass + bj.velocity[2] * bj.mass) / totalMass
+    ];
+    const relVel = [
+      bj.velocity[0] - bi.velocity[0],
+      bj.velocity[1] - bi.velocity[1],
+      bj.velocity[2] - bi.velocity[2]
+    ];
+    const radialSpeed = relVel[0] * n[0] + relVel[1] * n[1] + relVel[2] * n[2];
+    let tangent = [
+      relVel[0] - radialSpeed * n[0],
+      relVel[1] - radialSpeed * n[1],
+      relVel[2] - radialSpeed * n[2]
+    ];
+    let tangentLen = Math.sqrt(tangent[0] ** 2 + tangent[1] ** 2 + tangent[2] ** 2);
+    if (tangentLen < 0.001) {
+      tangent = Math.abs(n[1]) < 0.9 ? [-n[2], 0, n[0]] : [1, 0, 0];
+      tangentLen = Math.sqrt(tangent[0] ** 2 + tangent[1] ** 2 + tangent[2] ** 2);
+    }
+    const t = [tangent[0] / tangentLen, tangent[1] / tangentLen, tangent[2] / tangentLen];
+    const circularSpeed = Math.sqrt(Constants.G_solar_km * totalMass / newR);
+    const inwardSpeed = dr / dt;
+    const newRelVel = [
+      t[0] * circularSpeed + n[0] * inwardSpeed,
+      t[1] * circularSpeed + n[1] * inwardSpeed,
+      t[2] * circularSpeed + n[2] * inwardSpeed
+    ];
+
+    bi.position = [
+      com[0] - n[0] * newR * (bj.mass / totalMass),
+      com[1] - n[1] * newR * (bj.mass / totalMass),
+      com[2] - n[2] * newR * (bj.mass / totalMass)
+    ];
+    bj.position = [
+      com[0] + n[0] * newR * (bi.mass / totalMass),
+      com[1] + n[1] * newR * (bi.mass / totalMass),
+      com[2] + n[2] * newR * (bi.mass / totalMass)
+    ];
+    bi.velocity = [
+      comVel[0] - newRelVel[0] * (bj.mass / totalMass),
+      comVel[1] - newRelVel[1] * (bj.mass / totalMass),
+      comVel[2] - newRelVel[2] * (bj.mass / totalMass)
+    ];
+    bj.velocity = [
+      comVel[0] + newRelVel[0] * (bi.mass / totalMass),
+      comVel[1] + newRelVel[1] * (bi.mass / totalMass),
+      comVel[2] + newRelVel[2] * (bi.mass / totalMass)
+    ];
+  }
+
+  _shouldMergeBlackHoles(bi, bj) {
+    return bi.distanceTo(bj) <= Math.max(bi.rs + bj.rs, Constants.softening);
+  }
+
+  _estimateRemnantSpin(bi, bj) {
+    const totalMass = bi.mass + bj.mass;
+    const weightedSpin = (Math.abs(bi.spin || 0) * bi.mass + Math.abs(bj.spin || 0) * bj.mass) / totalMass;
+    return Math.max(0.67, Math.min(0.98, weightedSpin + 0.35));
+  }
+
+  _ringdownFrequency(massSolar, spin) {
+    const massKg = massSolar * Constants.M_sun;
+    const qnmFactor = 1 - 0.63 * Math.pow(Math.max(1 - spin, 0.001), 0.3);
+    return Math.pow(Constants.c, 3) / (2 * Math.PI * Constants.G * massKg) * qnmFactor;
+  }
+
+  _mergeBlackHoles(bi, bj, peakFrequency, peakStrain) {
+    if (!this.bodies.includes(bi) || !this.bodies.includes(bj)) return;
+
+    const totalMass = bi.mass + bj.mass;
+    const remnantMass = totalMass * 0.95;
+    const spin = this._estimateRemnantSpin(bi, bj);
+    const position = [
+      (bi.position[0] * bi.mass + bj.position[0] * bj.mass) / totalMass,
+      (bi.position[1] * bi.mass + bj.position[1] * bj.mass) / totalMass,
+      (bi.position[2] * bi.mass + bj.position[2] * bj.mass) / totalMass
+    ];
+    const velocity = [
+      (bi.velocity[0] * bi.mass + bj.velocity[0] * bj.mass) / totalMass,
+      (bi.velocity[1] * bi.mass + bj.velocity[1] * bj.mass) / totalMass,
+      (bi.velocity[2] * bi.mass + bj.velocity[2] * bj.mass) / totalMass
+    ];
+    const remnant = new BlackHole({
+      mass: remnantMass,
+      position,
+      velocity,
+      spin,
+      fixed: bi.fixed && bj.fixed,
+      name: `Remnant_${bi.name}_${bj.name}`
+    });
+    remnant.trail = [...bi.trail.slice(-50), ...bj.trail.slice(-50)].slice(-Constants.trailMaxPoints);
+
+    this.bodies = this.bodies.filter(body => body !== bi && body !== bj);
+    this.addObject(remnant);
+    this._binaryOrbitSeparations.delete([bi.id, bj.id].sort((a, b) => a - b).join(':'));
+    this._mergedBH = {
+      id: remnant.id,
+      mass: remnantMass,
+      spin,
+      mergeTime: this.simTime,
+      peakFrequency,
+      peakStrain: Math.max(peakStrain, 0.001),
+      ringdownFrequency: this._ringdownFrequency(remnantMass, spin),
+      dampingTime: 0.2
+    };
+    this._gwRippleFadeStrain = this._mergedBH.peakStrain;
+    this._gwRippleFadeTime = this.simTime;
+  }
+
   _integrateGravity(dt) {
     const n = this.bodies.length;
     const useBarnesHut = n > Constants.barnesHutThreshold;
@@ -181,7 +349,7 @@ export class PhysicsEngine {
           const dz = bj.position[2] - bi.position[2];
           const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
           const r = Math.sqrt(r2);
-          const f = Constants.G * bj.mass / (r2 * r);
+          const f = Constants.G_solar_km * bj.mass / (r2 * r);
           acc[i][0] += f * dx;
           acc[i][1] += f * dy;
           acc[i][2] += f * dz;
@@ -229,7 +397,7 @@ export class PhysicsEngine {
           const dz = bj.position[2] - bi.position[2];
           const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
           const r = Math.sqrt(r2);
-          const f = Constants.G * bj.mass / (r2 * r);
+          const f = Constants.G_solar_km * bj.mass / (r2 * r);
           newAcc[i][0] += f * dx;
           newAcc[i][1] += f * dy;
           newAcc[i][2] += f * dz;
@@ -270,7 +438,7 @@ export class PhysicsEngine {
         const dz = bh.position[2] - gp.position[2];
         const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
         const r = Math.sqrt(r2);
-        const f = Constants.G * bh.mass / (r2 * r);
+        const f = Constants.G_solar_km * bh.mass / (r2 * r);
         ax += f * dx;
         ay += f * dy;
         az += f * dz;
@@ -332,7 +500,7 @@ export class PhysicsEngine {
         const dz = bh.position[2] - gp.position[2];
         const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
         const r = Math.sqrt(r2);
-        const f = Constants.G * bh.mass / (r2 * r);
+        const f = Constants.G_solar_km * bh.mass / (r2 * r);
         ax += f * dx;
         ay += f * dy;
         az += f * dz;
@@ -504,7 +672,7 @@ export class PhysicsEngine {
         if (d < dR) {
           star.disrupted = true;
           star.disruptionTime = this.simTime;
-          const particles = star.generateDisruptionParticles();
+          const particles = star.generateDisruptionParticles(bh);
           star.disruptionParticles = particles;
           
           if (this._fallbackStartTime < 0) {
@@ -512,19 +680,22 @@ export class PhysicsEngine {
             this._fallbackMass = star.mass;
           }
           
-          for (const p of particles) {
-            const captureProb = 0.3;
-            if (Math.random() < captureProb) {
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const capturedIntoGas = i % 5 !== 0;
+            if (capturedIntoGas) {
               this.addGasParticle(new GasParticle({
                 position: p.position,
                 velocity: p.velocity,
-                mass: p.mass * 0.8
+                mass: p.mass * 0.8,
+                renderSize: p.renderSize
               }));
             } else {
               this.bodies.push(new Body({
                 position: p.position,
                 velocity: p.velocity,
                 mass: p.mass * 0.2,
+                renderRadius: p.renderRadius,
                 type: 'debris',
                 name: `debris_${star.name}_${Math.floor(Math.random() * 1000)}`
               }));
@@ -553,58 +724,37 @@ export class PhysicsEngine {
         const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (r < 0.001) continue;
 
-        const M = bi.mass + bj.mass;
-        const fOrb = Math.sqrt(Constants.G * M * Constants.M_sun) / (2 * Math.PI * Math.pow(r, 1.5));
-        const fGW = 2 * fOrb;
-        const Mc = Constants.chirpMass(bi.mass, bj.mass);
-        const McKg = Mc * Constants.M_sun;
-        const MKg = M * Constants.M_sun;
-        const strain = (4 / r) * Math.pow(Constants.G * McKg / (Constants.c * Constants.c), 5 / 3) *
-          Math.pow(Math.PI * fGW / Constants.c, 2 / 3);
+        const metrics = this._computeBinaryGWMetrics(bi, bj, r);
 
-        const luminosity = (32 / 5) * Math.pow(Constants.G, 7 / 3) *
-          Math.pow(Mc, 10 / 3) * Math.pow(Math.PI * fGW, 10 / 3) / Math.pow(Constants.c, 5);
+        if (metrics.frequency > maxFreq) maxFreq = metrics.frequency;
+        if (metrics.strain > maxStrain) maxStrain = metrics.strain;
+        totalLuminosity += metrics.luminosity;
 
-        if (!bi.fixed) {
-          const v2_bi = bi.velocity[0] ** 2 + bi.velocity[1] ** 2 + bi.velocity[2] ** 2;
-          const v_bi = Math.sqrt(v2_bi);
-          if (v_bi > 0.001) {
-            const dvDt = luminosity / (MKg * v_bi);
-            bi.velocity[0] += (dx / r) * dvDt * subDt;
-            bi.velocity[1] += (dy / r) * dvDt * subDt;
-            bi.velocity[2] += (dz / r) * dvDt * subDt;
+        if (bi.type === 'blackhole' && bj.type === 'blackhole') {
+          this._applyGWOrbitalDecay(bi, bj, subDt);
+          if (this._shouldMergeBlackHoles(bi, bj)) {
+            this._mergeBlackHoles(bi, bj, metrics.frequency, metrics.strain);
           }
         }
-
-        if (!bj.fixed) {
-          const v2_bj = bj.velocity[0] ** 2 + bj.velocity[1] ** 2 + bj.velocity[2] ** 2;
-          const v_bj = Math.sqrt(v2_bj);
-          if (v_bj > 0.001) {
-            const dvDt = luminosity / (MKg * v_bj);
-            bj.velocity[0] += (-dx / r) * dvDt * subDt;
-            bj.velocity[1] += (-dy / r) * dvDt * subDt;
-            bj.velocity[2] += (-dz / r) * dvDt * subDt;
-          }
-        }
-
-        if (fGW > maxFreq) maxFreq = fGW;
-        if (strain > maxStrain) maxStrain = strain;
-        totalLuminosity += luminosity;
       }
     }
 
-    this.gwFrequency = maxFreq;
-    this.gwStrain = maxStrain;
-    this.gwPhase += maxFreq * subDt;
+    let outputFreq = maxFreq;
+    let outputStrain = maxStrain;
     this.gwLuminosity = totalLuminosity;
 
     if (this._mergedBH) {
-      const tau = 0.001;
-      const ringdownFreq = this._mergedBH.spin * 0.5;
-      const dampingTime = tau * (1 - this._mergedBH.spin * 0.5);
-      this.gwFrequency = ringdownFreq * Math.exp(-this.simTime / dampingTime);
-      this.gwStrain = maxStrain * Math.exp(-this.simTime / dampingTime);
+      const elapsed = Math.max(0, this.simTime - this._mergedBH.mergeTime);
+      const ringdownStrain = this._mergedBH.peakStrain * Math.exp(-elapsed / this._mergedBH.dampingTime);
+      if (ringdownStrain > outputStrain) {
+        outputFreq = this._mergedBH.ringdownFrequency;
+        outputStrain = ringdownStrain;
+      }
     }
+
+    this.gwFrequency = outputFreq;
+    this.gwStrain = outputStrain;
+    this.gwPhase += outputFreq * subDt;
   }
 
   _computeBHPairs() {
@@ -765,7 +915,8 @@ export class PhysicsEngine {
         disrupted: b.disrupted,
         name: b.name,
         color: b.color,
-        radius: b.radius,
+        radius: b.renderRadius ?? b.radius,
+        rs: b.rs || 0,
         spin: b.spin || 0,
         trail: b.trail || [],
         selected: b.selected || false
@@ -810,7 +961,7 @@ export class PhysicsEngine {
         const dy = bj.position[1] - bi.position[1];
         const dz = bj.position[2] - bi.position[2];
         const r = Math.sqrt(dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening);
-        potential -= Constants.G * bi.mass * bj.mass / r;
+        potential -= Constants.G_solar_km * bi.mass * bj.mass / r;
       }
     }
     return kinetic + potential;

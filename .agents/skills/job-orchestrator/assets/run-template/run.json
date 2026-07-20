@@ -1,22 +1,11 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
+  "protocol_version": 4,
   "run_id": "{{RUN_ID}}",
-  "status": "initializing",
   "goal": "{{GOAL}}",
+  "status": "active",
+  "job_ids": ["{{JOB_ID}}"],
   "created_at": "{{CREATED_AT}}",
   "updated_at": "{{CREATED_AT}}",
-  "workspace": "{{WORKSPACE}}",
-  "state_root": "{{STATE_ROOT}}",
-  "protocol": {
-    "manifest_path": "protocol/manifest.json",
-    "version": 3,
-    "sha256": "{{PROTOCOL_SHA256}}"
-  },
-  "skill_source": {
-    "path": "{{SKILL_SOURCE}}",
-    "update_scope": "future_runs"
-  },
-  "revision": 1,
-  "active_job_id": null,
-  "active_dispatch_id": null
+  "revision": 1
 }

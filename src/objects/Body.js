@@ -11,6 +11,7 @@ export class Body {
     this.type = options.type || 'star';
     this.name = options.name || `${this.type}_${this.id}`;
     this.fixed = options.fixed || false;
+    this.renderRadius = options.renderRadius;
     this.disrupted = false;
     this.disruptionTime = -1;
     this.disruptionParticles = [];

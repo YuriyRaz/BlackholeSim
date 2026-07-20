@@ -35,40 +35,92 @@ export class Star extends Body {
     );
   }
 
-  generateDisruptionParticles() {
-    const n = Math.max(
+  generateDisruptionParticles(blackHole = null) {
+    const baseCount = Math.max(
       Constants.minStarParticles,
       Math.min(
         Constants.maxStarParticles,
         Math.floor(this.mass / Constants.starParticleMassFraction)
       )
     );
+    const n = blackHole ? Math.max(baseCount, 1400) : baseCount;
     const particles = [];
-    const r = this.starRadius * Constants.R_sun;
+    const stellarRadius = this.starRadius * Constants.R_sun_km;
+    const dR = blackHole ? Constants.tidalDisruptionRadius(blackHole.mass, this.starRadius, this.mass) : stellarRadius;
+    const streamLength = blackHole ? dR * 1.75 : stellarRadius;
+    const streamWidth = blackHole ? dR * 0.045 : stellarRadius;
+    const visualSize = blackHole ? dR * 0.13 : undefined;
+    const radial = this._directionFrom(blackHole?.position || [0, 0, 0], this.position);
+    const tangent = this._tangentFromVelocity(radial);
+    const normal = this._normalize([
+      radial[1] * tangent[2] - radial[2] * tangent[1],
+      radial[2] * tangent[0] - radial[0] * tangent[2],
+      radial[0] * tangent[1] - radial[1] * tangent[0]
+    ]);
+    const speed = Math.hypot(...this.velocity);
     for (let i = 0; i < n; i++) {
-      let px, py, pz;
-      do {
-        px = (Math.random() * 2 - 1) * r;
-        py = (Math.random() * 2 - 1) * r;
-        pz = (Math.random() * 2 - 1) * r;
-      } while (px * px + py * py + pz * pz > r * r);
+      const streamT = (i / Math.max(n - 1, 1)) - 0.5;
+      const jitterT = (Math.random() - 0.5) * 0.18;
+      const along = (streamT + jitterT) * streamLength;
+      const sweep = Math.sign(streamT || 1) * streamT * streamT * streamLength * 0.42;
+      const across = (Math.random() - 0.5) * streamWidth;
+      const lift = (Math.random() - 0.5) * streamWidth * 0.35;
       const perturbation = 0.1;
-      const vOrb = Math.sqrt(Constants.G * this.mass * Constants.M_sun / (r || 1));
+      const vOrb = Math.sqrt(Constants.G_solar_km * this.mass / (stellarRadius || 1));
+      const shear = blackHole ? streamT * speed * 0.7 : 0;
+      let position = [
+        this.position[0] + radial[0] * along + tangent[0] * (across + sweep) + normal[0] * lift,
+        this.position[1] + radial[1] * along + tangent[1] * (across + sweep) + normal[1] * lift,
+        this.position[2] + radial[2] * along + tangent[2] * (across + sweep) + normal[2] * lift
+      ];
+      if (blackHole && streamT < -0.2) {
+        const wrap = (-streamT - 0.2) / 0.3;
+        const angle = -wrap * Math.PI * 0.95 + (Math.random() - 0.5) * 0.12;
+        const radius = dR * (0.18 + wrap * 0.35) + (Math.random() - 0.5) * streamWidth;
+        position = [
+          blackHole.position[0] + radial[0] * Math.cos(angle) * radius + tangent[0] * Math.sin(angle) * radius + normal[0] * lift,
+          blackHole.position[1] + radial[1] * Math.cos(angle) * radius + tangent[1] * Math.sin(angle) * radius + normal[1] * lift,
+          blackHole.position[2] + radial[2] * Math.cos(angle) * radius + tangent[2] * Math.sin(angle) * radius + normal[2] * lift
+        ];
+      }
       particles.push({
-        position: [
-          this.position[0] + px,
-          this.position[1] + py,
-          this.position[2] + pz
-        ],
+        position,
         velocity: [
-          this.velocity[0] + (Math.random() * 2 - 1) * vOrb * perturbation,
-          this.velocity[1] + (Math.random() * 2 - 1) * vOrb * perturbation,
-          this.velocity[2] + (Math.random() * 2 - 1) * vOrb * perturbation
+          this.velocity[0] + radial[0] * shear + (Math.random() * 2 - 1) * vOrb * perturbation,
+          this.velocity[1] + radial[1] * shear + (Math.random() * 2 - 1) * vOrb * perturbation,
+          this.velocity[2] + radial[2] * shear + (Math.random() * 2 - 1) * vOrb * perturbation
         ],
-        mass: this.mass / n
+        mass: this.mass / n,
+        renderRadius: visualSize,
+        renderSize: visualSize
       });
     }
     return particles;
+  }
+
+  _directionFrom(from, to) {
+    return this._normalize([
+      to[0] - from[0],
+      to[1] - from[1],
+      to[2] - from[2]
+    ]);
+  }
+
+  _tangentFromVelocity(radial) {
+    const radialSpeed = this.velocity[0] * radial[0] + this.velocity[1] * radial[1] + this.velocity[2] * radial[2];
+    const tangent = [
+      this.velocity[0] - radial[0] * radialSpeed,
+      this.velocity[1] - radial[1] * radialSpeed,
+      this.velocity[2] - radial[2] * radialSpeed
+    ];
+    const tLen = Math.hypot(...tangent);
+    if (tLen > 0.001) return tangent.map(v => v / tLen);
+    return Math.abs(radial[1]) < 0.9 ? this._normalize([-radial[2], 0, radial[0]]) : [1, 0, 0];
+  }
+
+  _normalize(v) {
+    const len = Math.hypot(...v);
+    return len > 0 ? v.map(component => component / len) : [1, 0, 0];
   }
 
   computeDeformation(blackHole) {

@@ -1,2 +1,1 @@
-Report status for dispatch {{dispatch}} only. Do not perform new domain work.
-Return the current result if complete; otherwise return progress from {{progress}}.
+Requesting status for dispatch: {{dispatch}}

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Supplied recovery evidence v4",
+  "type": "object",
+  "required": ["schema_version", "job_id", "observed_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 4},
+    "job_id": {"type": "string", "minLength": 1},
+    "session_ref": {"type": ["string", "null"], "minLength": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "transport": {
+      "type": ["object", "null"],
+      "required": ["observation", "status"],
+      "properties": {
+        "observation": {"type": "string", "enum": ["direct", "unknown", "unsupported"]},
+        "status": {"type": "string", "enum": ["active", "available", "returned", "canceled", "lost", "unavailable", "unknown"]},
+        "transcript_ref": {"type": "string", "minLength": 1},
+        "transcript_content": {"type": "string", "minLength": 1},
+        "cancellation_requested": {"type": "boolean"},
+        "response": {
+          "type": ["object", "null"],
+          "required": ["status", "summary"],
+          "properties": {
+            "status": {"type": "string", "enum": ["completed", "needs_input", "failed"]},
+            "summary": {"type": "string", "minLength": 1},
+            "context": {"type": "string", "minLength": 1},
+            "report_path": {"type": "string", "minLength": 1},
+            "question": {"type": "string", "minLength": 1}
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": ["status"],
+                "properties": {"status": {"const": "needs_input"}}
+              },
+              "then": {"required": ["question"]}
+            }
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "external_system": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["system", "observation", "effect_state", "summary"],
+        "properties": {
+          "system": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "enum": ["direct", "unknown", "unsupported"]},
+          "effect_state": {"type": "string", "enum": ["confirmed", "absent", "unknown"]},
+          "summary": {"type": "string", "minLength": 1},
+          "reference": {"type": "string", "minLength": 1},
+          "idempotency_key": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "recovery_check": {
+      "type": ["object", "null"],
+      "description": "Supplied result of performing the job's exact configured recovery check outside jobctl.",
+      "required": ["check", "result", "summary"],
+      "properties": {
+        "check": {"type": "string", "minLength": 1},
+        "result": {
+          "type": "string",
+          "enum": ["positive", "negative", "unknown"],
+          "description": "positive confirms the effect is present; negative confirms the effect is absent; unknown records that the configured query could not decide."
+        },
+        "summary": {"type": "string", "minLength": 1},
+        "reference": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "workspace": {
+      "type": ["object", "null"],
+      "required": ["observation", "path", "summary"],
+      "properties": {
+        "observation": {"type": "string", "enum": ["direct", "unknown", "unsupported"]},
+        "path": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "effect_state": {"type": "string", "enum": ["confirmed", "absent", "unknown"]}
+      },
+      "additionalProperties": false
+    },
+    "report": {
+      "type": ["object", "null"],
+      "required": ["observation", "path"],
+      "properties": {
+        "observation": {"type": "string", "enum": ["direct", "unknown", "unsupported"]},
+        "path": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "effect_state": {"type": "string", "enum": ["confirmed", "absent", "unknown"]}
+      },
+      "additionalProperties": false
+    },
+    "checkpoint": {
+      "type": ["object", "null"],
+      "required": ["observation", "path"],
+      "properties": {
+        "observation": {"type": "string", "enum": ["direct", "unknown", "unsupported"]},
+        "path": {"type": "string", "minLength": 1},
+        "summary": {"type": "string", "minLength": 1},
+        "effect_state": {"type": "string", "enum": ["confirmed", "absent", "unknown"]}
+      },
+      "additionalProperties": false
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "subject", "value"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "transport_response",
+              "external_system",
+              "repository_filesystem",
+              "report",
+              "checkpoint"
+            ]
+          },
+          "subject": {"type": "string", "minLength": 1},
+          "value": {"type": "string", "minLength": 1},
+          "summary": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "recovery_findings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,159 +1,113 @@
 # Composite Workflows
 
-## Purpose
+## Maintainer Guidance: Composite Workflows
 
-Use a composite job when one role flow needs both:
+Use a composite job when one persistent session needs to own an arbitrary
+multi-stage workflow. A composite job may perform research, implementation,
+verification, repair, and synthesis in one conversation while its context is
+useful across those stages.
 
-- a persistent parent session for context-sensitive commands
-- separately tracked child jobs for delegated or independently recoverable work
-
-The parent may coordinate semantically, but the root orchestrator remains the
-only scheduler and queue mutator.
-
-## Execution Targets
-
-Each workflow node declares one target:
+If work requires a distinct role, independent judgment, separate report,
+scheduling dependency, user-visible recovery boundary, or isolated external
+effect, the orchestrator creates another explicit job rather than a hidden
+execution layer.
 
 ```text
-job_session | child_job
+one persistent job:  apply -> verify by any method -> repair -> report
+
+separate jobs:       implement -> independent review -> conditional repair
+
+one job:             investigate only, no verification stage
 ```
 
-`job_session` sends exactly one command to the persistent session belonging to
-the current job. `child_job` asks the root orchestrator to create a separate
-job and suspends the parent until the required child result is available.
+## Persistent Job Owns Arbitrary Phases
 
-Do not use `main_session`; it is ambiguous. The root orchestrator session never
-performs domain work. Use `job_session` for the composite parent's own context.
+A persistent job may execute an arbitrary sequence of phases within one
+conversation. The job prompt can prescribe an ordered workflow, or leave
+the method open. The job is not split into orchestrator-visible steps or
+dispatches.
 
-## Normalized Example
+Example: a single job may implement a change, verify it by any suitable
+method, repair findings, re-verify, and produce a final report. All of
+this happens in one persistent conversation with one normalized outcome.
 
-Normalize a Proposal flow like this:
+The orchestrator stores the workflow as prompt instructions. It does not
+interpret skill names, verification methods, or workflow stages as protocol
+states.
 
-```json
-{
-  "role": "Proposal",
-  "session_policy": "persistent",
-  "workflow": [
-    {
-      "id": "apply",
-      "position": 1,
-      "run_in": "child_job",
-      "child_template": {
-        "title": "Apply the OpenSpec change",
-        "role": "Implementation",
-        "command": "/openspec-apply-change",
-        "delegation_policy": "request_tracked_child_jobs",
-        "instruction": "Use a tracked child job for each implementation task"
-      }
-    },
-    {
-      "id": "verify-and-fix",
-      "position": 2,
-      "run_in": "child_job",
-      "child_template": {
-        "title": "Verify and repair the OpenSpec change",
-        "role": "Verifier",
-        "session_policy": "persistent",
-        "workflow": [
-          {"id": "verify", "command": "/openspec-verify-change"},
-          {
-            "id": "fix",
-            "command": "Fix every finding, including minor findings"
-          },
-          {"id": "reverify", "command": "/openspec-verify-change"}
-        ],
-        "repeat": {
-          "from": "verify",
-          "until": "verification_has_no_findings",
-          "max_attempts": 3
-        },
-        "escalation": {
-          "major_finding": {
-            "request_job": {
-              "role": "Architect",
-              "priority": 80
-            },
-            "resume_origin_session": true
-          }
-        }
-      }
-    },
-    {
-      "id": "sync",
-      "position": 3,
-      "run_in": "job_session",
-      "command": "/openspec-sync-specs"
-    },
-    {
-      "id": "archive",
-      "position": 4,
-      "run_in": "job_session",
-      "command": "/openspec-archive-change"
-    },
-    {
-      "id": "publish",
-      "position": 5,
-      "run_in": "job_session",
-      "command": "Commit to main and push",
-      "side_effect_class": "external_non_idempotent",
-      "recovery_check": "Verify the expected commit on the remote branch"
-    }
-  ]
-}
-```
+## Independently Scheduled Work Becomes Another Job
 
-Commands inside the Verify/Fix child are still dispatched as one bounded batch
-at a time. One workflow node may own multiple dispatches; partial results keep
-that node active and only remaining work units enter a later dispatch.
+When a phase of work needs any of the following, represent it as a separate
+explicit job:
 
-## Runtime Sequence
+- **Independent scheduling**: the phase may run at a different time or
+  priority.
+- **Independent responsibility**: a different role owns the work and its
+  judgment.
+- **Separate report**: the phase produces its own durable report artifact.
+- **Scheduling dependency**: the phase must complete before other work can
+  proceed, and the origin job cannot continue until it does.
+- **Recovery boundary**: the phase has different side-effect or recovery
+  requirements.
+- **User-visible decision**: the phase requires its own user interaction or
+  authority.
 
-1. Obtain the persisted action from `jobctl next`.
-2. Perform only that generated external action.
-3. For `child_job`, create a child request record before creating the job.
-4. Enqueue accepted children and mark the parent `waiting`.
-5. Run children through the global sequential queue.
-6. Persist each child report before satisfying the parent wait condition.
-7. Send child report references to the parent session.
-8. Wait for acknowledgement without combining it with the next command.
-9. Advance to the next node.
-10. Record the response through `jobctl record`; never hand-edit parent,
-    child, workflow, or queue state.
+### Example: Advisory Job
 
-If an apply child discovers implementation tasks, it returns additional
-`proposed_jobs`. The root orchestrator creates them as grandchildren, while
-the apply child waits. Do not allow the apply child to mutate the queue or
-start untracked subagents directly.
+When a job returns `needs_input` and the question requires separate
+architecture consultation:
 
-## Verification And Repair
+1. The orchestrator creates an architect job as an ordinary explicit job.
+2. The origin job is marked `waiting_for_job` with the architect job in
+   `waiting_on`.
+3. When the architect job completes with a report, the origin job receives
+   that report as a related report.
+4. The origin session resumes with the continuation prompt containing the
+   architect report.
 
-Keep verification and repair in one persistent child session when repair
-benefits from the verifier's context. Dispatch:
+### Example: Verification Job
 
-1. verification
-2. repair, only when findings exist
-3. verification again
+When the orchestration plan requests independent verification:
 
-Repeat within configured limits. Minor findings do not require escalation.
-For major findings, pause the Verify/Fix child and create a separate advisory
-job. Route its report back to the same Verify/Fix session before repair.
+1. The orchestrator creates a verification job with `depends_on` pointing
+   to the implementation job.
+2. The verification job receives the implementation report as context.
+3. The verification job returns its own report with findings.
+4. If findings require repair, a repair job may be created, or the origin
+   job may handle repair in its own session.
 
-If the initial prompt explicitly requests reconsideration in the same session,
-model it as another step in that job rather than calling it a separate
-Architect job. Use a separate job whenever independent judgment, a distinct
-role, or a durable decision artifact is required.
+## Job Relationships
+
+### Dependencies
+
+`depends_on` lists job IDs that must be `completed` before a job becomes
+eligible for scheduling. Dependencies express ordering, not parent-child
+ownership.
+
+### Parent Relationship
+
+`parent_job_id` indicates that a job was created as part of another job's
+work. Parent jobs may wait on child jobs using `waiting_on`. Parent
+relationships describe ownership but do not create a second scheduler.
+
+### Waiting
+
+`waiting_on` lists job IDs whose terminal reports are required before the
+origin session can continue. A job in `waiting_for_job` does not occupy a
+sequential execution slot.
 
 ## Safety Limits
 
-Configure:
+Configure limits as appropriate:
 
-- maximum hierarchy depth
-- maximum children per job and per node
-- maximum repeated child requests with the same signature
-- maximum verification-repair attempts
+- maximum job hierarchy depth
+- maximum jobs per run
+- maximum repeated jobs with the same purpose
 - ancestor-cycle rejection
-- explicit recovery checks for external side effects
 
-Direct subagents created inside a child are opaque to the root orchestrator.
-Permit them only when loss of their individual state and reports is acceptable.
-Otherwise require tracked child-job requests.
+## Direct Subagents
+
+Direct subagents created inside a job session are opaque to the root
+orchestrator. Permit them only when loss of their individual state and
+reports is acceptable. Otherwise require explicit job creation through the
+orchestrator.

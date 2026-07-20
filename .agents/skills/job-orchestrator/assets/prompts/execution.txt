@@ -1,6 +1,0 @@
-Worker subagent execution payload. The root orchestrator must send this text to the job subagent; the root must not execute it.
-Execute exactly one immutable dispatch using the command below.
-Do not begin any later workflow node.
-First run: python {{workerctl}} inspect --dispatch "{{dispatch}}" --nonce "{{nonce}}" --session-id "{{session_id}}" --current-node "{{node}}"
-Checkpoint at every policy milestone with workerctl checkpoint, passing the same inspected dispatch, a phase, and one next action.
-When finished, run workerctl finalize with the same inspected dispatch and --session-id "{{session_id}}", then return that validated result only.

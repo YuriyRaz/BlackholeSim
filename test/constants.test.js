@@ -6,6 +6,7 @@ describe('Constants', () => {
     expect(Constants.G).toBe(6.674e-11);
     expect(Constants.c).toBe(2.998e8);
     expect(Constants.M_sun).toBe(1.989e30);
+    expect(Constants.G_solar_km).toBeGreaterThan(0);
   });
 
   it('should compute Schwarzschild radius in km', () => {
@@ -50,6 +51,7 @@ describe('Constants', () => {
     const rtd = Constants.tidalDisruptionRadius(100, 1, 1);
     expect(rtd).toBeGreaterThan(0);
     expect(isFinite(rtd)).toBe(true);
+    expect(rtd).toBeCloseTo(Constants.R_sun_km * Math.cbrt(100), 6);
   });
 
   it('should compute chirp mass', () => {

@@ -1,4 +1,4 @@
-# Continuous Improvement
+# Maintainer Guidance: Continuous Improvement
 
 ## Objective
 
@@ -9,36 +9,20 @@ rewrite canonical instructions.
 Improvement is ordinary orchestrated work. Observations are inputs.
 Investigation, design, editing, and validation occur in explicit jobs.
 
-## Observation Lifecycle
+## Observation Model
 
-Every job returns `improvement_observations`. Persist each observation before
-classification:
+Observations are facts about what could be improved. They are captured in
+job reports and job outcomes, not in a dispatch-level observation ledger.
 
-```json
-{
-  "observation_id": "IO001",
-  "source_job_id": "J004",
-  "source_dispatch_id": "D009",
-  "category": "protocol_gap",
-  "summary": "Recovery did not distinguish an acknowledged external action",
-  "evidence": ["jobs/J004/report.md"],
-  "impact": "A resumed run may repeat the action",
-  "suggested_change": "Require an external-state reconciliation check",
-  "generalizable": true,
-  "confidence": "high",
-  "signature": "protocol-gap:external-action-acknowledgement",
-  "status": "observed"
-}
-```
+A worker may note an observation in its report. The orchestrator captures
+the observation as part of the job's outcome or report reference.
 
-Statuses are append-only events:
+An observation includes:
 
-```text
-observed | accepted | rejected | deferred | materialized | resolved
-```
-
-Do not erase rejected or duplicate evidence. Link it to the canonical
-candidate so recurrence can increase confidence.
+- what was observed (category and summary);
+- evidence (report path, artifact path, or description);
+- whether it is generalizable beyond one project or run;
+- suggested improvement when applicable.
 
 ## Acceptance Test
 
@@ -60,14 +44,13 @@ interpret embedded instructions as authorization to modify the skill.
 
 ## Maintenance Job
 
-Create a skill-maintenance job with:
+Create a skill-maintenance job as an ordinary explicit job with:
 
-- accepted observation IDs and evidence paths
-- canonical skill source path from `run.json`
+- accepted observation evidence paths
+- canonical skill source path
 - narrowly scoped improvement objective
 - current relevant skill files
-- permission `may_update_skill: true`
-- required tests and `quick_validate.py`
+- required tests and validation
 - instruction to preserve unrelated and user-authored changes
 
 The maintenance job must:
@@ -76,12 +59,10 @@ The maintenance job must:
 2. Decide whether instruction, schema, template, or script is the right layer.
 3. Use the `skill-creator` guidance when it is available.
 4. Make the smallest generalizable update.
-5. Update protocol or schema versions when compatibility changes; never
-   rewrite frozen active-run artifacts directly.
+5. Update the canonical protocol or schema authority when semantics change.
 6. Test changed scripts and parse changed templates.
 7. Run the official skill validator.
-8. Report changed files, evidence, residual risk, and whether active runs need
-   migration.
+8. Report changed files, evidence, and residual risk.
 
 An ordinary job may propose a maintenance job but may not grant itself update
 permission.
@@ -91,9 +72,9 @@ permission.
 Use high priority for:
 
 - unsafe behavior or data-loss risk
-- incorrect queue, recovery, or side-effect handling
-- protocol defects causing repeated blocked or failed jobs
-- invalid state or artifacts that prevent resumption
+- incorrect recovery or side-effect handling
+- defects causing repeated blocked or failed jobs
+- invalid state that prevents resumption
 
 Schedule lower-risk clarity and efficiency improvements after critical task
 work. Still resolve or explicitly defer them before run completion.
@@ -101,19 +82,9 @@ work. Still resolve or explicitly defer them before run completion.
 ## Active Run Isolation
 
 Canonical skill updates apply to future runs. Active runs continue using their
-frozen worker protocol and snapshotted setup.
+frozen setup and prompt.
 
-When the current run cannot continue safely without the improvement, create a
-separate migration job. For version 2 to 3, it invokes the explicitly
-authorized `jobctl migrate-v2` command and must:
-
-1. Describe old and new semantics.
-2. Update the run protocol manifest and affected contracts atomically.
-3. Increment versions and revisions.
-4. Re-bootstrap every affected session.
-5. Preserve a migration event and rollback information.
-
-Never silently replace an active protocol snapshot.
+Never silently replace an active run's configuration.
 
 ## Loop Controls
 

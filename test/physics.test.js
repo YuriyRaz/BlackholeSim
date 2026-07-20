@@ -4,6 +4,7 @@ import { BlackHole } from '../src/objects/BlackHole.js';
 import { Star } from '../src/objects/Star.js';
 import { GasParticle } from '../src/objects/GasParticle.js';
 import { Body } from '../src/objects/Body.js';
+import { BinaryBHPreset } from '../src/presets/presets.js';
 
 describe('PhysicsEngine', () => {
   let engine;
@@ -78,6 +79,32 @@ describe('PhysicsEngine', () => {
     expect(state.bodies.length).toBe(1);
     expect(state.simTime).toBe(0);
     expect(state.gw).toBeDefined();
+    expect(state.bodies[0].rs).toBeGreaterThan(0);
+  });
+
+  it('should inspiral and merge the binary black hole preset', () => {
+    engine.loadPreset(BinaryBHPreset());
+    const initialBHs = engine.bodies.filter(body => body.type === 'blackhole');
+    const initialDistance = initialBHs[0].distanceTo(initialBHs[1]);
+
+    for (let i = 0; i < 120; i++) {
+      engine.step(0.01);
+    }
+
+    let blackHoles = engine.bodies.filter(body => body.type === 'blackhole');
+    expect(blackHoles[0].distanceTo(blackHoles[1])).toBeLessThan(initialDistance);
+
+    engine.speedMultiplier = 10;
+    for (let i = 0; i < 800; i++) {
+      engine.step(0.01);
+      blackHoles = engine.bodies.filter(body => body.type === 'blackhole');
+      if (blackHoles.length === 1) break;
+    }
+
+    expect(blackHoles).toHaveLength(1);
+    expect(blackHoles[0].mass).toBeCloseTo((36 + 29) * 0.95, 5);
+    expect(engine.gwFrequency).toBeGreaterThan(0);
+    expect(engine.gwStrain).toBeGreaterThan(0);
   });
 
   it('should reset simulation', () => {

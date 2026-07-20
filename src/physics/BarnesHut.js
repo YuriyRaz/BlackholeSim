@@ -79,12 +79,12 @@ export class BHNode {
 
     if (this.isLeaf) {
       if (this.body === body) return [0, 0, 0];
-      const f = Constants.G * this.mass / (r2 * r);
+      const f = Constants.G_solar_km * this.mass / (r2 * r);
       return [f * dx, f * dy, f * dz];
     }
 
     if (this.size / r < theta) {
-      const f = Constants.G * this.mass / (r2 * r);
+      const f = Constants.G_solar_km * this.mass / (r2 * r);
       return [f * dx, f * dy, f * dz];
     }
 

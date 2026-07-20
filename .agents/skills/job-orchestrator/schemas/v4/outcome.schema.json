@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Minimal worker outcome v4",
+  "type": "object",
+  "required": ["status", "summary"],
+  "properties": {
+    "status": {"type": "string", "enum": ["completed", "needs_input", "failed"]},
+    "summary": {"type": "string", "minLength": 1},
+    "context": {"type": "string", "minLength": 1},
+    "report_path": {"type": "string", "minLength": 1},
+    "question": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["status"],
+        "properties": {"status": {"const": "needs_input"}}
+      },
+      "then": {"required": ["question"]}
+    }
+  ],
+  "additionalProperties": false
+}

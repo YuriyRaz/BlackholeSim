@@ -87,7 +87,8 @@ describe('BarnesHut', () => {
 
     const acc = tree.computeAcceleration(star);
     const r = 10;
-    const expectedAcc = Constants.G * 100 / (r * r + Constants.softening * Constants.softening);
+    const softenedR2 = r * r + Constants.softening * Constants.softening;
+    const expectedAcc = Constants.G_solar_km * 100 * r / (softenedR2 * Math.sqrt(softenedR2));
     expect(acc[0]).toBeCloseTo(expectedAcc, 6);
   });
 

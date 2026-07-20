@@ -3,6 +3,8 @@ export const Constants = {
   c: 2.998e8,
   M_sun: 1.989e30,
   R_sun: 6.957e8,
+  R_sun_km: 6.957e5,
+  G_solar_km: 6.674e-11 * 1.989e30 / 1e9,
   PI: Math.PI,
   TWO_PI: 2 * Math.PI,
   DEG_TO_RAD: Math.PI / 180,
@@ -27,16 +29,16 @@ export const Constants = {
     return Rs * (1 + Math.sqrt(1 - a * a * Math.cos(theta) * Math.cos(theta)));
   },
 
-  orbitalVelocity(M, r) {
-    return Math.sqrt(this.G * M * this.M_sun / r);
+  orbitalVelocity(M, rKm) {
+    return Math.sqrt(this.G_solar_km * M / rKm);
   },
 
-  orbitalPeriod(M, r) {
-    return this.TWO_PI * Math.sqrt(Math.pow(r, 3) / (this.G * M * this.M_sun));
+  orbitalPeriod(M, rKm) {
+    return this.TWO_PI * Math.sqrt(Math.pow(rKm, 3) / (this.G_solar_km * M));
   },
 
   tidalDisruptionRadius(M_bh, R_star, M_star) {
-    return R_star * this.R_sun * Math.pow(M_bh * this.M_sun / (M_star * this.M_sun), 1 / 3);
+    return R_star * this.R_sun_km * Math.pow(M_bh / M_star, 1 / 3);
   },
 
   chirpMass(m1, m2) {
