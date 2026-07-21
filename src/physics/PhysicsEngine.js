@@ -3,12 +3,16 @@ import { Body } from '../objects/Body.js';
 import { BlackHole } from '../objects/BlackHole.js';
 import { Star } from '../objects/Star.js';
 import { GasParticle } from '../objects/GasParticle.js';
+import { MatterParticle } from '../objects/MatterParticle.js';
 import { BarnesHut } from './BarnesHut.js';
+import { SPHSolver } from './SPHSolver.js';
+import { ConservationLedger } from './ConservationLedger.js';
 
 export class PhysicsEngine {
   constructor() {
     this.bodies = [];
     this.gasParticles = [];
+    this.matterParticles = [];
     this.jetParticles = [];
     this.simTime = 0;
     this.accretionRate = 0;
@@ -33,6 +37,11 @@ export class PhysicsEngine {
     this._gwRippleFadeStrain = 0;
     this._gwRippleFadeTime = 0;
     this._binaryOrbitSeparations = new Map();
+    this._sphSolver = new SPHSolver();
+    this._ledger = new ConservationLedger();
+    this._smoothingLength = 0;
+    this._dtHydro = 0;
+    this._coolingBeta = Constants.coolingBeta;
   }
 
   get playing() { return this._playing; }
@@ -62,7 +71,9 @@ export class PhysicsEngine {
   reset() {
     for (const b of this.bodies) b.reset();
     for (const g of this.gasParticles) g.reset();
+    for (const p of this.matterParticles) p.reset();
     this.jetParticles = [];
+    this.matterParticles = [];
     this.simTime = 0;
     this.accretionRate = 0;
     this.gwFrequency = 0;
@@ -82,6 +93,7 @@ export class PhysicsEngine {
     this._gwRippleFadeStrain = 0;
     this._gwRippleFadeTime = 0;
     this._binaryOrbitSeparations = new Map();
+    this._ledger.reset();
   }
 
   loadPreset(presetData) {
@@ -89,6 +101,7 @@ export class PhysicsEngine {
     this.bodies = [];
     this.gasParticles = [];
     this.jetParticles = [];
+    this.matterParticles = [];
     if (presetData.bodies) {
       for (const bd of presetData.bodies) {
         let body;
@@ -107,17 +120,27 @@ export class PhysicsEngine {
         this.addGasParticle(new GasParticle(gd));
       }
     }
+    if (presetData.matterParticles) {
+      for (const pd of presetData.matterParticles) {
+        this.matterParticles.push(new MatterParticle(pd));
+      }
+    }
   }
 
   step(dt) {
     if (!this._playing) return;
     const effectiveDt = dt * this._speedMultiplier;
-    const substeps = Math.max(1, Math.ceil(effectiveDt / Constants.dt_max));
-    const subDt = effectiveDt / substeps;
     this._blackHoles = this.bodies.filter(b => b.type === 'blackhole');
+
+    const matterDt = this._computeMatterTimestep();
+    const maxDt = Math.min(Constants.dt_max, matterDt);
+    const substeps = Math.max(1, Math.ceil(effectiveDt / maxDt));
+    const subDt = effectiveDt / substeps;
 
     for (let s = 0; s < substeps; s++) {
       this._integrateGravity(subDt);
+      this._integrateMatterGravity(subDt);
+      this._integrateMatterSPH(subDt);
       this._integrateGas(subDt);
       this._computeAccretion(subDt);
       this._computeGravitationalWaves(subDt);
@@ -928,6 +951,20 @@ export class PhysicsEngine {
         size: g.size,
         type: 'gas'
       })),
+      matterParticles: this.matterParticles.filter(p => p.isActive).map(p => ({
+        id: p.id,
+        position: [...p.position],
+        velocity: [...p.velocity],
+        mass: p.mass,
+        density: p.density,
+        pressure: p.pressure,
+        internalEnergy: p.internalEnergy,
+        temperature: p.temperature,
+        phase: p.phase,
+        lifecycle: p.lifecycle,
+        smoothingLength: p.smoothingLength,
+        type: 'matter'
+      })),
       jetParticles: this.jetParticles.map(j => ({
         position: [...j.position],
         velocity: [...j.velocity],
@@ -943,8 +980,215 @@ export class PhysicsEngine {
       fallbackRate: this._fallbackRate,
       simTime: this.simTime,
       bhPairs: this._bhPairs,
-      particleTrails: Object.fromEntries(this._particleTrails)
+      particleTrails: Object.fromEntries(this._particleTrails),
+      ledgers: this.getMatterDiagnostics()
     };
+  }
+
+  addMatterParticles(particles) {
+    for (const p of particles) {
+      p.saveInitialState();
+      this.matterParticles.push(p);
+    }
+  }
+
+  _computeSmoothingLength() {
+    const active = this.matterParticles.filter(p => p.isActive);
+    if (active.length === 0) {
+      this._smoothingLength = 1;
+      return;
+    }
+    const R = Math.max(...active.map(p => {
+      const dx = p.position[0], dy = p.position[1], dz = p.position[2];
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }));
+    const volume = (4 / 3) * Math.PI * Math.pow(R + 1, 3);
+    this._smoothingLength = Constants.sphEtaSmooth * Math.pow(volume / active.length, 1 / 3);
+  }
+
+  _integrateMatterGravity(dt) {
+    const active = this.matterParticles.filter(p => p.isActive);
+    const n = active.length;
+    if (n === 0) return;
+
+    const allGravitating = this.bodies;
+    const useBarnesHut = allGravitating.length + n > Constants.barnesHutThreshold;
+
+    if (useBarnesHut) {
+      this._barnesHut.build(allGravitating, active);
+    }
+
+    const acc = new Array(n);
+    for (let i = 0; i < n; i++) acc[i] = [0, 0, 0];
+
+    for (let i = 0; i < n; i++) {
+      const p = active[i];
+      if (useBarnesHut) {
+        const accBH = this._barnesHut.computeAcceleration(p);
+        acc[i][0] = accBH[0];
+        acc[i][1] = accBH[1];
+        acc[i][2] = accBH[2];
+      } else {
+        let ax = 0, ay = 0, az = 0;
+        for (const bh of allGravitating) {
+          const dx = bh.position[0] - p.position[0];
+          const dy = bh.position[1] - p.position[1];
+          const dz = bh.position[2] - p.position[2];
+          const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
+          const r = Math.sqrt(r2);
+          const f = Constants.G_solar_km * bh.mass / (r2 * r);
+          ax += f * dx;
+          ay += f * dy;
+          az += f * dz;
+        }
+        for (const pj of active) {
+          if (pj.id === p.id) continue;
+          const dx = pj.position[0] - p.position[0];
+          const dy = pj.position[1] - p.position[1];
+          const dz = pj.position[2] - p.position[2];
+          const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
+          const r = Math.sqrt(r2);
+          const f = Constants.G_solar_km * pj.mass / (r2 * r);
+          ax += f * dx;
+          ay += f * dy;
+          az += f * dz;
+        }
+        acc[i][0] = ax;
+        acc[i][1] = ay;
+        acc[i][2] = az;
+      }
+    }
+
+    for (let i = 0; i < n; i++) {
+      const p = active[i];
+      p.position[0] += p.velocity[0] * dt + 0.5 * acc[i][0] * dt * dt;
+      p.position[1] += p.velocity[1] * dt + 0.5 * acc[i][1] * dt * dt;
+      p.position[2] += p.velocity[2] * dt + 0.5 * acc[i][2] * dt * dt;
+    }
+
+    const newAcc = new Array(n);
+    for (let i = 0; i < n; i++) newAcc[i] = [0, 0, 0];
+
+    if (useBarnesHut) {
+      this._barnesHut.build(allGravitating, active);
+    }
+
+    for (let i = 0; i < n; i++) {
+      const p = active[i];
+      if (useBarnesHut) {
+        const accBH = this._barnesHut.computeAcceleration(p);
+        newAcc[i][0] = accBH[0];
+        newAcc[i][1] = accBH[1];
+        newAcc[i][2] = accBH[2];
+      } else {
+        let ax = 0, ay = 0, az = 0;
+        for (const bh of allGravitating) {
+          const dx = bh.position[0] - p.position[0];
+          const dy = bh.position[1] - p.position[1];
+          const dz = bh.position[2] - p.position[2];
+          const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
+          const r = Math.sqrt(r2);
+          const f = Constants.G_solar_km * bh.mass / (r2 * r);
+          ax += f * dx;
+          ay += f * dy;
+          az += f * dz;
+        }
+        for (const pj of active) {
+          if (pj.id === p.id) continue;
+          const dx = pj.position[0] - p.position[0];
+          const dy = pj.position[1] - p.position[1];
+          const dz = pj.position[2] - p.position[2];
+          const r2 = dx * dx + dy * dy + dz * dz + Constants.softening * Constants.softening;
+          const r = Math.sqrt(r2);
+          const f = Constants.G_solar_km * pj.mass / (r2 * r);
+          ax += f * dx;
+          ay += f * dy;
+          az += f * dz;
+        }
+        newAcc[i][0] = ax;
+        newAcc[i][1] = ay;
+        newAcc[i][2] = az;
+      }
+    }
+
+    for (let i = 0; i < n; i++) {
+      const p = active[i];
+      p.velocity[0] += 0.5 * (acc[i][0] + newAcc[i][0]) * dt;
+      p.velocity[1] += 0.5 * (acc[i][1] + newAcc[i][1]) * dt;
+      p.velocity[2] += 0.5 * (acc[i][2] + newAcc[i][2]) * dt;
+    }
+  }
+
+  _integrateMatterSPH(dt) {
+    const active = this.matterParticles.filter(p => p.isActive);
+    if (active.length === 0) return;
+
+    this._computeSmoothingLength();
+    const h = this._smoothingLength;
+
+    this._sphSolver.computeDensity(active, h);
+    this._sphSolver.computePressure(active);
+    this._sphSolver.computeHydroForces(active, dt, h);
+
+    for (const p of active) {
+      const acc = p._sphAcceleration || [0, 0, 0];
+      p.velocity[0] += 0.5 * acc[0] * dt;
+      p.velocity[1] += 0.5 * acc[1] * dt;
+      p.velocity[2] += 0.5 * acc[2] * dt;
+    }
+
+    this._sphSolver.integrateInternalEnergy(active, dt, this._coolingBeta);
+
+    for (const p of active) {
+      if (p._shockHeating) {
+        this._ledger.recordShockHeating(p.mass * p._shockHeating);
+        p._shockHeating = 0;
+      }
+      if (p._coolingRate) {
+        this._ledger.recordCooling(-p.mass * p._coolingRate * dt);
+        p._coolingRate = 0;
+      }
+      p._sphAcceleration = null;
+      p._duDtHydro = 0;
+    }
+  }
+
+  _computeMatterTimestep() {
+    const active = this.matterParticles.filter(p => p.isActive);
+    if (active.length === 0) return Infinity;
+
+    let dtMin = Infinity;
+
+    for (const p of active) {
+      const h = this._smoothingLength;
+      const cs = Math.sqrt(Constants.sphGamma * p.pressure / Math.max(p.density, Constants.sphDensityFloor));
+      const vSig = cs;
+      const dtSph = Constants.dt_factor * h / (vSig + 1e-15);
+      if (dtSph < dtMin) dtMin = dtSph;
+
+      for (const bh of this._blackHoles) {
+        const dx = p.position[0] - bh.position[0];
+        const dy = p.position[1] - bh.position[1];
+        const dz = p.position[2] - bh.position[2];
+        const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (r < bh.rs * 10) {
+          const vRel = Math.sqrt(
+            (p.velocity[0] - bh.velocity[0]) ** 2 +
+            (p.velocity[1] - bh.velocity[1]) ** 2 +
+            (p.velocity[2] - bh.velocity[2]) ** 2
+          );
+          const dtEnc = Constants.dt_factor * r / (vRel + 1e-15);
+          if (dtEnc < dtMin) dtMin = dtEnc;
+        }
+      }
+    }
+
+    return dtMin;
+  }
+
+  getMatterDiagnostics() {
+    this._ledger.compute(this.matterParticles, this.bodies, Constants.G_solar_km);
+    return this._ledger.getDiagnostics();
   }
 
   getTotalEnergy() {

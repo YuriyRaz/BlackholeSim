@@ -80,6 +80,36 @@ The physics engine will expose particle positions, velocities, thermodynamic fie
 
 **Why:** The previous failure was diagnosed visually but originated in state generation. Separating the contracts lets tests catch a stationary cluster without relying on a screenshot.
 
+### D8: TDE orbital parameters — start outside tidal radius, e=0.95
+
+The TDE preset places the star at `3 × dR` from the black hole on an elliptical orbit with eccentricity `e = 0.95` and periapsis inside `dR`. The orbit defines the center-of-mass trajectory; the resolved star particles follow this trajectory with internal SPH state.
+
+**Why:** Starting outside the tidal radius lets students see the approach phase and the gradual increase of tidal force (`a_tidal ∝ 1/d³`) before disruption. Eccentricity 0.95 produces a clearly bound orbit with a fast periapsis passage, appropriate for a single encounter in a teaching simulation.
+
+**Alternatives considered:** Starting at `2 × dR` (too little approach time for visual/educational clarity). e=0.99 (periapsis passage too fast, disrupts numerical stability). A parabolic orbit (unbound, no fallback phase).
+
+### D9: Polytropic star — γ = 5/3, 1000 particles
+
+The star is initialized as a polytropic sphere with index `γ = 5/3` (adiabatic ideal gas, appropriate for a sun-like main-sequence star). The density profile follows the Lane-Emden solution for `n = 1.5` (γ = 1 + 1/n). Default resolution: 1000 particles per star.
+
+**Why:** γ = 5/3 is the standard adiabatic index for a non-relativistic ideal gas and is what physics students learn. 1000 particles provides sufficient density sampling for SPH stability while keeping the simulation interactive on a laptop CPU (the neighbor search remains bounded).
+
+**Particle count formula:** `N_star = clamp(M_star / M_sun × 1000, 200, 2000)`. A solar-mass star gets 1000 particles; lower-mass stars may go down to 200, more massive stars up to 2000.
+
+### D10: Cooling — optically thin placeholder for first milestone
+
+The first milestone uses a simple optically thin cooling law:
+```
+du/dt = -u / t_cool
+t_cool = β × t_dyn(ρ)
+t_dyn = 1 / sqrt(Gρ)
+```
+where `β` is a dimensionless parameter (default 10). This is NOT a crutch — optically thin cooling is a standard SPH approximation and is physically motivated (real gas in the TDE stream radiates energy). The cooling timescale is tied to the local dynamical time, which is the shortest physical timescale in the problem.
+
+**Why:** Without any cooling, shocked debris retains its thermal energy and forms a hot, puffy torus that does not circularize into a thin disk within the simulation window. A simple cooling law lets students observe: "with cooling → stream intersections lose energy → debris circularizes → disk forms." The `β` parameter serves as calibration, not as a magic value.
+
+**Teaching note:** Students can experiment with β → Infinity (no cooling → thick torus) vs. β → 1 (rapid cooling → thin disk) and observe the difference.
+
 ## Risks / Trade-offs
 
 - [SPH instability or particle clumping] → Use kernel/support bounds, CFL-like timestep limits, density floors, artificial viscosity, and small deterministic test scenes before TDE runs.
@@ -102,8 +132,7 @@ Rollback during development is a source-control revert to the pre-change physics
 
 ## Open Questions
 
-- What particle count gives acceptable SPH stability and 30 FPS on the project's weakest supported GPU/CPU combination?
+- What particle count gives acceptable SPH stability and 30 FPS on the project's weakest supported GPU/CPU combination? (Default 1000 per star; may need tuning)
 - Should the first implementation use a fixed smoothing length or adapt it from local density?
-- Which cooling approximation is sufficient to let debris circularize without artificially destroying energy conservation?
 - Should the MHD/jet change use a reduced magnetic-flux model or target a GPU-capable GRMHD research path?
 - Should the black hole become dynamic in the same change, or remain fixed until the matter solver has passed conservation tests?

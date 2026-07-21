@@ -104,8 +104,9 @@ export class BarnesHut {
     this.root = null;
   }
 
-  build(bodies) {
-    if (bodies.length === 0) {
+  build(bodies, particles = []) {
+    const allBodies = [...bodies, ...particles];
+    if (allBodies.length === 0) {
       this.root = null;
       return;
     }
@@ -114,7 +115,7 @@ export class BarnesHut {
     let minY = Infinity, maxY = -Infinity;
     let minZ = Infinity, maxZ = -Infinity;
 
-    for (const body of bodies) {
+    for (const body of allBodies) {
       minX = Math.min(minX, body.position[0]);
       maxX = Math.max(maxX, body.position[0]);
       minY = Math.min(minY, body.position[1]);
@@ -129,7 +130,7 @@ export class BarnesHut {
     const cz = (minZ + maxZ) / 2;
 
     this.root = new BHNode(cx, cy, cz, size);
-    for (const body of bodies) {
+    for (const body of allBodies) {
       this.root.insert(body);
     }
   }

@@ -67,5 +67,22 @@ export const Constants = {
 
   minStarParticles: 50,
   maxStarParticles: 500,
-  starParticleMassFraction: 0.1
+  starParticleMassFraction: 0.1,
+
+  sphGamma: 5 / 3,
+  sphKernelSupport: 2.0,
+  sphDensityFloor: 1e-20,
+  sphPressureFloor: 1e-20,
+  sphEtaSmooth: 1.2,
+  sphViscAlpha: 1.0,
+  sphViscBeta: 2.0,
+
+  coolingBeta: 10,
+  sphOverloadThreshold: 100,
+
+  pseudoNewtonian: true,
+
+  defaultStarResolution: 1000,
+  minStarResolution: 200,
+  maxStarResolution: 2000,
 };
