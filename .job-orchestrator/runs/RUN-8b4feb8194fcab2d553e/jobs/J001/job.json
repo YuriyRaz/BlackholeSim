@@ -1,0 +1,28 @@
+{
+  "answers": [],
+  "checkpoint_path": null,
+  "created_at": "2026-07-20T20:25:48.866101Z",
+  "creation_sequence": 1,
+  "depends_on": [],
+  "id": "J001",
+  "outcome": {
+    "report_path": "jobs/J001/report.md",
+    "status": "completed",
+    "summary": "Reviewed rebuild-tde-physics-core proposal against current TDE codebase. Found 3 blocking issues (TDEPreset starts inside tidal radius, polytropic star parameters underspecified, cooling approach undecided) and 3 minor items. Verdict: ready for implementation after architect resolves the 3 blocking issues."
+  },
+  "parent_job_id": null,
+  "pending_question": null,
+  "priority": 80,
+  "prompt_path": "jobs/J001/prompt.md",
+  "recovery_policy": null,
+  "related_reports": [],
+  "report_path": "jobs/J001/report.md",
+  "report_required": true,
+  "revision": 3,
+  "schema_version": 4,
+  "session_ref": "ses_iteration1_proposal",
+  "status": "completed",
+  "title": "Iteration 1 — Proposal: Review rebuild-tde-physics-core",
+  "updated_at": "2026-07-20T20:29:40.361390Z",
+  "waiting_on": []
+}

@@ -46,11 +46,16 @@ export class PhaseIndicator {
     if (hasDisruption) {
       phaseText += (phaseText ? ' | ' : '') + 'Tidal disruption';
     }
+    const hasFallback = (state.fallbackRate || 0) > 0;
+    if (hasFallback) {
+      phaseText += (phaseText ? ' | ' : '') + `Fallback \u2014 dM/dt = ${state.fallbackRate.toExponential(2)} M\u2609/yr`;
+    }
     if (hasAccretion) {
-      phaseText += (phaseText ? ' | ' : '') + `Active accretion \u2014 dM/dt = ${state.accretionRate.toExponential(2)} M\u2609/yr`;
-    } else if (state.gasParticles.length > 0) {
+      phaseText += (phaseText ? ' | ' : '') + `Accretion \u2014 dM/dt = ${state.accretionRate.toExponential(2)} M\u2609/yr`;
+    } else if (state.gasParticles.length > 0 || (state.matterParticles?.length ?? 0) > 0) {
       phaseText += (phaseText ? ' | ' : '') + 'Quiescent';
     }
+    phaseText += (phaseText ? ' | ' : '') + 'No MHD jet model';
 
     this.setPhase(phaseText || 'Idle');
   }

@@ -1,0 +1,73 @@
+{
+  "schema_version": 4,
+  "jobs": [
+    {
+      "id": "J001",
+      "title": "Iteration 1 — Proposal: Review rebuild-tde-physics-core",
+      "goal": "Review the existing rebuild-tde-physics-core proposal using openspec explore, check current TDE codebase state (PhysicsEngine.js, Star.js, Constants.js, presets.js), consult Architect if issues found, and confirm the proposal is ready for implementation.",
+      "workflow": "openspec explore current TDE state -> if issues, ask Architect via sub-job -> openspec proposal",
+      "requirements": ["Understand current faked TDE mechanics", "Review existing rebuild-tde-physics-core proposal"],
+      "constraints": ["Do not implement code", "Only review and propose"],
+      "completion_conditions": ["Proposal reviewed and confirmed ready for implementation", "Any architectural issues documented"],
+      "context": ["GREAT_GOAL.md — ultimate goal: all phenomena emerge from shared physical equations", "openspec/changes/rebuild-tde-physics-core/proposal.md — existing proposal to review"],
+      "report_required": true,
+      "priority": 80,
+      "depends_on": []
+    },
+    {
+      "id": "J002",
+      "title": "Iteration 1 — Implementation: Physics Foundation + SPH + Gravity",
+      "goal": "Implement task groups 1-3 of rebuild-tde-physics-core: physics state foundation (units, persistent particles, polytropic star), neighbor search and SPH (hash, density, pressure, forces, internal energy), unified gravity (symplectic integration, BH+self-gravity, pseudo-Newtonian potential). Each task group applied via openspec-apply-change, verified, fixed, synced, archived, committed.",
+      "workflow": "openspec-apply-change for task group 1 -> openspec-apply-change for task group 2 -> openspec-apply-change for task group 3 -> openspec-verify-change -> fix findings -> openspec-sync-specs -> openspec-archive-change -> git commit and push",
+      "requirements": ["Implement tasks 1.1-1.5 (Physics State Foundation)", "Implement tasks 2.1-2.6 (Neighbor Search and SPH)", "Implement tasks 3.1-3.5 (Unified Gravity Integration)"],
+      "constraints": ["Do not implement later task groups", "Major issues must be escalated to Architect"],
+      "completion_conditions": ["Tasks 1.1-1.5 checked off", "Tasks 2.1-2.6 checked off", "Tasks 3.1-3.5 checked off", "All verification findings fixed", "Change archived and committed"],
+      "context": ["openspec/changes/rebuild-tde-physics-core/tasks.md — task definitions", "openspec/changes/rebuild-tde-physics-core/design.md — design decisions", "openspec/changes/rebuild-tde-physics-core/specs/ — specification files"],
+      "escalation": "Architect",
+      "report_required": true,
+      "priority": 70,
+      "depends_on": ["J001"]
+    },
+    {
+      "id": "J003",
+      "title": "Iteration 1 — Implementation: TDE Init + Disruption + Fallback + Accretion",
+      "goal": "Implement task groups 4-5 of rebuild-tde-physics-core: TDE initial conditions and disruption (persistent star, real tidal gradient), fallback/circularization/accretion (bound/unbound classification, particle capture, remove fake timers and synthetic jet). Each task group applied via openspec-apply-change, verified, fixed, synced, archived, committed.",
+      "workflow": "openspec-apply-change for task group 4 -> openspec-apply-change for task group 5 -> openspec-verify-change -> fix findings -> openspec-sync-specs -> openspec-archive-change -> git commit and push",
+      "requirements": ["Implement tasks 4.1-4.5 (TDE Initial Conditions and Disruption)", "Implement tasks 5.1-5.6 (Fallback, Circularization, Accretion)", "Remove pre-shaped stream, index-based gas, random jet redirect rule"],
+      "constraints": ["Do not implement later task groups before J002 is done", "Major issues must be escalated to Architect"],
+      "completion_conditions": ["Tasks 4.1-4.5 checked off", "Tasks 5.1-5.6 checked off", "No faked TDE mechanics remain from groups 4-5", "Change archived and committed"],
+      "context": ["openspec/changes/rebuild-tde-physics-core/tasks.md — task definitions", "openspec/changes/rebuild-tde-physics-core/design.md — design decisions", "openspec/specs/tidal-disruption/spec.md — current (faked) spec being replaced"],
+      "escalation": "Architect",
+      "report_required": true,
+      "priority": 60,
+      "depends_on": ["J001"]
+    },
+    {
+      "id": "J004",
+      "title": "Iteration 1 — Implementation: Rendering Contract + Verification + Performance",
+      "goal": "Implement task groups 6-7 of rebuild-tde-physics-core: update physics state and rendering contract (getState(), remove TDE-specific hacks), add integration tests, benchmarks, and documentation. Applied via openspec-apply-change, verified, fixed, synced, archived, committed.",
+      "workflow": "openspec-apply-change for task group 6 -> openspec-apply-change for task group 7 -> openspec-verify-change -> fix findings -> openspec-sync-specs -> openspec-archive-change -> git commit and push",
+      "requirements": ["Implement tasks 6.1-6.5 (Physics State and Rendering Contract)", "Implement tasks 7.1-7.6 (Verification and Performance)", "Ensure visual-effects-03 and audio-polish-04 features still work with new TDE state"],
+      "constraints": ["Must run after J002 and J003 complete", "Check compatibility with existing features"],
+      "completion_conditions": ["Tasks 6.1-6.5 checked off", "Tasks 7.1-7.6 checked off", "Existing visual and audio features compatible", "Change archived and committed"],
+      "context": ["openspec/changes/rebuild-tde-physics-core/tasks.md — task definitions", "openspec/changes/archive/2026-07-09-visual-effects-03/ — archived visual effects specs for compatibility check"],
+      "escalation": "Architect",
+      "report_required": true,
+      "priority": 50,
+      "depends_on": ["J001", "J002", "J003"]
+    },
+    {
+      "id": "J005",
+      "title": "Iteration 1 — Architect: Cross-cutting Review and Iteration 2 Plan",
+      "goal": "Perform a cross-cutting architecture review of the entire rebuild-tde-physics-core change. Check GREAT_GOAL.md compliance: are all faked TDE mechanics replaced with physical simulation? Verify compatibility with visual-effects-03 and audio-polish-04. Identify any remaining non-physical behavior in the entire simulation. Plan Iteration 2.",
+      "workflow": "openspec explore the complete rebuilt TDE -> check every faked mechanic removal -> verify compatibility with existing features -> plan next iteration -> update GREAT_GOAL.md if needed",
+      "requirements": ["Verify no faked TDE mechanics remain (pre-shaped stream, index gas, random jet, fallback timer)", "Check compatibility with visual-effects-03 features (phase indicator, particle trails, GW ripples)", "Check compatibility with audio-polish-04 features (event sounds, spatial audio)", "Identify any other non-physical behaviors in the simulation", "Produce Iteration 2 plan"],
+      "constraints": ["This review is cross-cutting — must examine the entire system, not just TDE", "Must verify great goal compliance"],
+      "completion_conditions": ["All TDE physics confirmed as emergent from physical equations", "No fake mechanics remain anywhere", "Compatibility confirmed with existing features", "Iteration 2 plan documented"],
+      "context": ["GREAT_GOAL.md — ultimate goal reference", "openspec/changes/rebuild-tde-physics-core/ — the implemented change", "openspec/specs/ — all main specs to check for remaining non-physical behavior"],
+      "report_required": true,
+      "priority": 40,
+      "depends_on": ["J004"]
+    }
+  ]
+}

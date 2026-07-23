@@ -149,7 +149,16 @@ function animate() {
   camState.gw = physState.gw;
   camState.gwSourcePosition = physState.bodies.filter(b => b.type === 'blackhole')[0]?.position || [0,0,0];
   camState.particleTrails = display.trails ? physState.particleTrails : null;
-  camState.particles = physState.gasParticles;
+  camState.particles = [
+    ...physState.gasParticles,
+    ...physState.matterParticles.map(p => ({
+      position: p.position,
+      velocity: p.velocity,
+      temperature: p.temperature,
+      size: p.smoothingLength || 1.0,
+      type: 'matter'
+    }))
+  ];
 
   if (audioEngine._initialized && !audioEngine.muted) {
     try {

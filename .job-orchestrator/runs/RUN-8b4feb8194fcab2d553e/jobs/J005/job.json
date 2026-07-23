@@ -1,0 +1,30 @@
+{
+  "answers": [],
+  "checkpoint_path": null,
+  "created_at": "2026-07-20T20:25:48.866101Z",
+  "creation_sequence": 5,
+  "depends_on": [
+    "J004"
+  ],
+  "id": "J005",
+  "outcome": {
+    "report_path": "jobs/J005/report.md",
+    "status": "completed",
+    "summary": "Cross-cutting architecture review complete. All faked TDE mechanics confirmed removed. Compatible with visual-effects-03 and audio-polish-04. Fixed: _updateParticleTrails now includes matter particles, removed dead Star.js pulsation code and 7 dead Constants.js entries. Iteration 2 plan: fallback rate validation, accretion enhancement, disk formation visibility, self-gravity, snapshot replay."
+  },
+  "parent_job_id": null,
+  "pending_question": null,
+  "priority": 40,
+  "prompt_path": "jobs/J005/prompt.md",
+  "recovery_policy": null,
+  "related_reports": [],
+  "report_path": "jobs/J005/report.md",
+  "report_required": true,
+  "revision": 3,
+  "schema_version": 4,
+  "session_ref": "ses_iteration1_architect_review",
+  "status": "completed",
+  "title": "Iteration 1 — Architect: Cross-cutting Review and Iteration 2 Plan",
+  "updated_at": "2026-07-22T22:49:07.133482Z",
+  "waiting_on": []
+}

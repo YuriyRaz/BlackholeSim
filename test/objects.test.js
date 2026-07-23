@@ -70,16 +70,10 @@ describe('Star', () => {
     expect(hotStar.color[2]).toBeGreaterThan(coolStar.color[2]);
   });
 
-  it('should generate disruption particles', () => {
+  it('generateDisruptionParticles returns empty (particles now created by PhysicsEngine)', () => {
     const star = new Star({ mass: 1, radius: 1 });
     const particles = star.generateDisruptionParticles();
-    expect(particles.length).toBeGreaterThanOrEqual(50);
-    expect(particles.length).toBeLessThanOrEqual(500);
-    particles.forEach(p => {
-      expect(p.position.length).toBe(3);
-      expect(p.velocity.length).toBe(3);
-      expect(p.mass).toBeGreaterThan(0);
-    });
+    expect(particles.length).toBe(0);
   });
 
   it('should compute deformation', () => {

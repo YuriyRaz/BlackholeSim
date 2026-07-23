@@ -53,21 +53,14 @@ export const Constants = {
   barnesHutThreshold: 100,
 
   alpha_visc: 0.1,
-  jetMaxParticles: 2000,
-  jetMaxDistance: 200,
   trailMaxPoints: 200,
 
   snapshotInterval: 10,
   maxSnapshots: 600,
   maxRecomputeSteps: 100,
 
-  gasMinRadius: 10,
   gasMaxRadius: 50,
   gasDiskThickness: 0.1,
-
-  minStarParticles: 50,
-  maxStarParticles: 500,
-  starParticleMassFraction: 0.1,
 
   sphGamma: 5 / 3,
   sphKernelSupport: 2.0,
@@ -79,8 +72,6 @@ export const Constants = {
 
   coolingBeta: 10,
   sphOverloadThreshold: 100,
-
-  pseudoNewtonian: true,
 
   defaultStarResolution: 1000,
   minStarResolution: 200,

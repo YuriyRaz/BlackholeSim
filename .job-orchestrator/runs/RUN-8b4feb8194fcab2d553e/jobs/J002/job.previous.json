@@ -1,0 +1,26 @@
+{
+  "answers": [],
+  "checkpoint_path": null,
+  "created_at": "2026-07-20T20:25:48.866101Z",
+  "creation_sequence": 2,
+  "depends_on": [
+    "J001"
+  ],
+  "id": "J002",
+  "outcome": null,
+  "parent_job_id": null,
+  "pending_question": null,
+  "priority": 70,
+  "prompt_path": "jobs/J002/prompt.md",
+  "recovery_policy": null,
+  "related_reports": [],
+  "report_path": "jobs/J002/report.md",
+  "report_required": true,
+  "revision": 2,
+  "schema_version": 4,
+  "session_ref": "ses_iteration1_impl_foundation",
+  "status": "running",
+  "title": "Iteration 1 \u00e2\u20ac\u201d Implementation: Physics Foundation + SPH + Gravity",
+  "updated_at": "2026-07-21T18:14:39.109538+00:00",
+  "waiting_on": []
+}

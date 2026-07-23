@@ -13,7 +13,6 @@ export class PhysicsEngine {
     this.bodies = [];
     this.gasParticles = [];
     this.matterParticles = [];
-    this.jetParticles = [];
     this.simTime = 0;
     this.accretionRate = 0;
     this.gwFrequency = 0;
@@ -42,6 +41,7 @@ export class PhysicsEngine {
     this._smoothingLength = 0;
     this._dtHydro = 0;
     this._coolingBeta = Constants.coolingBeta;
+    this._bhAccretionEnergy = 0;
   }
 
   get playing() { return this._playing; }
@@ -72,7 +72,6 @@ export class PhysicsEngine {
     for (const b of this.bodies) b.reset();
     for (const g of this.gasParticles) g.reset();
     for (const p of this.matterParticles) p.reset();
-    this.jetParticles = [];
     this.matterParticles = [];
     this.simTime = 0;
     this.accretionRate = 0;
@@ -88,6 +87,7 @@ export class PhysicsEngine {
     this._fallbackRate = 0;
     this._fallbackStartTime = -1;
     this._fallbackMass = 0;
+    this._bhAccretionEnergy = 0;
     this._bhPairs = [];
     this._particleTrails = new Map();
     this._gwRippleFadeStrain = 0;
@@ -100,7 +100,6 @@ export class PhysicsEngine {
     this.reset();
     this.bodies = [];
     this.gasParticles = [];
-    this.jetParticles = [];
     this.matterParticles = [];
     if (presetData.bodies) {
       for (const bd of presetData.bodies) {
@@ -142,39 +141,60 @@ export class PhysicsEngine {
       this._integrateMatterGravity(subDt);
       this._integrateMatterSPH(subDt);
       this._integrateGas(subDt);
+      this._handleTidalDisruption(subDt);
+      this._classifyBoundParticles();
+      this._computeFallbackRate(subDt);
+      this._updatePhaseTransitions(subDt);
+      this._captureParticlesAtISCO(subDt);
       this._computeAccretion(subDt);
       this._computeGravitationalWaves(subDt);
-      this._handleTidalDisruption();
-      this._computeFallbackRate();
-      this._updateJets(subDt);
       for (const body of this.bodies) {
         if (!body.fixed && !body.disrupted) {
           body.updateTrail();
         }
       }
       this._computeBHPairs();
-      this._updateParticleTrails();
       this.simTime += subDt;
       this._snapshotCounter++;
-      if (this._snapshotCounter >= Constants.snapshotInterval) {
-        this._saveSnapshot();
-        this._snapshotCounter = 0;
-      }
     }
   }
 
-  _computeFallbackRate() {
-    if (this._fallbackStartTime < 0) return;
-    
-    const t = this.simTime - this._fallbackStartTime;
-    if (t <= 0) {
-      this._fallbackRate = 0;
-      return;
+  _computeFallbackRate(dt) {
+    const active = this.matterParticles.filter(p => p.isActive);
+    if (active.length === 0) return;
+
+    const blackHoles = this._blackHoles;
+    if (blackHoles.length === 0) return;
+    const bh = blackHoles[0];
+
+    const dR = Constants.tidalDisruptionRadius(bh.mass, 1, 1);
+    const fallbackRadius = dR * 2.0;
+    let returningMass = 0;
+    let returningCount = 0;
+
+    for (const p of active) {
+      if (p.phase !== 'debris' && p.phase !== 'disk') continue;
+      if (p._wasReturning === undefined) p._wasReturning = false;
+
+      const dx = p.position[0] - bh.position[0];
+      const dy = p.position[1] - bh.position[1];
+      const dz = p.position[2] - bh.position[2];
+      const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      const vr = (dx * p.velocity[0] + dy * p.velocity[1] + dz * p.velocity[2]) / (r + 1e-15);
+
+      const isReturning = r < fallbackRadius && vr < 0;
+      if (isReturning && !p._wasReturning) {
+        returningMass += p.mass;
+        returningCount++;
+      }
+      p._wasReturning = r < fallbackRadius;
     }
-    
-    const T_fallback = 10.0;
-    const tRatio = t / T_fallback;
-    this._fallbackRate = this._fallbackMass * Math.pow(tRatio, -5/3) * 0.001;
+
+    this._fallbackRate = returningMass / Math.max(dt, 1e-15);
+    if (returningCount > 0 && this._fallbackStartTime < 0) {
+      this._fallbackStartTime = this.simTime;
+    }
   }
 
   _computeBinaryGWMetrics(bi, bj, separationKm) {
@@ -553,41 +573,7 @@ export class PhysicsEngine {
       gp.age += dt;
     }
 
-    this._applyViscousTransport(dt);
     this.gasParticles = this.gasParticles.filter(gp => !gp.accreted);
-  }
-
-  _applyViscousTransport(dt) {
-    for (let i = 0; i < this.gasParticles.length; i++) {
-      const gp = this.gasParticles[i];
-      if (gp.accreted) continue;
-      const blackHoles = this._blackHoles;
-      for (const bh of blackHoles) {
-        const dx = gp.position[0] - bh.position[0];
-        const dy = gp.position[1] - bh.position[1];
-        const dz = gp.position[2] - bh.position[2];
-        const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (r < 0.001) continue;
-
-        const orbitalPeriod = Constants.orbitalPeriod(bh.mass, r);
-        const H = r * Constants.gasDiskThickness;
-        const viscousTimescale = orbitalPeriod * (r / H) * (r / H);
-        const viscousAccel = Constants.alpha_visc * r / (viscousTimescale * viscousTimescale + 1);
-        const rVec = [dx / r, dy / r, dz / r];
-        const tangential = [-rVec[1], rVec[0], 0];
-        const tLen = Math.sqrt(tangential[0] ** 2 + tangential[1] ** 2 + tangential[2] ** 2);
-        if (tLen > 0.001) {
-          tangential[0] /= tLen;
-          tangential[1] /= tLen;
-          tangential[2] /= tLen;
-        }
-        const inward = [-rVec[0], -rVec[1], -rVec[2]];
-        const transport = 0.001 * viscousAccel * dt;
-        gp.velocity[0] += tangential[0] * transport + inward[0] * transport * 0.01;
-        gp.velocity[1] += tangential[1] * transport + inward[1] * transport * 0.01;
-        gp.velocity[2] += tangential[2] * transport + inward[2] * transport * 0.01;
-      }
-    }
   }
 
   _computeAccretion(dt) {
@@ -610,7 +596,6 @@ export class PhysicsEngine {
           if (r < bh.rs * 0.5) {
             gp.accreted = true;
             accretedThisStep += gp.mass;
-            this._emitJetParticles(bh, gp);
           }
         }
       }
@@ -626,105 +611,163 @@ export class PhysicsEngine {
     }
   }
 
-  _emitJetParticles(bh, gasParticle) {
-    if (bh.spin === 0) return;
-    const jetProb = bh.spin * bh.spin;
-    if (Math.random() > jetProb) return;
-
-    const count = Math.min(2, Math.floor(jetProb * 3) + 1);
-    for (let i = 0; i < count; i++) {
-      if (this.jetParticles.length >= Constants.jetMaxParticles) {
-        this.jetParticles.shift();
-      }
-      const spinAxis = bh.spinAxis;
-      const speed = Constants.c * 0.95 * (0.9 + Math.random() * 0.09);
-      const scaledSpeed = speed * 1e-6;
-      const wobble = bh.spin * 0.1;
-      const axis = [
-        spinAxis[0] + (Math.random() - 0.5) * wobble,
-        spinAxis[1] + (Math.random() - 0.5) * wobble,
-        spinAxis[2] + (Math.random() - 0.5) * wobble
-      ];
-      const sign = Math.random() > 0.5 ? 1 : -1;
-
-      this.jetParticles.push({
-        position: [...bh.position],
-        velocity: [axis[0] * scaledSpeed * sign, axis[1] * scaledSpeed * sign, axis[2] * scaledSpeed * sign],
-        type: 'jet',
-        age: 0,
-        birthTime: this.simTime
-      });
-    }
-  }
-
-  _updateJets(dt) {
-    for (const jp of this.jetParticles) {
-      jp.position[0] += jp.velocity[0] * dt;
-      jp.position[1] += jp.velocity[1] * dt;
-      jp.position[2] += jp.velocity[2] * dt;
-      jp.age += dt;
-    }
-
+  _classifyBoundParticles() {
     const blackHoles = this._blackHoles;
-    this.jetParticles = this.jetParticles.filter(jp => {
-      for (const bh of blackHoles) {
-        const dx = jp.position[0] - bh.position[0];
-        const dy = jp.position[1] - bh.position[1];
-        const dz = jp.position[2] - bh.position[2];
-        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (dist > bh.rs * Constants.jetMaxDistance) return false;
-      }
-      return true;
-    });
-  }
+    if (blackHoles.length === 0) return;
+    const bh = blackHoles[0];
 
-  _handleTidalDisruption() {
-    const blackHoles = this._blackHoles;
-    const stars = this.bodies.filter(b => b.type === 'star' && !b.disrupted);
+    for (const p of this.matterParticles) {
+      if (!p.isActive) continue;
 
-    for (const star of stars) {
-      for (const bh of blackHoles) {
-        const dx = star.position[0] - bh.position[0];
-        const dy = star.position[1] - bh.position[1];
-        const dz = star.position[2] - bh.position[2];
-        const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        const dR = Constants.tidalDisruptionRadius(bh.mass, star.starRadius, star.mass);
+      const dx = p.position[0] - bh.position[0];
+      const dy = p.position[1] - bh.position[1];
+      const dz = p.position[2] - bh.position[2];
+      const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      const v2 = p.velocity[0] ** 2 + p.velocity[1] ** 2 + p.velocity[2] ** 2;
 
-        star.computeDeformation(bh);
+      const rs = bh.rs;
+      const rMinusRs = Math.max(r - rs, rs * 0.1);
+      const specificOrbitalEnergy = 0.5 * v2 - Constants.G_solar_km * bh.mass / rMinusRs;
 
-        if (d < dR) {
-          star.disrupted = true;
-          star.disruptionTime = this.simTime;
-          const particles = star.generateDisruptionParticles(bh);
-          star.disruptionParticles = particles;
-          
-          if (this._fallbackStartTime < 0) {
-            this._fallbackStartTime = this.simTime;
-            this._fallbackMass = star.mass;
-          }
-          
-          for (let i = 0; i < particles.length; i++) {
-            const p = particles[i];
-            const capturedIntoGas = i % 5 !== 0;
-            if (capturedIntoGas) {
-              this.addGasParticle(new GasParticle({
-                position: p.position,
-                velocity: p.velocity,
-                mass: p.mass * 0.8,
-                renderSize: p.renderSize
-              }));
-            } else {
-              this.bodies.push(new Body({
-                position: p.position,
-                velocity: p.velocity,
-                mass: p.mass * 0.2,
-                renderRadius: p.renderRadius,
-                type: 'debris',
-                name: `debris_${star.name}_${Math.floor(Math.random() * 1000)}`
-              }));
-            }
-          }
+      const Lx = dy * p.velocity[2] - dz * p.velocity[1];
+      const Ly = dz * p.velocity[0] - dx * p.velocity[2];
+      const Lz = dx * p.velocity[1] - dy * p.velocity[0];
+      const specificAngularMomentum = Math.sqrt(Lx * Lx + Ly * Ly + Lz * Lz);
+      const vCirc = Math.sqrt(Constants.G_solar_km * bh.mass / Math.max(r, 1));
+
+      p._specificOrbitalEnergy = specificOrbitalEnergy;
+      p._specificAngularMomentum = specificAngularMomentum;
+      p._vCirc = vCirc;
+
+      if (p.phase === 'debris' || p.phase === 'disk') {
+        if (specificOrbitalEnergy > 0 && r > rs * 100) {
+          p.escaped = true;
         }
+      }
+    }
+  }
+
+  _updatePhaseTransitions(dt) {
+    const blackHoles = this._blackHoles;
+    if (blackHoles.length === 0) return;
+    const bh = blackHoles[0];
+
+    for (const p of this.matterParticles) {
+      if (!p.isActive) continue;
+      if (p.phase !== 'debris') continue;
+
+      const dx = p.position[0] - bh.position[0];
+      const dy = p.position[1] - bh.position[1];
+      const dz = p.position[2] - bh.position[2];
+      const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (r < bh.rs * 10) continue;
+
+      const vCirc = Math.sqrt(Constants.G_solar_km * bh.mass / r);
+      const vPhi = Math.abs(
+        (dx * p.velocity[2] - dz * p.velocity[0]) / (r + 1e-15)
+      );
+      const circularity = vPhi / (vCirc + 1e-15);
+      const hasShockHeating = p._shockHeating > 0;
+
+      if ((circularity > 0.7 || hasShockHeating) && p.density > 1e-15) {
+        p.phase = 'disk';
+      }
+    }
+  }
+
+  _captureParticlesAtISCO(dt) {
+    const blackHoles = this._blackHoles;
+    if (blackHoles.length === 0) return;
+    const bh = blackHoles[0];
+    let capturedThisStep = 0;
+
+    for (const p of this.matterParticles) {
+      if (!p.isActive) continue;
+      if (!bh.isInsideISCO(p.position)) continue;
+
+      const dx = p.position[0] - bh.position[0];
+      const dy = p.position[1] - bh.position[1];
+      const dz = p.position[2] - bh.position[2];
+      const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      const pMomentum = [
+        p.mass * p.velocity[0],
+        p.mass * p.velocity[1],
+        p.mass * p.velocity[2],
+      ];
+      const pEnergy = 0.5 * p.mass * (
+        p.velocity[0] ** 2 + p.velocity[1] ** 2 + p.velocity[2] ** 2
+      ) + p.mass * p.internalEnergy;
+
+      p.captured = true;
+      p.accretionTime = this.simTime;
+
+      capturedThisStep += p.mass;
+      this._ledger.recordAccretion(p.mass, pMomentum, pEnergy);
+
+      const pe = -Constants.G_solar_km * bh.mass * p.mass / Math.max(r, bh.rs);
+      this._accretedMass += p.mass;
+      this._bhAccretionEnergy = (this._bhAccretionEnergy || 0) + pEnergy + pe;
+    }
+
+    this._accretionWindow.push({ time: this.simTime, mass: capturedThisStep });
+    while (this._accretionWindow.length > 100) this._accretionWindow.shift();
+    if (this._accretionWindow.length > 0) {
+      const windowMass = this._accretionWindow.reduce((s, e) => s + e.mass, 0);
+      const windowTime = this._accretionWindow.length * dt;
+      this.accretionRate = windowTime > 0 ? windowMass / windowTime : 0;
+    }
+  }
+
+  _handleTidalDisruption(dt) {
+    const blackHoles = this._blackHoles;
+    if (blackHoles.length === 0) return;
+    const bh = blackHoles[0];
+    const bhPos = bh.position;
+    const bhMass = bh.mass;
+
+    const stellarParticles = this.matterParticles.filter(p => p.isActive && p.phase === 'stellar');
+    if (stellarParticles.length === 0) return;
+
+    const stars = this.bodies.filter(b => b.type === 'star' && !b.disrupted);
+    if (stars.length === 0) return;
+
+    const star = stars[0];
+    const R_star_km = star.starRadius * Constants.R_sun_km;
+
+    const cx = stellarParticles.reduce((s, p) => s + p.position[0], 0) / stellarParticles.length;
+    const cy = stellarParticles.reduce((s, p) => s + p.position[1], 0) / stellarParticles.length;
+    const cz = stellarParticles.reduce((s, p) => s + p.position[2], 0) / stellarParticles.length;
+
+    let maxSpread = 0;
+    for (const p of stellarParticles) {
+      const dx = p.position[0] - cx;
+      const dy = p.position[1] - cy;
+      const dz = p.position[2] - cz;
+      const spread = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (spread > maxSpread) maxSpread = spread;
+    }
+
+    star.computeDeformation(bh);
+
+    const dR = Constants.tidalDisruptionRadius(bhMass, star.starRadius, star.mass);
+    const dCenter = Math.sqrt(
+      (cx - bhPos[0]) ** 2 + (cy - bhPos[1]) ** 2 + (cz - bhPos[2]) ** 2
+    );
+
+    const tidalOverSelfGravity = (2 * Constants.G_solar_km * bhMass * R_star_km) /
+      (Math.pow(dCenter + 0.1, 3) * Constants.G_solar_km * stellarParticles.reduce((s, p) => s + p.mass, 0) /
+      (R_star_km * R_star_km + 0.01));
+
+    const disrupted = maxSpread > R_star_km * 2 || (dCenter < dR * 1.5 && tidalOverSelfGravity > 0.5);
+
+    if (!star.disrupted && disrupted) {
+      star.disrupted = true;
+      star.disruptionTime = this.simTime;
+      this._fallbackMass = stellarParticles.reduce((s, p) => s + p.mass, 0);
+
+      for (const p of stellarParticles) {
+        p.phase = 'debris';
       }
     }
   }
@@ -806,12 +849,13 @@ export class PhysicsEngine {
         trail.shift();
       }
     }
-    for (const jp of this.jetParticles) {
-      if (!this._particleTrails.has(jp.id)) {
-        this._particleTrails.set(jp.id, []);
+    for (const mp of this.matterParticles) {
+      if (mp.captured || !mp.isActive) continue;
+      if (!this._particleTrails.has(mp.id)) {
+        this._particleTrails.set(mp.id, []);
       }
-      const trail = this._particleTrails.get(jp.id);
-      trail.push([...jp.position]);
+      const trail = this._particleTrails.get(mp.id);
+      trail.push([...mp.position]);
       if (trail.length > this._trailMaxLength) {
         trail.shift();
       }
@@ -833,13 +877,6 @@ export class PhysicsEngine {
         velocity: [...g.velocity],
         mass: g.mass,
         temperature: g.temperature
-      })),
-      jets: this.jetParticles.map(j => ({
-        position: [...j.position],
-        velocity: [...j.velocity],
-        type: j.type,
-        age: j.age,
-        birthTime: j.birthTime
       })),
       gw: {
         frequency: this.gwFrequency,
@@ -888,16 +925,6 @@ export class PhysicsEngine {
         mass: g.mass,
         temperature: g.temperature,
         accreted: false
-      }));
-    }
-
-    if (snapshot.jets) {
-      this.jetParticles = snapshot.jets.map(j => ({
-        position: [...j.position],
-        velocity: [...j.velocity],
-        type: j.type,
-        age: j.age,
-        birthTime: j.birthTime
       }));
     }
 
@@ -965,11 +992,6 @@ export class PhysicsEngine {
         smoothingLength: p.smoothingLength,
         type: 'matter'
       })),
-      jetParticles: this.jetParticles.map(j => ({
-        position: [...j.position],
-        velocity: [...j.velocity],
-        type: 'jet'
-      })),
       gw: {
         frequency: this.gwFrequency,
         strain: this.gwStrain,
@@ -978,6 +1000,8 @@ export class PhysicsEngine {
       },
       accretionRate: this.accretionRate,
       fallbackRate: this._fallbackRate,
+      fallbackMass: this._fallbackMass,
+      bhAccretionEnergy: this._bhAccretionEnergy,
       simTime: this.simTime,
       bhPairs: this._bhPairs,
       particleTrails: Object.fromEntries(this._particleTrails),
@@ -1157,13 +1181,19 @@ export class PhysicsEngine {
     const active = this.matterParticles.filter(p => p.isActive);
     if (active.length === 0) return Infinity;
 
+    const h = this._smoothingLength > 0
+      ? this._smoothingLength
+      : Math.max(...active.map(p => {
+          const dx = p.position[0], dy = p.position[1], dz = p.position[2];
+          return Math.sqrt(dx * dx + dy * dy + dz * dz);
+        })) || 1;
+
     let dtMin = Infinity;
 
     for (const p of active) {
-      const h = this._smoothingLength;
       const cs = Math.sqrt(Constants.sphGamma * p.pressure / Math.max(p.density, Constants.sphDensityFloor));
-      const vSig = cs;
-      const dtSph = Constants.dt_factor * h / (vSig + 1e-15);
+      const vSig = Math.max(cs, 1e-15);
+      const dtSph = Constants.dt_factor * h / vSig;
       if (dtSph < dtMin) dtMin = dtSph;
 
       for (const bh of this._blackHoles) {

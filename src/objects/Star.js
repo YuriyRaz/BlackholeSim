@@ -7,8 +7,6 @@ export class Star extends Body {
     this.starRadius = options.radius || 1.0;
     this.temperature = options.temperature || 5778;
     this.luminosity = options.luminosity || 3.828e26;
-    this.pulsationFreq = Math.random() * 2 + 0.5;
-    this.pulsationPhase = Math.random() * Constants.TWO_PI;
     this.deformation = 0;
   }
 
@@ -35,67 +33,8 @@ export class Star extends Body {
     );
   }
 
-  generateDisruptionParticles(blackHole = null) {
-    const baseCount = Math.max(
-      Constants.minStarParticles,
-      Math.min(
-        Constants.maxStarParticles,
-        Math.floor(this.mass / Constants.starParticleMassFraction)
-      )
-    );
-    const n = blackHole ? Math.max(baseCount, 1400) : baseCount;
-    const particles = [];
-    const stellarRadius = this.starRadius * Constants.R_sun_km;
-    const dR = blackHole ? Constants.tidalDisruptionRadius(blackHole.mass, this.starRadius, this.mass) : stellarRadius;
-    const streamLength = blackHole ? dR * 1.75 : stellarRadius;
-    const streamWidth = blackHole ? dR * 0.045 : stellarRadius;
-    const visualSize = blackHole ? dR * 0.13 : undefined;
-    const radial = this._directionFrom(blackHole?.position || [0, 0, 0], this.position);
-    const tangent = this._tangentFromVelocity(radial);
-    const normal = this._normalize([
-      radial[1] * tangent[2] - radial[2] * tangent[1],
-      radial[2] * tangent[0] - radial[0] * tangent[2],
-      radial[0] * tangent[1] - radial[1] * tangent[0]
-    ]);
-    const speed = Math.hypot(...this.velocity);
-    for (let i = 0; i < n; i++) {
-      const streamT = (i / Math.max(n - 1, 1)) - 0.5;
-      const jitterT = (Math.random() - 0.5) * 0.18;
-      const along = (streamT + jitterT) * streamLength;
-      const sweep = Math.sign(streamT || 1) * streamT * streamT * streamLength * 0.42;
-      const across = (Math.random() - 0.5) * streamWidth;
-      const lift = (Math.random() - 0.5) * streamWidth * 0.35;
-      const perturbation = 0.1;
-      const vOrb = Math.sqrt(Constants.G_solar_km * this.mass / (stellarRadius || 1));
-      const shear = blackHole ? streamT * speed * 0.7 : 0;
-      let position = [
-        this.position[0] + radial[0] * along + tangent[0] * (across + sweep) + normal[0] * lift,
-        this.position[1] + radial[1] * along + tangent[1] * (across + sweep) + normal[1] * lift,
-        this.position[2] + radial[2] * along + tangent[2] * (across + sweep) + normal[2] * lift
-      ];
-      if (blackHole && streamT < -0.2) {
-        const wrap = (-streamT - 0.2) / 0.3;
-        const angle = -wrap * Math.PI * 0.95 + (Math.random() - 0.5) * 0.12;
-        const radius = dR * (0.18 + wrap * 0.35) + (Math.random() - 0.5) * streamWidth;
-        position = [
-          blackHole.position[0] + radial[0] * Math.cos(angle) * radius + tangent[0] * Math.sin(angle) * radius + normal[0] * lift,
-          blackHole.position[1] + radial[1] * Math.cos(angle) * radius + tangent[1] * Math.sin(angle) * radius + normal[1] * lift,
-          blackHole.position[2] + radial[2] * Math.cos(angle) * radius + tangent[2] * Math.sin(angle) * radius + normal[2] * lift
-        ];
-      }
-      particles.push({
-        position,
-        velocity: [
-          this.velocity[0] + radial[0] * shear + (Math.random() * 2 - 1) * vOrb * perturbation,
-          this.velocity[1] + radial[1] * shear + (Math.random() * 2 - 1) * vOrb * perturbation,
-          this.velocity[2] + radial[2] * shear + (Math.random() * 2 - 1) * vOrb * perturbation
-        ],
-        mass: this.mass / n,
-        renderRadius: visualSize,
-        renderSize: visualSize
-      });
-    }
-    return particles;
+  generateDisruptionParticles(blackHole) {
+    return [];
   }
 
   _directionFrom(from, to) {
@@ -132,10 +71,5 @@ export class Star extends Body {
     if (d < 0.001) return 0;
     this.deformation = Math.min(3.0, Math.pow(dR / d, 2));
     return this.deformation;
-  }
-
-  updatePulsation(time) {
-    const amp = 0.005;
-    return 1.0 + amp * Math.sin(this.pulsationFreq * time + this.pulsationPhase);
   }
 }

@@ -1,0 +1,17 @@
+{
+  "created_at": "2026-07-20T20:21:40.260013Z",
+  "goal": "Iteration 1: Rebuild TDE physics core — replace faked TDE mechanics with persistent matter particles, SPH, and real tidal physics",
+  "job_ids": [
+    "J001",
+    "J002",
+    "J003",
+    "J004",
+    "J005"
+  ],
+  "protocol_version": 4,
+  "revision": 3,
+  "run_id": "RUN-8b4feb8194fcab2d553e",
+  "schema_version": 4,
+  "status": "completed",
+  "updated_at": "2026-07-22T22:49:07.151912Z"
+}

@@ -3,6 +3,7 @@ import { PhysicsEngine } from '../src/physics/PhysicsEngine.js';
 import { BlackHole } from '../src/objects/BlackHole.js';
 import { Star } from '../src/objects/Star.js';
 import { GasParticle } from '../src/objects/GasParticle.js';
+import { MatterParticle } from '../src/objects/MatterParticle.js';
 import { Body } from '../src/objects/Body.js';
 import { BinaryBHPreset } from '../src/presets/presets.js';
 
@@ -16,7 +17,6 @@ describe('PhysicsEngine', () => {
   it('should initialize with empty arrays', () => {
     expect(engine.bodies).toEqual([]);
     expect(engine.gasParticles).toEqual([]);
-    expect(engine.jetParticles).toEqual([]);
     expect(engine.simTime).toBe(0);
   });
 
@@ -133,20 +133,21 @@ describe('PhysicsEngine', () => {
     expect(engine.gasParticles.length).toBe(1);
   });
 
-  it('should handle tidal disruption', () => {
-    const bh = new BlackHole({ mass: 1000, position: [0, 0, 0], fixed: true });
-    const star = new Star({ mass: 1, position: [50, 0, 0], velocity: [0, 0.1, 0], radius: 1 });
+  it('should detect disruption from particle cloud spread', () => {
+    const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
+    const star = new Star({ mass: 1, position: [-100, 0, 0], velocity: [0, 0, 0], radius: 1 });
     engine.addObject(bh);
     engine.addObject(star);
-    
-    const initialBodies = engine.bodies.length;
-    
-    for (let i = 0; i < 1000; i++) {
-      engine.step(0.001);
-      if (star.disrupted) break;
-    }
-    
+
+    const p1 = new MatterParticle({
+      position: [-100 - 1.5e6, 0, 0], velocity: [0, 0, 0], mass: 1e-6, phase: 'stellar', lifecycle: 'alive',
+    });
+    const p2 = new MatterParticle({
+      position: [-100 + 1.5e6, 0, 0], velocity: [0, 0, 0], mass: 1e-6, phase: 'stellar', lifecycle: 'alive',
+    });
+    engine.addMatterParticles([p1, p2]);
+
+    engine.step(0.001);
     expect(star.disrupted).toBe(true);
-    expect(engine.bodies.length).toBeGreaterThan(initialBodies);
   });
 });

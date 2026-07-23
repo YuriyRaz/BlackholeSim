@@ -151,7 +151,7 @@ describe('Energy and angular momentum regression', () => {
     const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
     engine.addObject(bh);
 
-    const r = 1000;
+    const r = 2e7;
     const vCirc = Math.sqrt(Constants.G_solar_km * 1e6 / r);
     const p = new MatterParticle({
       position: [r, 0, 0],
@@ -181,7 +181,7 @@ describe('Energy and angular momentum regression', () => {
     const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
     engine.addObject(bh);
 
-    const r = 1000;
+    const r = 2e7;
     const vCirc = Math.sqrt(Constants.G_solar_km * 1e6 / r);
     const p = new MatterParticle({
       position: [r, 0, 0],
@@ -208,7 +208,7 @@ describe('Energy and angular momentum regression', () => {
     const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
     engine.addObject(bh);
 
-    const r = 500;
+    const r = 1e7;
     const vCirc = Math.sqrt(Constants.G_solar_km * 1e6 / r);
     const p = new MatterParticle({
       position: [r, 0, 0],

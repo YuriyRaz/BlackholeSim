@@ -25,34 +25,34 @@
 
 ## 4. TDE Initial Conditions And Disruption
 
-- [ ] 4.1 Replace the one-body TDE star initialization with the persistent polytropic particle state while retaining the star's public identity for UI and audio events.
-- [ ] 4.2 Rebuild TDE orbital elements so the encounter starts outside the tidal radius and its derived periapsis is inside the disruption condition.
-- [ ] 4.3 Compute deformation and disruption from resolved particle binding, tidal gradients, and hydrodynamic state.
-- [ ] 4.4 Remove post-disruption stream generation, pre-shaped arcs, random velocity jitter, and index-based gas/debris splitting.
-- [ ] 4.5 Add integration tests proving that existing particles survive the disruption transition and develop bound/unbound orbital branches.
+- [x] 4.1 Replace the one-body TDE star initialization with the persistent polytropic particle state while retaining the star's public identity for UI and audio events.
+- [x] 4.2 Rebuild TDE orbital elements so the encounter starts outside the tidal radius and its derived periapsis is inside the disruption condition.
+- [x] 4.3 Compute deformation and disruption from resolved particle binding, tidal gradients, and hydrodynamic state.
+- [x] 4.4 Remove post-disruption stream generation, pre-shaped arcs, random velocity jitter, and index-based gas/debris splitting.
+- [x] 4.5 Add integration tests proving that existing particles survive the disruption transition and develop bound/unbound orbital branches.
 
 ## 5. Fallback, Circularization, And Accretion
 
-- [ ] 5.1 Implement bound/unbound classification from particle orbital energy and angular momentum relative to the selected black-hole potential.
-- [ ] 5.2 Implement return-surface crossing events and calculate fallback rate from measured returning mass.
-- [ ] 5.3 Implement phase transitions from stellar matter to debris and disk matter using resolved density, shock, and circularization conditions.
-- [ ] 5.4 Implement capture at the configured ISCO/horizon boundary with mass, momentum, energy, and accretion-rate accounting.
-- [ ] 5.5 Remove the fixed fallback timer, injected fallback curve, arbitrary viscous impulse, and synthetic jet emitter from the TDE path.
-- [ ] 5.6 Add tests for fallback response to changed orbital parameters, disk mass accounting, capture timing, and absence of jet particles without MHD state.
+- [x] 5.1 Implement bound/unbound classification from particle orbital energy and angular momentum relative to the selected black-hole potential.
+- [x] 5.2 Implement return-surface crossing events and calculate fallback rate from measured returning mass.
+- [x] 5.3 Implement phase transitions from stellar matter to debris and disk matter using resolved density, shock, and circularization conditions.
+- [x] 5.4 Implement capture at the configured ISCO/horizon boundary with mass, momentum, energy, and accretion-rate accounting.
+- [x] 5.5 Remove the fixed fallback timer, injected fallback curve, arbitrary viscous impulse, and synthetic jet emitter from the TDE path.
+- [x] 5.6 Add tests for fallback response to changed orbital parameters, disk mass accounting, capture timing, and absence of jet particles without MHD state.
 
 ## 6. Physics State And Rendering Contract
 
-- [ ] 6.1 Update serialized snapshots and `getState()` to expose the unified matter-particle thermodynamic and phase fields plus conservation diagnostics.
-- [ ] 6.2 Update particle rendering to consume the unified state without generating stream, disk, or jet geometry.
-- [ ] 6.3 Remove TDE-specific renderer sizing, wrapping, streak, and cluster workarounds that encode physical behavior.
-- [ ] 6.4 Update phase and physics-info UI to report measured disruption, fallback, circularization, accretion, and the explicit absence of an MHD jet model.
-- [ ] 6.5 Keep future jet rendering data-compatible while ensuring the new TDE core emits no synthetic jet particles.
+- [x] 6.1 Update serialized snapshots and `getState()` to expose the unified matter-particle thermodynamic and phase fields plus conservation diagnostics.
+- [x] 6.2 Update particle rendering to consume the unified state without generating stream, disk, or jet geometry.
+- [x] 6.3 Remove TDE-specific renderer sizing, wrapping, streak, and cluster workarounds that encode physical behavior.
+- [x] 6.4 Update phase and physics-info UI to report measured disruption, fallback, circularization, accretion, and the explicit absence of an MHD jet model.
+- [x] 6.5 Keep future jet rendering data-compatible while ensuring the new TDE core emits no synthetic jet particles.
 
 ## 7. Verification And Performance
 
-- [ ] 7.1 Add a deterministic headless TDE integration test covering pre-disruption approach, deformation, disruption, stream evolution, circularization, and accretion.
-- [ ] 7.2 Add a regression assertion that no post-disruption particle cluster remains stationary near the black hole for the supported observation window.
-- [ ] 7.3 Add resolution comparison tests for mass conservation and qualitative stream/disc behavior at two supported particle counts.
-- [ ] 7.4 Benchmark neighbor search, SPH, gravity, and rendering separately against the 30 FPS consumer-hardware target and expose overload diagnostics.
-- [ ] 7.5 Run the complete unit suite, production build, and browser visual verification at desktop and mobile viewports.
-- [ ] 7.6 Update README and physics documentation to state the approximation boundary and that jets require a future MHD change.
+- [x] 7.1 Add a deterministic headless TDE integration test covering pre-disruption approach, deformation, disruption, stream evolution, circularization, and accretion.
+- [x] 7.2 Add a regression assertion that no post-disruption particle cluster remains stationary near the black hole for the supported observation window.
+- [x] 7.3 Add resolution comparison tests for mass conservation and qualitative stream/disc behavior at two supported particle counts.
+- [x] 7.4 Benchmark neighbor search, SPH, gravity, and rendering separately against the 30 FPS consumer-hardware target and expose overload diagnostics.
+- [x] 7.5 Run the complete unit suite, production build, and browser visual verification at desktop and mobile viewports.
+- [x] 7.6 Update README and physics documentation to state the approximation boundary and that jets require a future MHD change.

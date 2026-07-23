@@ -122,7 +122,7 @@ describe('Presets', () => {
     expect(Math.min(...preset.bodies.map(body => projectedRadiusPixels(body, preset.camera)))).toBeGreaterThan(2);
   });
 
-  it('starts TDE close enough to disrupt and create visible debris immediately', () => {
+  it('starts TDE at 3x tidal radius with e=0.95 orbit', () => {
     const preset = TDEPreset();
     const blackHole = preset.bodies.find(body => body.type === 'blackhole');
     const star = preset.bodies.find(body => body.type === 'star');
@@ -131,20 +131,17 @@ describe('Presets', () => {
       star.position[1] - blackHole.position[1],
       star.position[2] - blackHole.position[2]
     );
+    const dR = Constants.tidalDisruptionRadius(blackHole.mass, star.radius, star.mass);
 
-    expect(separation).toBeLessThan(Constants.tidalDisruptionRadius(blackHole.mass, star.radius, star.mass));
+    expect(separation).toBeCloseTo(3 * dR, -2);
+    expect(preset.matterParticles.length).toBe(1000);
+  });
 
-    const engine = new PhysicsEngine();
-    engine.loadPreset(preset);
-    engine.step(0.01);
-
-    const state = engine.getState();
-    const disruptedStar = state.bodies.find(body => body.name === 'Star_1Msun');
-    const debris = state.bodies.filter(body => body.type === 'debris');
-
-    expect(disruptedStar.disrupted).toBe(true);
-    expect(debris.length + state.gasParticles.length).toBeGreaterThan(20);
-    expect(state.gasParticles.length).toBeGreaterThan(20);
-    expect([...debris, ...state.gasParticles].some(item => item.radius > 1000 || item.size > 1000)).toBe(true);
+  it('generates polytrope matter particles for TDE preset', () => {
+    const preset = TDEPreset();
+    expect(preset.matterParticles.length).toBeGreaterThan(0);
+    expect(preset.matterParticles[0].phase).toBe('stellar');
+    expect(preset.matterParticles[0].mass).toBeCloseTo(1 / 1000, 5);
+    expect(preset.matterParticles[0].density).toBeGreaterThan(0);
   });
 });

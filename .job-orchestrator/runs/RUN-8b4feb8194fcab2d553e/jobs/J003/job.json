@@ -1,0 +1,30 @@
+{
+  "answers": [],
+  "checkpoint_path": null,
+  "created_at": "2026-07-20T20:25:48.866101Z",
+  "creation_sequence": 3,
+  "depends_on": [
+    "J001"
+  ],
+  "id": "J003",
+  "outcome": {
+    "report_path": "jobs/J003/report.md",
+    "status": "completed",
+    "summary": "All 11 tasks in groups 4-5 checked off. Angular momentum classification added. Shock-based phase transitions added. 13 disruption tests added. Dead jet infrastructure removed. All 125 tests pass."
+  },
+  "parent_job_id": null,
+  "pending_question": null,
+  "priority": 60,
+  "prompt_path": "jobs/J003/prompt.md",
+  "recovery_policy": null,
+  "related_reports": [],
+  "report_path": "jobs/J003/report.md",
+  "report_required": true,
+  "revision": 3,
+  "schema_version": 4,
+  "session_ref": "ses_iteration1_impl_tde",
+  "status": "completed",
+  "title": "Iteration 1 — Implementation: TDE Init + Disruption + Fallback + Accretion",
+  "updated_at": "2026-07-22T22:32:20.860566Z",
+  "waiting_on": []
+}

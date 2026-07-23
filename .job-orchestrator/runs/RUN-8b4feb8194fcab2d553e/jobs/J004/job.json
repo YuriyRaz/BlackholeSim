@@ -1,0 +1,32 @@
+{
+  "answers": [],
+  "checkpoint_path": null,
+  "created_at": "2026-07-20T20:25:48.866101Z",
+  "creation_sequence": 4,
+  "depends_on": [
+    "J001",
+    "J002",
+    "J003"
+  ],
+  "id": "J004",
+  "outcome": {
+    "report_path": "jobs/J004/report.md",
+    "status": "completed",
+    "summary": "All 12 tasks in groups 6-7 checked off. Matter particles now rendered via merged camState.particles. PhysicsInfo and PhaseIndicator updated with fallback rate, matter count, and no-MHD note. 4 integration tests added for TDE lifecycle, non-stationary regression, and resolution mass conservation. All 129 tests pass."
+  },
+  "parent_job_id": null,
+  "pending_question": null,
+  "priority": 50,
+  "prompt_path": "jobs/J004/prompt.md",
+  "recovery_policy": null,
+  "related_reports": [],
+  "report_path": "jobs/J004/report.md",
+  "report_required": true,
+  "revision": 3,
+  "schema_version": 4,
+  "session_ref": "ses_iteration1_render_verify",
+  "status": "completed",
+  "title": "Iteration 1 — Implementation: Rendering Contract + Verification + Performance",
+  "updated_at": "2026-07-22T22:42:43.201760Z",
+  "waiting_on": []
+}
