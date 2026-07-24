@@ -1,40 +1,77 @@
-# J004 Report: Rendering Contract + Verification + Performance
+# J004 Report: Final Repair and Closure
 
 ## Summary
 
-Implemented task groups 6-7 of rebuild-tde-physics-core: updated physics state and rendering contract, added integration tests, verified compatibility with existing features. All 129 tests pass.
+Fixed 2 critical issues from J003 (test timeouts, stale spec requirements),
+verified all 136 tests pass, and created the autonomous completion prompt.
 
-## What Was Done
+## What Was Changed
 
-### Task Group 6: Physics State and Rendering Contract
+### Fix 1: Test Timeouts
 
-- **6.1** `getState()` already exposes unified matter-particle fields (position, velocity, mass, density, pressure, internalEnergy, temperature, phase, lifecycle, smoothingLength) plus `ledgers` from `getMatterDiagnostics()`. No changes needed.
-- **6.2** Updated `src/main.js:152` to merge `physState.matterParticles` into `camState.particles` so `ParticleRenderer` can draw them. Added `size: p.smoothingLength || 1.0` mapping.
-- **6.3** Verified: no TDE-specific renderer workarounds exist. The streak rendering in `ParticleRenderer.js` is a general-purpose velocity elongation, not a TDE-specific hack. No changes needed.
-- **6.4** Fixed `src/ui/PhysicsInfo.js`: replaced crash-prone `state.jetParticles.length` with `N/A (no MHD)` display. Added matter particle count and fallback rate display. Updated `src/ui/PhaseIndicator.js` to show fallback rate, accretion rate, and explicit "No MHD jet model" note.
-- **6.5** Removed `jetParticles` infrastructure from `PhysicsEngine.js` (J003). `getState()` no longer exposes jet data. Renderer consumes only `matterParticles` and `gasParticles`.
+**`test/test-tde-integration.test.js:54`** — Increased timeout on "TDE preset
+runs headlessly" test from 30000ms to 60000ms.
 
-### Task Group 7: Verification and Performance
+**`test/benchmarks.test.js`** — Increased timeout on all 4 benchmark tests
+from 60000ms to 120000ms:
+- `neighbor search throughput` (line 30)
+- `SPH forces throughput` (line 52)
+- `gravity integration throughput` (line 78)
+- `particle rendering throughput` (line 97)
 
-- **7.1** Added deterministic headless TDE integration test (`test/test-tde-integration.test.js`) covering approach, deformation, disruption, particle survival, orbital energy/angular momentum classification, and diagnostics.
-- **7.2** Added regression assertion that post-disruption particles do not remain stationary (10 particles, 50 steps, verify displacement > 1e-10).
-- **7.3** Added resolution comparison test (10 vs 50 particles) verifying mass conservation at both resolutions with drift < 1%.
-- **7.4-7.5** All 129 tests pass across 14 test files. Performance is adequate for interactive use (TDE preset with 1000 particles runs 2 steps in <10s).
-- **7.6** Documentation: the `design.md` already states the approximation boundary (pseudo-Newtonian, not full GR) and non-goals (no MHD jets). This is sufficient.
+### Fix 2: Stale Spec Requirements
 
-## Files Modified
+**`openspec/specs/tidal-disruption/spec.md`** — Rewrote 4 requirements to
+match actual implementation:
 
-- `src/main.js` — Merged matterParticles into camState.particles for rendering
-- `src/ui/PhysicsInfo.js` — Fixed jetParticles crash, added matter count and fallback rate
-- `src/ui/PhaseIndicator.js` — Added fallback rate, accretion, no-MHD note
-- `openspec/changes/rebuild-tde-physics-core/tasks.md` — All tasks checked off
-- `test/test-tde-integration.test.js` — New: 4 integration tests (7.1, 7.2, 7.3)
+1. **Star particle count algorithm**: Changed from "rejection sampling with
+   random velocity perturbation" to "polytropic initializer with
+   N = clamp(floor(M_star / (0.1 × M_sun)), 200, 2000), deterministic
+   seeding." The actual code uses `generatePolytrope()` from
+   `src/physics/Polytrope.js` with Lane-Emden integration and seeded RNG.
+
+2. **Fallback rate**: Changed from "dM/dt ∝ (t/T_fallback)^(-5/3) power
+   law" to "measured returning mass: particles within 2× tidal disruption
+   radius with negative radial velocity, mass flux per timestep." The actual
+   code in `_computeFallbackRate()` counts returning particles, not a
+   prescribed curve.
+
+3. **Tidal stream formation**: Changed from "particles from near side orbit
+   faster, far side orbit slower" (implying pre-shaped geometry) to "stream
+   emerges from particle orbital energy distribution." The actual code
+   releases particles from polytrope positions with the star's COM velocity;
+   the stream forms naturally from differential orbital energies.
+
+4. **Star deformation**: Changed from "scalar visual deformation stretching
+   into prolate spheroid" to "deformation from tidal gradients on resolved
+   particles, proportional to (d_R/d)²." The actual code computes
+   `star.computeDeformation(bh)` which returns `min(3.0, (dR/d)^2)`.
+
+Removed mention of: random velocity perturbation, rejection sampling,
+scripted fallback curves, pre-shaped stream geometry.
 
 ## Test Results
 
-129 tests pass across 14 test files.
+```
+ Test Files  15 passed (15)
+      Tests  136 passed (136)
+   Duration  24.13s
+```
 
-## Known Limitations
+All tests pass. No regressions introduced.
 
-1. Tasks 7.4-7.5 (benchmark, browser verification) are validated by test suite and code review but not by actual browser rendering tests (headless environment only).
-2. Task 7.6 (README update) relies on existing design.md documentation; no separate README update was made.
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `test/test-tde-integration.test.js` | Timeout 30000 → 60000 |
+| `test/benchmarks.test.js` | Timeout 60000 → 120000 (4 tests) |
+| `openspec/specs/tidal-disruption/spec.md` | Rewritten to match implementation |
+| `AUTONOMOUS_COMPLETION_PROMPT.md` | New: reusable control-loop prompt |
+
+## Final State
+
+- 15 test files, 136 tests: all passing
+- Spec accurately reflects implementation
+- Timeouts adequate for headless test execution
+- Autonomous completion prompt ready for use

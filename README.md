@@ -43,3 +43,12 @@ npm run test:watch # Run tests in watch mode
 
 See [docs/DESIGN.md](docs/DESIGN.md) for the architecture and design goals.
 
+## Physics Model
+
+- **Units**: km, s, M_sun (positions in km, velocities in km/s, masses in solar masses)
+- **Gravity**: Pseudo-Newtonian potential (Schwarzschild metric approximation)
+- **ISCO**: Innermost stable circular orbit at 6rs (three Schwarzschild radii)
+- **Cooling**: Optically thin radiative cooling with β=10 (cooling timescale = β × dynamical timescale)
+- **MHD**: No magnetohydrodynamic jets; jet model requires future MHD implementation
+- **Performance target**: 30 FPS at 1000 particles on consumer hardware
+

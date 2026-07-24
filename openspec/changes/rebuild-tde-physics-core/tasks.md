@@ -1,27 +1,27 @@
 ## 1. Physics State Foundation
 
-- [ ] 1.1 Define one canonical simulation-unit policy for positions, velocities, mass, time, and thermodynamic quantities, and expose the selected black-hole potential in diagnostics.
-- [ ] 1.2 Add the persistent matter-particle state with position, velocity, mass, density, pressure, internal energy, temperature, phase, and lifecycle fields.
-- [ ] 1.3 Add deterministic particle seeding so identical preset parameters produce identical initial matter states and reproducible tests.
-- [ ] 1.4 Implement a stable polytropic stellar initializer with configurable particle resolution and mass normalization.
-- [ ] 1.5 Add mass, momentum, angular-momentum, kinetic-energy, thermal-energy, and accretion/escape ledgers to the physics diagnostics.
+- [x] 1.1 Define one canonical simulation-unit policy for positions, velocities, mass, time, and thermodynamic quantities, and expose the selected black-hole potential in diagnostics.
+- [x] 1.2 Add the persistent matter-particle state with position, velocity, mass, density, pressure, internal energy, temperature, phase, and lifecycle fields.
+- [x] 1.3 Add deterministic particle seeding so identical preset parameters produce identical initial matter states and reproducible tests.
+- [x] 1.4 Implement a stable polytropic stellar initializer with configurable particle resolution and mass normalization.
+- [x] 1.5 Add mass, momentum, angular-momentum, kinetic-energy, thermal-energy, and accretion/escape ledgers to the physics diagnostics.
 
 ## 2. Neighbor Search And SPH
 
-- [ ] 2.1 Implement a spatial hash/grid that returns bounded neighboring matter particles for a configured smoothing length.
-- [ ] 2.2 Implement SPH density estimation and the equation-of-state pressure calculation with finite-value floors.
-- [ ] 2.3 Implement symmetric pressure forces and artificial viscosity for converging particle pairs.
-- [ ] 2.4 Implement internal-energy evolution, shock heating, and an explicit configurable cooling term.
-- [ ] 2.5 Add timestep constraints for hydrodynamic signal speed, smoothing length, and close black-hole encounters.
-- [ ] 2.6 Add unit tests for density response, finite sparse-particle state, pairwise momentum conservation, shock heating, and cooling accounting.
+- [x] 2.1 Implement a spatial hash/grid that returns bounded neighboring matter particles for a configured smoothing length.
+- [x] 2.2 Implement SPH density estimation and the equation-of-state pressure calculation with finite-value floors.
+- [x] 2.3 Implement symmetric pressure forces and artificial viscosity for converging particle pairs.
+- [x] 2.4 Implement internal-energy evolution, shock heating, and an explicit configurable cooling term.
+- [x] 2.5 Add timestep constraints for hydrodynamic signal speed, smoothing length, and close black-hole encounters.
+- [x] 2.6 Add unit tests for density response, finite sparse-particle state, pairwise momentum conservation, shock heating, and cooling accounting.
 
 ## 3. Unified Gravity Integration
 
-- [ ] 3.1 Extend the symplectic integration pipeline so matter particles receive black-hole and configured matter self-gravity through the same acceleration path.
-- [ ] 3.2 Update the Barnes-Hut or equivalent hierarchy to include massive matter particles and exclude only true self-force contributions.
-- [ ] 3.3 Implement and document the first-milepost pseudo-Newtonian capture/ISCO potential without presenting it as full general relativity.
-- [ ] 3.4 Add direct-sum comparison tests that bound hierarchical gravity error for supported TDE particle counts.
-- [ ] 3.5 Add energy and angular-momentum regression tests for two-body and resolved matter scenes.
+- [x] 3.1 Extend the symplectic integration pipeline so matter particles receive black-hole and configured matter self-gravity through the same acceleration path.
+- [x] 3.2 Update the Barnes-Hut or equivalent hierarchy to include massive matter particles and exclude only true self-force contributions.
+- [x] 3.3 Implement and document the first-milepost pseudo-Newtonian capture/ISCO potential without presenting it as full general relativity.
+- [x] 3.4 Add direct-sum comparison tests that bound hierarchical gravity error for supported TDE particle counts.
+- [x] 3.5 Add energy and angular-momentum regression tests for two-body and resolved matter scenes.
 
 ## 4. TDE Initial Conditions And Disruption
 

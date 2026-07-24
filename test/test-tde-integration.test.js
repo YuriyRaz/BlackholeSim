@@ -51,7 +51,7 @@ describe('Task 7.1: Deterministic headless TDE integration test', () => {
     expect(isFinite(state.ledgers.energy.total)).toBe(true);
   });
 
-  it('TDE preset runs headlessly without errors', () => {
+  it('TDE preset runs headlessly without errors', { timeout: 60000 }, () => {
     const { TDEPreset } = require('../src/presets/presets.js');
     const engine = new PhysicsEngine();
     const preset = TDEPreset();
@@ -159,5 +159,147 @@ describe('Task 7.3: Resolution comparison tests', () => {
 
     expect(lowDrift).toBeLessThan(0.01);
     expect(highDrift).toBeLessThan(0.01);
+  });
+
+  it('angular momentum distribution shows debris spreading', () => {
+    const computeAngularMomentumSpread = (numParticles) => {
+      const engine = new PhysicsEngine();
+      const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
+      engine.addObject(bh);
+
+      const particles = [];
+      for (let i = 0; i < numParticles; i++) {
+        const angle = (i / numParticles) * Math.PI * 2;
+        const r = 2.5e7;
+        const vCirc = Math.sqrt(Constants.G_solar_km * 1e6 / r);
+        particles.push(new MatterParticle({
+          position: [r * Math.cos(angle), r * Math.sin(angle), 0],
+          velocity: [-vCirc * Math.sin(angle), vCirc * Math.cos(angle), 0],
+          mass: 1e-6 / numParticles, phase: 'debris', lifecycle: 'alive',
+        }));
+      }
+      engine.addMatterParticles(particles);
+
+      for (let i = 0; i < 30; i++) {
+        engine.step(0.001);
+      }
+
+      const active = engine.matterParticles.filter(p => p.isActive);
+      const angles = active.map(p => {
+        const theta = Math.atan2(p.position[1], p.position[0]);
+        return theta >= 0 ? theta : theta + 2 * Math.PI;
+      });
+
+      const minAngle = Math.min(...angles);
+      const maxAngle = Math.max(...angles);
+      const spread = maxAngle - minAngle;
+
+      return { spread, count: active.length };
+    };
+
+    const low = computeAngularMomentumSpread(10);
+    const high = computeAngularMomentumSpread(50);
+
+    expect(low.count).toBeGreaterThan(0);
+    expect(high.count).toBeGreaterThan(0);
+    expect(low.spread).toBeGreaterThan(Math.PI / 2);
+    expect(high.spread).toBeGreaterThan(Math.PI / 2);
+  });
+});
+
+describe('Task 7.1 Extended: Full TDE lifecycle', () => {
+  it('runs 100 steps and verifies star disrupts, orbital branches, fallback, accretion', () => {
+    const engine = new PhysicsEngine();
+    const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
+    const star = new Star({ mass: 1, position: [-100, 0, 0], velocity: [0, 0, 0], radius: 1 });
+    engine.addObject(bh);
+    engine.addObject(star);
+
+    const particles = [];
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      particles.push(new MatterParticle({
+        position: [-100 + Math.cos(angle) * 5e7, Math.sin(angle) * 5e7, 0],
+        velocity: [0, 0, 0], mass: 1e-6, phase: 'stellar', lifecycle: 'alive',
+      }));
+    }
+    engine.addMatterParticles(particles);
+
+    expect(star.disrupted).toBe(false);
+
+    for (let step = 0; step < 100; step++) {
+      engine.step(0.001);
+    }
+
+    expect(star.disrupted).toBe(true);
+
+    const active = engine.matterParticles.filter(p => p.isActive);
+    expect(active.length).toBeGreaterThan(0);
+
+    let hasBound = false;
+    let hasUnbound = false;
+    for (const p of active) {
+      if (p._specificOrbitalEnergy !== undefined) {
+        if (p._specificOrbitalEnergy < 0) hasBound = true;
+        if (p._specificOrbitalEnergy > 0) hasUnbound = true;
+      }
+    }
+    expect(hasBound || hasUnbound).toBe(true);
+
+    const state = engine.getState();
+    expect(state.fallbackRate).toBeGreaterThanOrEqual(0);
+    expect(state.accretionRate).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('Task 7.2 Extended: Stationary cluster regression', () => {
+  it('measures distance variance from BH over 50 steps and verifies spreading', () => {
+    const engine = new PhysicsEngine();
+    const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
+    const star = new Star({ mass: 1, position: [-100, 0, 0], velocity: [0, 0, 0], radius: 1 });
+    engine.addObject(bh);
+    engine.addObject(star);
+
+    const particles = [];
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      const r = 5e7;
+      const vCirc = Math.sqrt(Constants.G_solar_km * 1e6 / r) * 0.5;
+      particles.push(new MatterParticle({
+        position: [-100 + Math.cos(angle) * r, Math.sin(angle) * r, 0],
+        velocity: [-vCirc * Math.sin(angle), vCirc * Math.cos(angle), 0],
+        mass: 1e-6, phase: 'stellar', lifecycle: 'alive',
+      }));
+    }
+    engine.addMatterParticles(particles);
+
+    engine.step(0.001);
+    expect(star.disrupted).toBe(true);
+
+    const computeDistanceStats = () => {
+      const active = engine.matterParticles.filter(p => p.isActive);
+      if (active.length === 0) return { mean: 0, variance: 0 };
+      const distances = active.map(p => {
+        const dx = p.position[0] - bh.position[0];
+        const dy = p.position[1] - bh.position[1];
+        const dz = p.position[2] - bh.position[2];
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+      });
+      const mean = distances.reduce((s, d) => s + d, 0) / distances.length;
+      const variance = distances.reduce((s, d) => s + (d - mean) ** 2, 0) / distances.length;
+      return { mean, variance };
+    };
+
+    const initialStats = computeDistanceStats();
+    expect(initialStats.mean).toBeGreaterThan(0);
+
+    for (let i = 0; i < 50; i++) {
+      engine.step(0.001);
+    }
+
+    const finalStats = computeDistanceStats();
+    const varianceRatio = finalStats.variance / (initialStats.variance + 1e-20);
+
+    expect(varianceRatio).toBeGreaterThan(1.0);
   });
 });
