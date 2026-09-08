@@ -76,6 +76,13 @@ When the orchestration plan requests independent verification:
 4. If findings require repair, a repair job may be created, or the origin
    job may handle repair in its own session.
 
+In trusted v5 runs, ordinary `depends_on` relationships automatically propagate
+the accepted, worker-attested dependency report. Do not require a manually
+copied `related_reports` path for an incomplete dependency. Independent
+verification jobs schedule from `completion_claimed`, not from the target's
+final `completed` state, and their condition results are the only results that
+can satisfy designated independent gates.
+
 ## Job Relationships
 
 ### Dependencies

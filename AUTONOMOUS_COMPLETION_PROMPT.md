@@ -1,109 +1,158 @@
 # Autonomous Completion Prompt
 
-This prompt is reusable for executing the job-orchestrator control loop to
-drive a TDE completion run to `run_complete`. It must be used by a **root
-session** (control plane only) — never by a worker session performing domain
-work.
+Use this prompt only in a **root control-plane session**. The root must route
+all repository investigation, implementation, testing, verification, report
+writing, and domain decisions to persistent worker jobs.
 
 ## Prerequisites
 
-1. Read `.job-orchestrator/inputs/tde-completion-request.md` to understand the
-   completion goal and acceptance criteria.
-2. Read `.job-orchestrator/inputs/tde-completion-jobs.json` to understand the
-   job definitions and dependencies.
-3. Ensure `scripts/jobctl.py` is available at the workspace root.
+1. Read `.job-orchestrator/inputs/tde-completion-request.md` for the goal and
+   acceptance conditions.
+2. Read `.job-orchestrator/inputs/tde-completion-jobs-v5.json` for v5 job
+   definitions and dependencies.
+3. Set `JOBCTL_PYTHON` to the Python executable installed for this environment.
+   Do not assume that `python` is on PATH.
+
+```powershell
+$env:JOBCTL_PYTHON = "C:\Projects\AkitoBlogBot\.venv\Scripts\python.exe"
+```
+
+4. Use the actual control-plane script:
+   `.agents/skills/job-orchestrator/scripts/jobctl.py`.
+
+## Initialize
+
+PowerShell command shape:
+
+```powershell
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py init `
+  --protocol-version 5 `
+  --request-file .job-orchestrator/inputs/tde-completion-request.md `
+  --goal "Complete all TDE rebuild tasks and verify every required condition"
+
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py register `
+  --run .job-orchestrator/runs/<run-id> `
+  --definition .job-orchestrator/inputs/tde-completion-jobs-v5.json
+```
+
+`--outcome`, `--receipt`, and `--evidence` options consume file paths. They do
+not accept inline JSON.
 
 ## Control Loop
 
-Execute the following loop until `jobctl next` returns `run_complete`:
+Repeat `next` until it returns `operation: run_complete`:
 
-### Step 1: Initialize (first run only)
-
-```bash
-python scripts/jobctl.py init \
-  --request-file .job-orchestrator/inputs/tde-completion-request.md \
-  --goal "Complete all TDE rebuild tasks and verify full test suite passes"
-
-python scripts/jobctl.py register \
-  --run .job-orchestrator/runs/<run-id> \
-  --definition .job-orchestrator/inputs/tde-completion-jobs.json
+```powershell
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py next `
+  --run .job-orchestrator/runs/<run-id>
 ```
 
-### Step 2: Loop
+| Result | Root action |
+| --- | --- |
+| `start_job` | Send the returned prompt byte-for-byte through the configured transport. Record the adapter-issued receipt with `launch-receipt`. |
+| `resume_job` | Send the returned continuation prompt byte-for-byte to the existing native session. Record its adapter-issued launch/resume receipt. |
+| `ask_user` | Obtain the requested authority, then run `answer`; process the immediate `resume_job` result on the same worker session. |
+| `wait` with `reason: advisory_decision_required` | Make the explicit advisory decision with `advisory-decision`. Do not treat this as an ordinary transport wait. |
+| `wait` with `reason: transport_unavailable` | The transport cannot reach the worker. Wait for connectivity to resume before retrying. |
+| `wait` with `reason: dependency_pending` | A required upstream job has not completed. Continue the control loop to process upstream jobs. |
+| ordinary `wait` | Wait for a transport event. Do not invent state from workspace files. |
+| `run_complete` | Stop. Treat only `run_status: completed` and `successful: true` as successful completion. Failed and canceled runs are terminal but unsuccessful. |
 
-```bash
-python scripts/jobctl.py next --run .job-orchestrator/runs/<run-id>
+## Receipt Ingestion
+
+The worker owns the semantic response and report. The root only relays exact
+adapter receipts:
+
+```powershell
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py launch-receipt `
+  --run .job-orchestrator/runs/<run-id> `
+  --receipt <adapter-launch-receipt.json>
+
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py response-receipt `
+  --run .job-orchestrator/runs/<run-id> `
+  --receipt <adapter-response-receipt.json>
+
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py answer `
+  --run .job-orchestrator/runs/<run-id> --job <job-id> `
+  --answer "<answer>" --source user
+
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py advisory-decision `
+  --run .job-orchestrator/runs/<run-id> --origin <origin-job-id> `
+  --advisory <advisory-job-id> `
+  --decision <keep_waiting|ask_user|select_another|fail_origin> `
+  [--replacement <replacement-job-id>] `
+  [--reason "<reason-text>"]
 ```
 
-| `jobctl next` result | Root action |
-|----------------------|-------------|
-| `start_job`          | Create a **real persistent worker session** (not an invented reference). Send the returned prompt verbatim. Record the session with `jobctl session`. |
-| `resume_job`         | Send the returned continuation prompt to the **existing** worker session identified by session ID. |
-| `ask_user`           | Obtain the requested authority or answer from the user, then record it with `jobctl answer`. |
-| `wait`               | Wait for a transport event. Do not invent state. |
-| `run_complete`       | Report completion. Stop the loop. |
-
-## Hard Constraints
-
-### No root-session domain work
-The root session MUST NOT perform implementation, investigation, verification,
-or synthesis work directly. All domain work MUST be routed to explicit jobs
-executed by real persistent worker sessions.
-
-### Real persistent worker sessions
-Every `start_job` action MUST create a real worker session with a genuine
-conversation context. Never fabricate session references, never claim a
-"phantom" session exists, and never use `completed` status for sessions that
-were never actually created.
-
-### Evidence-gated outcomes
-No job may be marked `completed` without:
-1. A `report.md` that documents what was changed.
-2. Concrete evidence (test output, file diffs, verification logs) referenced
-   in the report.
-3. All acceptance criteria from the job definition satisfied.
-
-### Continuation until run_complete
-The loop MUST continue until `jobctl next` returns `run_complete`. Do not
-prematurely terminate the loop by:
-- Declaring "all jobs done" without `jobctl` confirmation.
-- Skipping `next` calls because the goal "seems met."
-- Fabricating a `run_complete` result.
-
-## Outcomes
-
-Each worker session MUST return exactly one normalized outcome:
-
-```json
-{"status":"completed","summary":"...","report_path":"jobs/Jxxx/report.md"}
-```
-
-```json
-{"status":"needs_input","summary":"...","question":"...","context":"..."}
-```
-
-```json
-{"status":"failed","summary":"..."}
-```
-
-Only claim `completed` after the job's report and evidence satisfy all
-completion conditions. Ask blocking questions early.
-
-## Example Completion Sequence
-
-```
-1. init → register
-2. next → start_job J001 → session-abc created → session J001 → session-abc
-3. (worker completes) → outcome J004 → {"status":"completed",...}
-4. next → start_job J002 → session-def created → session J002 → session-def
-5. (worker completes) → outcome J002 → {"status":"completed",...}
-6. next → start_job J003 → session-ghi created → session J003 → session-ghi
-7. (worker completes) → outcome J003 → {"status":"completed",...}
-8. next → run_complete → REPORT
-```
+Never invent a session reference, edit a worker prompt, create or replace a
+worker report, or synthesize an outcome from workspace observations. v5 rejects
+standalone `session` and `outcome` submissions because they have no transport
+provenance.
 
 ## Recovery
 
-If `jobctl` reports corruption or an unrecoverable state, follow
-`.agents/skills/job-orchestrator/references/recovery.md`. Do not manually
-patch persisted run-state JSON.
+Cancellation, loss, unavailable status, empty response with uncertain liveness,
+or contradictory transport evidence exits the normal loop:
+
+```powershell
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py audit `
+  --run .job-orchestrator/runs/<run-id>
+
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py recover `
+  --run .job-orchestrator/runs/<run-id> `
+  --job <job-id> `
+  --evidence <recovery-evidence.json>
+```
+
+Recovery evidence must be a file containing a valid v5 recovery-evidence record:
+
+```json
+{
+  "schema_version": 5,
+  "job_id": "<job-id>",
+  "observed_at": "<ISO-8601-timestamp>",
+  "classification": "canceled|lost|unknown|contradictory|active|returned",
+  "transport": { },
+  "recovery_id": "<unique-recovery-id>"
+}
+```
+
+Do not start a replacement until recovery explicitly authorizes it. Preserve
+all prior session attempts. For non-idempotent effects, include the configured
+external side-effect check in recovery evidence.
+
+## Repair
+
+Use `repair` only for an explicit failed or canceled disposition; it cannot
+claim completion:
+
+```powershell
+& $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py repair `
+  --run .job-orchestrator/runs/<run-id> `
+  --job <job-id> `
+  --disposition failed `
+  --reason "<reason-text>"
+```
+
+The `--disposition` must be exactly `failed` or `canceled`.
+
+## Sample Sequence
+
+A correct orchestration starts every job before recording any response. The
+following two-job example (J001 implements, J002 verifies independently)
+shows the full lifecycle:
+
+```
+1.  init      → run created
+2.  register  → jobs registered
+3.  next      → {operation: start_job, job_id: J001}
+4.  launch-receipt  → J001 session established
+5.  next      → {operation: start_job, job_id: J002}
+6.  launch-receipt  → J002 session established
+7.  response-receipt → J001 completion_claimed
+8.  response-receipt → J002 completed
+9.  next      → {operation: run_complete, successful: true}
+```
+
+Steps 3-4 and 5-6 must both occur before step 7. A job must be started
+(receipt recorded) before its response can be recorded.

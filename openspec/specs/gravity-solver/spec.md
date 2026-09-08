@@ -3,19 +3,19 @@
 ## Requirements
 
 ### Requirement: N-body gravitational integration
-The system SHALL compute gravitational forces between all bodies using Newton's law of universal gravitation: F = G × m1 × m2 / r². The integrator SHALL use Velocity Verlet (symplectic) to update positions and velocities each time step.
+The system SHALL compute gravitational forces between black holes, bodies, and massive matter particles using the selected gravitational potential. The integrator SHALL use Velocity Verlet or an equivalent symplectic method for all resolved massive matter that participates in gravity.
 
 #### Scenario: Two-body orbit conserves energy
 - **WHEN** two bodies are placed in a circular orbit around their center of mass
-- **THEN** the total energy (kinetic + potential) SHALL remain constant within 0.01% over 100 orbital periods
+- **THEN** the total energy SHALL remain constant within the configured tolerance over 100 orbital periods
 
-#### Scenario: Three-body interaction
-- **WHEN** three bodies are placed in a gravitational system
-- **THEN** the integrator SHALL compute forces from all pairs and update all positions consistently
+#### Scenario: Matter particles respond to all configured masses
+- **WHEN** a stellar particle is placed near a black hole and other massive matter
+- **THEN** its acceleration SHALL include the black hole and all configured matter sources according to the selected gravity approximation
 
 #### Scenario: No self-force
-- **WHEN** computing the force on body i
-- **THEN** the force from body i on itself SHALL NOT be included (only pairs i≠j)
+- **WHEN** computing the force on a particle or body
+- **THEN** its own mass SHALL NOT contribute to its acceleration
 
 ### Requirement: Softening parameter
 The system SHALL use a softening parameter (ε = 0.01) in the gravity calculation to prevent singularities when two bodies are very close: F = G × m1 × m2 / (r² + ε²)^(3/2) × r̂.
@@ -44,15 +44,15 @@ The system SHALL compute time step size based on the shortest orbital period: dt
 - **THEN** the time step SHALL be forced to dt_min (0.0001)
 
 ### Requirement: Barnes-Hut tree optimization
-The system SHALL use a Barnes-Hut tree for O(n log n) gravity computation when body count exceeds 100. The tree SHALL be rebuilt every frame. The opening angle θ SHALL be 0.5.
+The system SHALL use a Barnes-Hut or equivalent hierarchical approximation for massive matter gravity when the configured particle count exceeds the direct-sum threshold. The approximation parameters SHALL be explicit and its error SHALL be measured against direct summation in tests.
 
-#### Scenario: 500 bodies compute in under 5ms
-- **WHEN** 500 bodies are simulated with Barnes-Hut enabled
-- **THEN** the physics step SHALL complete in under 5ms on a modern CPU
+#### Scenario: Resolved matter uses hierarchical gravity
+- **WHEN** the TDE particle count exceeds the direct-sum threshold
+- **THEN** the solver SHALL build a spatial hierarchy and use it for matter gravity without removing particles from the force model
 
-#### Scenario: Tree structure is rebuilt each frame
-- **WHEN** bodies move during simulation
-- **THEN** the Barnes-Hut tree SHALL be rebuilt from scratch at the start of each physics step
+#### Scenario: Tree accuracy is bounded
+- **WHEN** the same particle configuration is evaluated by direct gravity and the hierarchy
+- **THEN** acceleration error SHALL remain below the configured tolerance for the supported scene
 
 ### Requirement: Velocity Verlet update rules
 The integrator SHALL use the Velocity Verlet algorithm: position update x(t+dt) = x(t) + v(t)dt + 0.5a(t)dt², then compute new acceleration a(t+dt), then velocity update v(t+dt) = v(t) + 0.5(a(t) + a(t+dt))dt.

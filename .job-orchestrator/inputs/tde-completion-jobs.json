@@ -1,0 +1,175 @@
+{
+  "schema_version": 4,
+  "jobs": [
+    {
+      "id": "J001",
+      "title": "Evidence Audit of TDE Rebuild",
+      "goal": "Establish the truthful implementation and verification status of the complete rebuild-tde-physics-core change without modifying repository source or OpenSpec artifacts.",
+      "workflow": "Read GREAT_GOAL.md, the complete OpenSpec change and main specs, all prior J001-J005 reports, relevant source and tests, and repository status. Run non-mutating tests, build, and diagnostics where useful. Compare every task checkbox and prior completion claim to direct evidence. Produce a precise repair matrix with file references, commands, acceptance evidence, and recommended task checkbox corrections.",
+      "requirements": [
+        "Audit all tasks 1.1 through 7.6, including unchecked groups 1-3 and every checked task in groups 4-7.",
+        "Verify whether the deterministic integration tests truly cover approach, deformation, disruption, stream evolution, circularization, fallback, and accretion rather than merely asserting fields or motion.",
+        "Verify whether the resolution test checks qualitative stream and disk behavior, and whether the stationary-cluster regression proves the full stated invariant.",
+        "Verify serialized snapshots and scrub/replay support for matter particles, generic renderer behavior, future jet data compatibility, particle trails, UI, audio, and gravitational-wave compatibility.",
+        "Verify benchmark evidence separately for neighbor search, SPH, gravity, and rendering against the stated 30 FPS target, including overload diagnostics.",
+        "Verify production build and actual browser behavior at desktop and mobile viewports, recording any inability to perform a required check as a finding rather than passing it by assumption.",
+        "Verify README and physics documentation, main-spec synchronization, and OpenSpec archive readiness.",
+        "Search the entire source tree for remaining scripted or random physical outcomes, pre-shaped geometry, timer-driven physics, index-driven mechanics, synthetic jets, and stale fake-physics specifications.",
+        "Inspect git status and distinguish pre-existing or unrelated changes; do not revert them."
+      ],
+      "constraints": [
+        "Do not edit source, tests, documentation, OpenSpec artifacts, or orchestration state.",
+        "Do not accept prior reports or checked boxes as evidence.",
+        "Do not weaken GREAT_GOAL.md or reinterpret unmet requirements as complete.",
+        "Do not commit, push, or create a pull request."
+      ],
+      "completion_conditions": [
+        "The report maps every task from 1.1 through 7.6 to direct evidence and a truthful status.",
+        "Every false, incomplete, untested, or contradictory prior claim is listed with a concrete repair and verification method.",
+        "The report provides enough detail for a separate implementation worker to act without repeating the audit."
+      ],
+      "context": [
+        "Prior report jobs/J004/report.md admits no actual browser verification and no README update while tasks 7.4-7.6 were checked complete.",
+        "openspec/changes/rebuild-tde-physics-core/tasks.md currently leaves groups 1-3 unchecked.",
+        "The main tidal-disruption spec may still describe random perturbations and a prescribed t^(-5/3) fallback driver; verify synchronization status.",
+        "The previous root session performed domain edits directly and used invented local session references, so its protocol-completion status is not domain evidence."
+      ],
+      "escalation": "Return needs_input only for a genuinely blocking authority decision. Missing verification tools are findings to document with the exact attempted command and error.",
+      "report_required": true,
+      "priority": 100,
+      "depends_on": [],
+      "parent_job_id": null,
+      "related_reports": [],
+      "recovery_policy": null
+    },
+    {
+      "id": "J002",
+      "title": "Repair and Complete TDE Rebuild",
+      "goal": "Implement every confirmed correction from the independent audit and complete the TDE physics rebuild with truthful tests, documentation, OpenSpec status, and verification evidence.",
+      "workflow": "Start from the J001 report. Inspect current workspace state before editing. Implement the smallest physically honest corrections. For each affected requirement, add or strengthen deterministic tests that prove the actual behavior. Run focused tests frequently. Then run the complete test suite, production build, component benchmarks, and real browser verification at desktop and mobile viewports. Repair failures and repeat verification. Update README and physics documentation. Update OpenSpec task checkboxes only when their exact conditions are evidenced, sync delta specs to main specs when appropriate, verify the change, and archive it only if the local OpenSpec workflow and all acceptance conditions support archival.",
+      "requirements": [
+        "Resolve every J001 finding or document a concrete technical reason it is not a defect.",
+        "Complete or correct tasks 1.1 through 7.6; never check a task based on intent, code review alone, or a weaker substitute.",
+        "Tests for the TDE lifecycle must demonstrate temporal progression through the required physical stages using deterministic initial conditions and measured particle behavior.",
+        "The stationary-cluster regression must quantify cluster displacement or dispersion over the supported observation window, not merely prove that one particle moved.",
+        "Resolution comparison must check mass conservation and qualitative stream and disk behavior at two supported particle counts.",
+        "Benchmark neighbor search, SPH, gravity, and rendering separately. Record workload, timing method, hardware/environment limitations, measured values, and whether the 30 FPS budget is met.",
+        "Run the production build and actual browser verification at desktop and mobile viewports. Inspect console and rendering diagnostics; save concise evidence in the report and authorized project artifacts when useful.",
+        "Keep rendering scenario-agnostic. Do not synthesize stream, disk, fallback, accretion, or jet visuals.",
+        "Preserve compatibility with visual-effects-03 and audio-polish-04 using tests or direct verification for phase indicator, matter trails, GW state/ripples, event sounds, and spatial audio.",
+        "Update README and physics documentation to state units, selected potential, approximation boundaries, performance limits, cooling approximation, and that physical jets require future MHD work.",
+        "Synchronize stale main specs so they no longer require fake random shearing, uniform random stellar structure, or a prescribed fallback curve as a simulation driver.",
+        "Do not remove or overwrite unrelated user or concurrent changes."
+      ],
+      "constraints": [
+        "Do not mutate orchestrator-owned run, queue, dependency, parent, or job-status state.",
+        "Do not perform commits, pushes, releases, or pull requests.",
+        "Do not install heavyweight dependencies unless existing project tooling cannot perform a required check; prefer existing browser and test tooling.",
+        "Do not mark browser or performance requirements complete from unit tests alone.",
+        "Do not add scripted fallback curves, random redirects, positional shortcuts, pre-shaped geometry, or renderer-created physics.",
+        "Use apply_patch for manual file edits and preserve existing project style."
+      ],
+      "completion_conditions": [
+        "Every J001 repair item is resolved and linked to code, test, documentation, or explicit evidence in the report.",
+        "All OpenSpec checkboxes truthfully reflect completed work; no known acceptance item remains falsely checked or silently omitted.",
+        "Focused and full automated tests pass, the production build succeeds, and actual desktop/mobile browser verification has no blocking console or rendering errors.",
+        "Separate benchmark results exist for neighbor search, SPH, gravity, and rendering, with an honest conclusion against the 30 FPS target.",
+        "README, physics documentation, and main OpenSpec specs describe the implemented physical model without stale fake-mechanics requirements.",
+        "The rebuild-tde-physics-core change passes the available OpenSpec verification workflow and is archived only if fully ready."
+      ],
+      "context": [
+        "Read the authoritative audit report at jobs/J001/report.md before changing files.",
+        "GREAT_GOAL.md makes mathematical honesty more important than visual appearance.",
+        "The workspace may be dirty; preserve unrelated changes and report overlap rather than reverting it."
+      ],
+      "escalation": "Attempt reasonable repairs autonomously. Return needs_input only when a product decision or unavailable external authority truly blocks completion; include the exact failed approaches and smallest decision required.",
+      "report_required": true,
+      "priority": 90,
+      "depends_on": ["J001"],
+      "parent_job_id": null,
+      "related_reports": [],
+      "recovery_policy": {
+        "effect": "repository",
+        "check": "Inspect git status, git diff, reports, test/build outputs, OpenSpec status, and browser/benchmark artifacts before repeating edits or verification."
+      }
+    },
+    {
+      "id": "J003",
+      "title": "Independent TDE Completion Verification",
+      "goal": "Independently verify that the repaired implementation satisfies GREAT_GOAL.md and every rebuild-tde-physics-core acceptance condition without relying on the implementation worker's conclusions.",
+      "workflow": "Read J001 and J002 reports, but independently inspect the final files and run verification. Re-run focused and full tests, production build, representative benchmarks, OpenSpec verification, and browser checks at desktop and mobile viewports. Review the complete diff for physical, numerical, rendering, UI, audio, documentation, and regression risks. Produce findings ordered by severity. If anything is incomplete, identify exact repair steps and leave the job completed only as a verification report; do not edit repository files.",
+      "requirements": [
+        "Verify every task 1.1 through 7.6 against direct final-state evidence.",
+        "Confirm lifecycle tests prove approach, deformation, disruption, stream evolution, fallback, circularization, disk formation, and accretion rather than names or implementation details alone.",
+        "Confirm conservation, self-gravity, snapshot/replay, renderer contract, trail, phase UI, GW, and audio behavior are covered and coherent.",
+        "Confirm no fake TDE mechanism or stale fake-physics spec remains.",
+        "Confirm benchmark and browser evidence is reproducible and honestly interpreted.",
+        "Report all findings with file and line references where applicable."
+      ],
+      "constraints": [
+        "Do not edit source, tests, docs, OpenSpec artifacts, reports from other jobs, or orchestration state.",
+        "Do not waive a requirement because implementation is difficult or prior reports say it passed.",
+        "Do not commit, push, or create a pull request."
+      ],
+      "completion_conditions": [
+        "The report states either no findings or a complete severity-ordered finding list with exact evidence.",
+        "All required test, build, benchmark, browser, documentation, and OpenSpec checks were independently attempted and recorded.",
+        "The report gives a clear release-readiness verdict and any residual risks."
+      ],
+      "context": [
+        "Implementation report: jobs/J002/report.md.",
+        "Initial audit report: jobs/J001/report.md.",
+        "A verification job reports defects but does not repair them."
+      ],
+      "escalation": "Return needs_input only if verification is impossible without user authority. Tool absence or failed checks should be recorded as findings with exact evidence.",
+      "report_required": true,
+      "priority": 80,
+      "depends_on": ["J002"],
+      "parent_job_id": null,
+      "related_reports": [],
+      "recovery_policy": null
+    },
+    {
+      "id": "J004",
+      "title": "Final Repair and Closure",
+      "goal": "Resolve every independent verification finding, re-run all affected checks, and leave the workspace and OpenSpec change truthfully complete.",
+      "workflow": "Read J003 findings and inspect current workspace state. Repair every confirmed issue using minimal physically honest changes. Re-run focused and full tests, build, benchmarks, browser checks, and OpenSpec verification affected by the repairs. Update final documentation and task status. If the change is fully complete, synchronize and archive it according to the local OpenSpec workflow. Produce a final evidence index and closure report.",
+      "requirements": [
+        "Resolve every J003 finding or explicitly demonstrate with direct evidence why it is not applicable.",
+        "Re-run all checks invalidated by repairs, including browser and performance checks where relevant.",
+        "Leave no false checked task, stale fake-physics requirement, known blocking test failure, build failure, browser error, or unreported performance miss.",
+        "Preserve unrelated workspace changes and avoid destructive git operations.",
+        "Create AUTONOMOUS_COMPLETION_PROMPT.md at the workspace root containing a reusable root-session prompt that enforces the job-orchestrator control loop, real persistent worker sessions, evidence-gated outcomes, recovery protocol, and continuation until run_complete."
+      ],
+      "constraints": [
+        "Do not mutate orchestrator-owned run, queue, dependency, parent, or job-status state.",
+        "Do not commit, push, publish, or create a pull request.",
+        "Do not claim completion while a required check is skipped, substituted, or contradicted by evidence.",
+        "Use apply_patch for manual edits and do not revert unrelated changes."
+      ],
+      "completion_conditions": [
+        "Every J003 finding is closed with evidence.",
+        "The final full test suite and production build pass.",
+        "Required browser and benchmark checks are complete and honestly documented.",
+        "OpenSpec status, tasks, main specs, and archive state are coherent with the implemented work.",
+        "AUTONOMOUS_COMPLETION_PROMPT.md is self-contained, references the prepared request and job-definition inputs, and prevents root-session domain work or fabricated session references.",
+        "The report contains a concise evidence index and identifies any non-blocking residual limitations."
+      ],
+      "context": [
+        "Independent verification report: jobs/J003/report.md.",
+        "Implementation report: jobs/J002/report.md.",
+        "The user wants a prompt suitable for a fresh autonomous session, not merely a prose plan."
+      ],
+      "escalation": "Continue autonomously through repair and re-verification. Return needs_input only for a truly blocking authority decision after documenting attempted alternatives.",
+      "report_required": true,
+      "priority": 70,
+      "depends_on": ["J003"],
+      "parent_job_id": null,
+      "related_reports": [],
+      "recovery_policy": {
+        "effect": "repository",
+        "check": "Inspect git status, git diff, OpenSpec status, reports, and verification artifacts before repeating any repair or archive operation."
+      }
+    }
+  ]
+}

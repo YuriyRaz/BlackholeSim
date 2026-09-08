@@ -1,0 +1,55 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-8.4.2, pluggy-1.6.0 -- C:\Projects\AkitoBlogBot\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Projects\BlackholeSim
+plugins: anyio-4.13.0, langsmith-0.8.0, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 45 items
+
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5ProtocolTest::test_v5_raw_response_and_report_digest_are_bound_to_attempt PASSED [  2%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5ProtocolTest::test_v5_rejects_caller_authored_session_and_accepts_adapter_receipt PASSED [  4%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5ProtocolTest::test_v5_rejects_unknown_fields_and_invalid_condition_status PASSED [  6%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5ProtocolTest::test_v5_schema_registry_contains_trusted_record_kinds PASSED [  8%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_artifact_kind_enum_is_valid PASSED [ 11%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_artifact_schema_rejects_extra_properties PASSED [ 13%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_attempt_schema_rejects_extra_properties PASSED [ 15%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_attempt_schema_rejects_invalid_status PASSED [ 17%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_completion_claim_schema_rejects_extra_properties PASSED [ 20%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_condition_result_schema_rejects_extra_properties PASSED [ 22%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_condition_result_status_enum_exactly_five_values PASSED [ 24%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_dispatch_prompt_sha256_must_be_hex64 PASSED [ 26%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_dispatch_schema_rejects_extra_properties PASSED [ 28%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_dispatch_schema_rejects_invalid_kind PASSED [ 31%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_job_definition_v5_side_effect_class_enum_is_valid PASSED [ 33%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_job_v5_schema_rejects_extra_properties PASSED [ 35%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_job_v5_side_effect_class_enum_is_valid PASSED [ 37%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_launch_receipt_schema_rejects_extra_properties PASSED [ 40%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_outcome_v5_schema_rejects_extra_properties PASSED [ 42%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_outcome_v5_status_enum_is_valid PASSED [ 44%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_raw_response_response_sha256_must_be_hex64 PASSED [ 46%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_raw_response_schema_rejects_extra_properties PASSED [ 48%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_recovery_evidence_v5_classification_enum_is_valid PASSED [ 51%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_recovery_evidence_v5_schema_rejects_extra_properties PASSED [ 53%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_response_receipt_schema_rejects_extra_properties PASSED [ 55%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_response_receipt_status_enum_is_valid PASSED [ 57%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_run_schema_rejects_invalid_status PASSED [ 60%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_run_schema_requires_all_fields_and_rejects_extra PASSED [ 62%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_v4_run_schema_version_is_4 PASSED [ 64%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::Version5SchemaValidationTest::test_v4_schemas_are_loadable_for_legacy_audit PASSED [ 66%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_classify_run_version_v4_is_legacy_unattested PASSED [ 68%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_classify_run_version_v5_is_authenticated PASSED [ 71%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_new_runs_use_v5_by_default PASSED [ 73%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_require_run_version_accepts_v4_and_v5 PASSED [ 75%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_require_run_version_rejects_mismatch PASSED [ 77%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_v4_outcome_not_treated_as_v5_evidence PASSED [ 80%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_v4_run_not_silently_converted_to_v5 PASSED [ 82%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::VersionLoadingTest::test_v4_runs_remain_available_for_legacy_audit PASSED [ 84%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::AtomicPersistenceTest::test_artifacts_are_recorded_with_digest PASSED [ 86%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::AtomicPersistenceTest::test_attempt_ids_are_unique_across_attempts PASSED [ 88%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::AtomicPersistenceTest::test_attempts_are_append_only PASSED [ 91%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::AtomicPersistenceTest::test_completion_claim_is_recorded_on_completed_response PASSED [ 93%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::AtomicPersistenceTest::test_condition_results_require_valid_status PASSED [ 95%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::AtomicPersistenceTest::test_dispatch_records_are_immutable_once_delivered PASSED [ 97%]
+.agents/skills/job-orchestrator/tests/test_v5_protocol.py::AtomicPersistenceTest::test_raw_responses_are_stored_immutable PASSED [100%]
+
+============================= 45 passed in 1.16s ==============================

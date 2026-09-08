@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Any, Iterator
 
 CURRENT_RUN_VERSION = 4
+LEGACY_UNATTESTED_VERSION = 4
+TRUSTED_RUN_VERSION = 5
 WORKER_CONTRACT_PATH = (
     Path(__file__).resolve().parent.parent / "references" / "job-protocol.md"
 )
@@ -130,7 +132,12 @@ def load_json(path: Path) -> Any:
 
 
 def require_run_version(run_root: Path, expected_version: int = CURRENT_RUN_VERSION) -> int:
-    """Ensure this v4-only control plane owns the persisted run."""
+    """Ensure this control plane owns the persisted run.
+
+    Version 5 is the trusted protocol with authenticated receipts.
+    Version 4 is legacy_unattested; its session, report, outcome, and
+    completion fields are never interpreted as trusted new-protocol evidence.
+    """
     run_path = run_root / "run.json"
     document = load_json(run_path)
     if not isinstance(document, dict):
@@ -174,6 +181,24 @@ def require_run_version(run_root: Path, expected_version: int = CURRENT_RUN_VERS
         f"run {run_root} uses unsupported version {actual_version}; only version "
         f"{expected_version} is supported"
     )
+
+
+def classify_run_version(run_root: Path) -> dict[str, Any]:
+    """Classify the protocol trust level of a run without mutating it.
+
+    Version 5 runs use authenticated receipts and are mutable.
+    Version 4 runs are legacy_unattested; their session, report, outcome,
+    and completion fields are never interpreted as trusted new-protocol
+    evidence.
+    """
+    run_path = run_root / "run.json"
+    document = load_json(run_path)
+    version = document.get("schema_version")
+    if version == LEGACY_UNATTESTED_VERSION:
+        return {"version": version, "trust": "legacy_unattested", "mutable": False}
+    if version == TRUSTED_RUN_VERSION:
+        return {"version": version, "trust": "authenticated_receipts", "mutable": True}
+    return {"version": version, "trust": "unknown", "mutable": False}
 
 
 def guard_v4_run_mutation(run_root: Path) -> None:
@@ -470,6 +495,11 @@ SCHEMA_REGISTRY: dict[int, frozenset[str]] = {
     4: frozenset({
         "job", "job-definition", "outcome", "pending-question",
         "recovery-evidence", "recovery-policy", "run", "setup",
+    }),
+    5: frozenset({
+        "artifact", "attempt", "completion-claim", "condition-result", "dispatch",
+        "job", "job-definition", "launch-receipt", "outcome", "raw-response",
+        "recovery-evidence", "response-receipt", "run", "setup",
     }),
 }
 _UNVERSIONED_SCHEMA_DEFAULTS = {

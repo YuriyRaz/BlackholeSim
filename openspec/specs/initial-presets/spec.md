@@ -25,15 +25,15 @@ The "Binary BH" preset SHALL place two black holes (36 M_sun and 29 M_sun) on a 
 - **THEN** the BHs SHALL spiral together due to GW emission, merge when close, and form a remnant — all from the physics engine, not from preset logic
 
 ### Requirement: TDE preset
-The "TDE" preset SHALL place a 10^6 M_sun black hole at the origin and a 1 M_sun, 1 R_sun star on an eccentric orbit (e=0.9) with periapsis within the tidal disruption radius. The disruption, tidal stream formation, disk formation, and jet emission all emerge from the physics engine.
+The "TDE" preset SHALL place a 10^6 M_sun black hole at the origin and a resolved 1 M_sun, 1 R_sun star on a physically defined eccentric encounter that starts outside the tidal disruption radius and has a periapsis inside it. The preset SHALL contain the star's initial matter-particle state but SHALL NOT contain a pre-created tidal stream, accretion disk, fallback timer, or jet.
 
 #### Scenario: TDE initial conditions
 - **WHEN** the TDE preset is loaded
-- **THEN** a BH and star SHALL be placed on an eccentric orbit with periapsis inside the tidal radius
+- **THEN** the black hole and resolved star SHALL be separated by more than the tidal radius and the orbital elements SHALL imply a periapsis inside the tidal radius
 
-#### Scenario: Disruption emerges from physics
-- **WHEN** the simulation runs with TDE preset
-- **THEN** the star SHALL be disrupted by tidal forces, form a tidal stream, circularize into a disk, and potentially produce jets — all from the physics engine
+#### Scenario: Disruption and disk emerge from initial conditions
+- **WHEN** the simulation runs with the TDE preset
+- **THEN** tidal deformation, stream formation, fallback, circularization, and accretion SHALL emerge from the physics engine state without preset update logic or injected particle effects
 
 ### Requirement: Kerr preset
 The "Kerr" preset SHALL place a 10 M_sun black hole with spin=0.998 and a pre-existing gas disk (100 gas particles on circular orbits between 10-50×Rs). Frame dragging, ISCO effects, disk evolution, and jet emission emerge from the physics engine.

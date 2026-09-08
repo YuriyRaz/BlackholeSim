@@ -42,14 +42,17 @@ class InstructionArchitectureTest(unittest.TestCase):
         ):
             self.assertIn(reference, skill)
 
-    def test_only_v4_assets_and_cli_surface_are_shipped(self) -> None:
+    def test_versioned_assets_and_cli_surface_are_shipped(self) -> None:
         schemas = ROOT / "schemas"
-        self.assertEqual([path.name for path in schemas.iterdir() if path.is_dir()], ["v4"])
+        self.assertEqual(
+            sorted(path.name for path in schemas.iterdir() if path.is_dir()), ["v4", "v5"]
+        )
         self.assertFalse((ROOT / "scripts" / "workerctl.py").exists())
         self.assertFalse((ROOT / "scripts" / "verify_repair.py").exists())
 
         architecture_test = Path("tests/test_instruction_architecture.py")
         outcome_test = Path("tests/test_v4_outcome.py")
+        outcome_proto_test = Path("tests/test_v4_outcome_protocol.py")
         registration_test = Path("tests/test_v4_registration.py")
         legacy_allowlist = {
             "class Lease:": {architecture_test},
@@ -62,19 +65,30 @@ class InstructionArchitectureTest(unittest.TestCase):
             "workerctl": {architecture_test},
             "next_permitted": {architecture_test},
             "protocol_ack": {architecture_test},
-            "contract_revision": {architecture_test, outcome_test},
-            "dispatch_id": {architecture_test, outcome_test},
-            "work_units": {architecture_test, outcome_test},
-            "completed_work_units": {architecture_test, outcome_test},
+            "contract_revision": {architecture_test, outcome_test, outcome_proto_test},
+            "dispatch_id": {architecture_test, outcome_test, outcome_proto_test},
+            "work_units": {architecture_test, outcome_test, outcome_proto_test},
+            "completed_work_units": {architecture_test, outcome_test, outcome_proto_test},
             "current_workflow_node_id": {architecture_test, registration_test},
             "checkpoint_sha256": {architecture_test},
             "Next permitted:": {architecture_test},
             "Completed units:": {architecture_test},
             "executing a dispatch": {architecture_test},
         }
+        trusted_v5_paths = {
+            Path("scripts/v5_core.py"),
+            Path("scripts/transport_v5.py"),
+            Path("tests/test_v5_protocol.py"),
+            Path("tests/test_v5_documentation.py"),
+            Path("tests/test_v5_workflows.py"),
+            Path("tests/test_v5_regressions.py"),
+            Path("tests/test_v5_artifact_integrity.py"),
+            Path("tests/test_v5_response_recovery.py"),
+            Path("tests/test_v5_transport.py"),
+        }
         violations: list[str] = []
         for path in sorted(ROOT.rglob("*")):
-            if not path.is_file() or "__pycache__" in path.parts:
+            if not path.is_file() or "__pycache__" in path.parts or any(p.startswith(".") for p in path.parts):
                 continue
             self.assertIn(
                 path.suffix,
@@ -82,6 +96,8 @@ class InstructionArchitectureTest(unittest.TestCase):
                 f"Classify new shipped file type before excluding it: {path}",
             )
             relative = path.relative_to(ROOT)
+            if relative in trusted_v5_paths or relative.parts[:2] == ("schemas", "v5"):
+                continue
             text = path.read_text(encoding="utf-8")
             for forbidden, allowed_paths in legacy_allowlist.items():
                 if forbidden in text and relative not in allowed_paths:

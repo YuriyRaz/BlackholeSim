@@ -1,0 +1,126 @@
+{
+  "execution_mode": "sequential",
+  "jobs": [
+    {
+      "completion_conditions": [
+        "All v5 schemas defined in schemas/v5/ with tests passing",
+        "v4 recognized as legacy_unattested in require_run_version",
+        "New runs use v5 by default",
+        "Atomic persistence extended for new record types"
+      ],
+      "goal": "Define v5 schemas for dispatch, attempts, raw responses, artifacts, completion claims, and condition results. Add schema tests for required fields, strict additional-property rejection, digest formats, unique attempt IDs, condition IDs, condition statuses, and side-effect classifications. Add explicit version loading that recognizes v4 as legacy_unattested. Add tests proving new runs use v5 while v4 runs remain available. Extend atomic persistence for immutable dispatch records, append-only attempts, raw responses, artifact records, claims, and condition results.",
+      "id": "J001",
+      "priority": 10,
+      "report_required": true,
+      "title": "Versioned Protocol Foundation"
+    },
+    {
+      "completion_conditions": [
+        "Adapter capability handshake defined",
+        "Fake adapter with full lifecycle controls implemented",
+        "Dispatch persisted immutably before launch",
+        "Launch receipt ingestion replaces session strings",
+        "Crash-reconciliation tests passing"
+      ],
+      "depends_on": [
+        "J001"
+      ],
+      "goal": "Define the transport adapter capability handshake and receipt-verification interface. Implement a deterministic fake adapter with launch, resume, response, cancellation, loss, transcript-status, and receipt-verification controls. Persist a pending immutable dispatch before launch and return dispatch ID, canonical prompt path, prompt SHA-256, run/job correlation, and adapter requirement from next. Replace caller-authored session ingestion with launch-receipt ingestion. Add tests for genuine receipt acceptance, fabricated session rejection, wrong correlation, altered prompt delivery, duplicate receipt idempotence, and conflicting receipt rejection. Add crash-reconciliation tests.",
+      "id": "J002",
+      "priority": 9,
+      "report_required": true,
+      "title": "Transport Adapter And Dispatch Provenance"
+    },
+    {
+      "completion_conditions": [
+        "Append-only attempts with active-attempt reference",
+        "Raw response ingestion with immutable storage",
+        "Root-authored outcome files rejected",
+        "Format-repair and response-retrieval operations",
+        "Side-effect classes validated at registration"
+      ],
+      "depends_on": [
+        "J001",
+        "J002"
+      ],
+      "goal": "Replace singular session state with append-only attempts and active-attempt reference. Implement adapter-verified raw response ingestion storing exact response bytes and digest. Bind accepted outcomes to raw response, attempt, dispatch, and native session. Implement same-session format-repair for malformed live responses and response-retrieval for empty responses. Route canceled, lost, unavailable, contradictory results to recovery. Require every job definition to declare a side-effect class. Extend audit and recovery to classify pending dispatches and attempts. Add tests for malformed and empty responses, root-authored outcome rejection, cancellation recovery, ambiguous evidence, contradictory evidence, replacement-attempt history, and interrupted non-idempotent effects.",
+      "id": "J003",
+      "priority": 8,
+      "report_required": true,
+      "title": "Attempts Responses And Recovery"
+    },
+    {
+      "completion_conditions": [
+        "Canonical run:// artifact references parsed and resolved",
+        "Worker-bound artifact provenance with SHA-256 digests",
+        "Stale and cross-run artifacts rejected",
+        "Dependency reports auto-propagated in deterministic order"
+      ],
+      "depends_on": [
+        "J001",
+        "J003"
+      ],
+      "goal": "Implement canonical run:// artifact reference parsing and safe resolution to run-owned absolute paths. Update prompts to provide canonical artifact references plus absolute paths. Extend normalized worker responses with artifact references and SHA-256 digests. Reject missing, changed, stale, prior-attempt, wrong-job, and cross-run report claims. Automatically include accepted dependency reports in dependent prompts in deterministic order. Preserve distinct labels and deduplicate canonical identities. Add tests for cross-run isolation, repeated job IDs, stale report reuse, root replacement, missing dependency reports, multi-dependency ordering, and advisory/dependency coexistence.",
+      "id": "J004",
+      "priority": 7,
+      "report_required": true,
+      "title": "Run-Scoped Artifact Integrity"
+    },
+    {
+      "completion_conditions": [
+        "Structured completion conditions with stable IDs",
+        "completion_claimed state before accepted completion",
+        "Independent verifier gate functional",
+        "Terminal run_complete with run_status and successful boolean"
+      ],
+      "depends_on": [
+        "J001",
+        "J003",
+        "J004"
+      ],
+      "goal": "Replace string completion conditions with stable structured conditions containing ID, description, required flag, evidence requirement, verification mode, and designated verifier. Validate condition uniqueness, verifier existence, and dependency cycles during registration. Parse worker and verifier condition results using only passed, failed, not_run, unavailable, and unknown. Implement completion_claimed state and accept completion only when all required conditions pass. Schedule designated verifier jobs from target claims. Return run_complete with explicit run_status and successful. Add tests for omitted conditions, missing evidence, unauthorized self-approval, verifier pass, verifier defect, unavailable browser evidence, repair flow, successful terminal run, failed terminal run, and canceled terminal run.",
+      "id": "J005",
+      "priority": 6,
+      "report_required": true,
+      "title": "Evidence-Gated Completion"
+    },
+    {
+      "completion_conditions": [
+        "SKILL.md rewritten with closed root allowlist",
+        "All reference docs updated for v5 semantics",
+        "Instruction conformance tests passing"
+      ],
+      "depends_on": [
+        "J001",
+        "J002",
+        "J003",
+        "J004",
+        "J005"
+      ],
+      "goal": "Rewrite SKILL.md with closed root allowlist, exact adapter dispatch loop, semantic-artifact prohibition, invalid-response flow, interruption recovery trigger, wait-reason handling, and terminal disposition rules. Update protocol.md, job-protocol.md, transport-capabilities.md, recovery.md, and maintainer guidance to match v5 semantics.",
+      "id": "J006",
+      "priority": 5,
+      "report_required": true,
+      "title": "Root And Worker Instructions"
+    },
+    {
+      "completion_conditions": [
+        "AUTONOMOUS_COMPLETION_PROMPT.md uses real CLI",
+        "Parser-backed documentation tests passing",
+        "End-to-end fake-adapter orchestration passing",
+        "End-to-end interruption scenario passing"
+      ],
+      "depends_on": [
+        "J006"
+      ],
+      "goal": "Rewrite AUTONOMOUS_COMPLETION_PROMPT.md to use resolved skill script path and available interpreter invocation. Document exact command syntax. Add parser-backed documentation tests for executable CLI examples. Run end-to-end fake-adapter orchestration covering implementation claim, dependency report delivery, independent verification, evidence acceptance, and successful run_complete. Run end-to-end interruption scenario covering canceled transport, audit, recovery-authorized replacement, append-only attempts, failed required evidence, and unsuccessful terminal disposition.",
+      "id": "J007",
+      "priority": 4,
+      "report_required": true,
+      "title": "Completion Prompt And Conformance Verification"
+    }
+  ],
+  "request_path": "request.md",
+  "schema_version": 4,
+  "workspace": "C:\\Projects\\BlackholeSim"
+}

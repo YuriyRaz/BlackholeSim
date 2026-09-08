@@ -1,0 +1,19 @@
+{
+  "created_at": "2026-07-24T13:17:47.294817Z",
+  "goal": "Implement harden-job-orchestrator-protocol: v5 trusted protocol with adapter receipts, append-only attempts, artifact provenance, evidence gates, and instruction conformance",
+  "job_ids": [
+    "J001",
+    "J002",
+    "J003",
+    "J004",
+    "J005",
+    "J006",
+    "J007"
+  ],
+  "protocol_version": 4,
+  "revision": 3,
+  "run_id": "RUN-4f9e42dd4fa5da61a10d",
+  "schema_version": 4,
+  "status": "completed",
+  "updated_at": "2026-07-24T15:18:46.437881Z"
+}

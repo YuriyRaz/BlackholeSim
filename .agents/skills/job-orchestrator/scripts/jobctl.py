@@ -33,6 +33,18 @@ from orchestrator_core import (
     write_json,
     write_v4_document,
 )
+from v5_core import (
+    audit_v5_state,
+    init_v5_run,
+    load_v5_state,
+    record_v5_launch_receipt,
+    record_v5_response_receipt,
+    record_v5_answer,
+    repair_v5_job,
+    recover_v5_job,
+    register_v5_jobs,
+    select_v5_next_operation,
+)
 
 
 def emit(value: Any) -> None:
@@ -40,6 +52,14 @@ def emit(value: Any) -> None:
 
 
 def init_run(args: argparse.Namespace) -> dict[str, Any]:
+    if args.protocol_version == 5:
+        return init_v5_run(
+            args.request_file,
+            args.goal,
+            run_id=args.run_id,
+            state_root=args.state_root,
+            workspace=args.workspace,
+        )
     now = utc_now()
     run_id = args.run_id or stable_id("RUN", args.goal, now)
     run_root = args.state_root.resolve() / run_id
@@ -81,6 +101,11 @@ def init_run(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def register_jobs(args: argparse.Namespace) -> dict[str, Any]:
+    run = load_json(args.run.resolve() / "run.json")
+    if run.get("schema_version") == 5:
+        return register_v5_jobs(
+            args.run.resolve(), load_json(args.definition), controller=args.controller
+        )
     return register_v4_jobs(
         args.run.resolve(),
         load_json(args.definition),
@@ -91,16 +116,26 @@ def register_jobs(args: argparse.Namespace) -> dict[str, Any]:
 
 def next_action(args: argparse.Namespace) -> dict[str, Any]:
     run_root = args.run.resolve()
+    if load_json(run_root / "run.json").get("schema_version") == 5:
+        return select_v5_next_operation(run_root)
     return select_v4_next_operation(load_v4_state(run_root), run_root=run_root)
 
 
 def record_session(args: argparse.Namespace) -> dict[str, Any]:
+    if load_json(args.run.resolve() / "run.json").get("schema_version") == 5:
+        raise OrchestratorError(
+            "v5 rejects caller-authored session references; use launch-receipt with an adapter-verified receipt"
+        )
     return record_v4_session(
         args.run.resolve(), args.job, args.session_ref, controller=args.controller
     )
 
 
 def record_outcome(args: argparse.Namespace) -> dict[str, Any]:
+    if load_json(args.run.resolve() / "run.json").get("schema_version") == 5:
+        raise OrchestratorError(
+            "v5 rejects standalone outcome files; submit an adapter-verified response receipt"
+        )
     return record_v4_outcome(
         args.run.resolve(),
         args.job,
@@ -112,6 +147,10 @@ def record_outcome(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def record_answer(args: argparse.Namespace) -> dict[str, Any]:
+    if load_json(args.run.resolve() / "run.json").get("schema_version") == 5:
+        return record_v5_answer(
+            args.run.resolve(), args.job, args.answer, controller=args.controller
+        )
     return record_v4_answer(
         args.run.resolve(), args.job, args.answer,
         source=args.source, controller=args.controller,
@@ -128,6 +167,15 @@ def record_advisory_decision(args: argparse.Namespace) -> dict[str, Any]:
 
 def recover(args: argparse.Namespace) -> dict[str, Any]:
     run_root = args.run.resolve()
+    if load_json(run_root / "run.json").get("schema_version") == 5:
+        if not args.job or not args.evidence:
+            raise OrchestratorError("v5 recover requires --job and --evidence")
+        return recover_v5_job(
+            run_root,
+            args.job,
+            load_json(args.evidence),
+            controller=args.controller,
+        )
     if args.dry_run:
         raise OrchestratorError("recover is read-only by default; omit --dry-run or use --apply")
     if not args.job:
@@ -164,6 +212,8 @@ def recover(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def audit(args: argparse.Namespace) -> dict[str, Any]:
+    if load_json(args.run.resolve() / "run.json").get("schema_version") == 5:
+        return audit_v5_state(args.run.resolve())
     return audit_v4_state(
         args.run.resolve(),
         evidence=(
@@ -174,8 +224,31 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def repair_run(args: argparse.Namespace) -> dict[str, Any]:
+    if load_json(args.run.resolve() / "run.json").get("schema_version") == 5:
+        return repair_v5_job(
+            args.run.resolve(), args.job, args.disposition, args.reason,
+            controller=args.controller,
+        )
     return repair_v4_job(
         args.run.resolve(), args.job, args.disposition, args.reason,
+        controller=args.controller,
+    )
+
+
+def record_launch_receipt(args: argparse.Namespace) -> dict[str, Any]:
+    run_root = args.run.resolve()
+    return record_v5_launch_receipt(
+        run_root,
+        load_json(args.receipt),
+        controller=args.controller,
+    )
+
+
+def record_response_receipt(args: argparse.Namespace) -> dict[str, Any]:
+    run_root = args.run.resolve()
+    return record_v5_response_receipt(
+        run_root,
+        load_json(args.receipt),
         controller=args.controller,
     )
 
@@ -191,6 +264,7 @@ def parser() -> argparse.ArgumentParser:
     init.add_argument("--run-id")
     init.add_argument("--state-root", type=Path, default=Path.cwd() / ".job-orchestrator" / "runs")
     init.add_argument("--workspace", type=Path, default=Path.cwd())
+    init.add_argument("--protocol-version", type=int, choices=(4, 5), default=4)
     register = sub.add_parser("register", parents=[common])
     register.add_argument("--run", type=Path, required=True)
     register.add_argument("--definition", type=Path, required=True)
@@ -201,12 +275,18 @@ def parser() -> argparse.ArgumentParser:
     session.add_argument("--run", type=Path, required=True)
     session.add_argument("--job", required=True)
     session.add_argument("--session-ref", required=True)
+    launch = sub.add_parser("launch-receipt", parents=[common])
+    launch.add_argument("--run", type=Path, required=True)
+    launch.add_argument("--receipt", type=Path, required=True)
     outcome = sub.add_parser("outcome", parents=[common])
     outcome.add_argument("--run", type=Path, required=True)
     outcome.add_argument("--job", required=True)
     outcome.add_argument("--outcome", type=Path, required=True)
     outcome.add_argument("--session-ref")
     outcome.add_argument("--evidence", type=Path)
+    response = sub.add_parser("response-receipt", parents=[common])
+    response.add_argument("--run", type=Path, required=True)
+    response.add_argument("--receipt", type=Path, required=True)
     answer = sub.add_parser("answer", parents=[common])
     answer.add_argument("--run", type=Path, required=True)
     answer.add_argument("--job", required=True)
@@ -246,6 +326,7 @@ def main() -> int:
     handlers = {
         "init": init_run, "register": register_jobs, "next": next_action,
         "session": record_session, "outcome": record_outcome,
+        "launch-receipt": record_launch_receipt, "response-receipt": record_response_receipt,
         "answer": record_answer, "advisory-decision": record_advisory_decision,
         "audit": audit, "recover": recover, "repair": repair_run,
     }

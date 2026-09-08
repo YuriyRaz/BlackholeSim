@@ -41,3 +41,18 @@ The particle trail renderer SHALL be available in WebGL 2.0 mode. WebGPU trail r
 #### Scenario: Trails work in WebGL 2.0
 - **WHEN** the renderer backend is WebGL 2.0
 - **THEN** particle trails SHALL render correctly
+
+### Requirement: Particle trail update each sub-step
+`_updateParticleTrails()` SHALL be called in `step()` after body trail updates. `getState().particleTrails` SHALL be non-empty when trails are enabled. Both gas and matter particles SHALL appear in trail data.
+
+#### Scenario: Trails called in step
+- **WHEN** `step()` executes a physics sub-step
+- **THEN** `_updateParticleTrails()` SHALL be called after body trail updates
+
+#### Scenario: Trail data populated
+- **WHEN** trails are enabled and the simulation runs
+- **THEN** `getState().particleTrails` SHALL be non-empty
+
+#### Scenario: Both particle types appear in trails
+- **WHEN** gas and matter particles exist in the simulation
+- **THEN** both types SHALL appear in the trail data

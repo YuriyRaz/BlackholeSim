@@ -32,3 +32,22 @@ Transport evidence has priority for conversation liveness and responses, then
 explicit external-system facts, repository/workspace facts, reports or
 checkpoints, and persisted status. Report contradictions instead of selecting a
 convenient source.
+
+## Trusted v5 Interruption Rules
+
+Cancellation is not permission to retry. Any canceled, lost, unavailable,
+empty-with-uncertain-liveness, or contradictory transport result exits the
+normal scheduling loop. The root must run `audit`, gather direct adapter status
+and transcript evidence, and invoke `recover` before resuming, retrying,
+failing, canceling, or creating a replacement attempt.
+
+The v5 state keeps append-only attempts. Recovery may classify the active
+attempt as `canceled`, `lost`, `unknown`, or `replaced`; only an explicit
+recovery result may authorize a new dispatch. A crash after worker creation but
+before receipt persistence is reconciled against the pending dispatch before a
+second worker can be launched.
+
+For a non-idempotent side effect, perform the configured external check and
+record its result as recovery evidence. Unknown is not negative and is not
+permission to repeat the effect. Raw worker responses and attested artifacts
+are immutable evidence and cannot be reconstructed from workspace observations.

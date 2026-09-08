@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Worker normalized outcome v5",
+  "type": "object",
+  "required": ["schema_version", "status", "summary", "response_id"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 5},
+    "status": {"type": "string", "enum": ["completed", "needs_input", "failed"]},
+    "summary": {"type": "string", "minLength": 1},
+    "response_id": {"type": "string", "minLength": 1},
+    "report_ref": {"type": ["string", "null"], "pattern": "run://[^/]+/jobs/[^/]+/report"},
+    "artifacts": {"type": "array", "items": {"type": "object"}},
+    "condition_results": {"type": "array", "items": {"type": "object"}},
+    "question": {"type": "string", "minLength": 1},
+    "context": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,10 @@
+..F....................................F................................ [ 26%]
+........................................................................ [ 53%]
+......................F....F............................................ [ 80%]
+...................................................                      [100%]
+=========================== short test summary info ===========================
+FAILED .agents/skills/job-orchestrator/tests/test_instruction_architecture.py::InstructionArchitectureTest::test_versioned_assets_and_cli_surface_are_shipped
+FAILED .agents/skills/job-orchestrator/tests/test_v4_init.py::Version4InitTest::test_init_creates_exact_empty_v4_run
+FAILED .agents/skills/job-orchestrator/tests/test_v4_registration.py::Version4RegistrationTest::test_register_persists_complete_definitions_and_authoritative_jobs
+FAILED .agents/skills/job-orchestrator/tests/test_v4_registration.py::Version4RegistrationTest::test_render_initial_prompt_uses_open_workflow_and_omits_absent_sections
+4 failed, 263 passed in 41.28s

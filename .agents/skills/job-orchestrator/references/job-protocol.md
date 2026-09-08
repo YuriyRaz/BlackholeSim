@@ -38,3 +38,27 @@ continuing.
 
 Workers may recommend follow-up work in their report, but only the root
 operator creates explicit jobs.
+
+## Trusted v5 Output Contract
+
+The worker exclusively owns the semantic content of its report, checkpoint,
+raw response, normalized outcome, completion claim, and condition results. The
+root MUST NOT create, complete, repair, summarize, or replace these artifacts.
+
+The generated prompt provides both a canonical reference such as
+`run://RUN-123/jobs/J001/report` and an absolute authorized write path. Return
+the reference and SHA-256 content digest in the adapter response. A report that
+exists at a plausible path but is stale, cross-run, changed, or absent from the
+verified response is not evidence of completion.
+
+Return condition results with stable IDs and one of `passed`, `failed`,
+`not_run`, `unavailable`, or `unknown`. Only `passed` satisfies a required
+condition, and evidence-bearing passes must name accepted artifact references.
+Return exactly one normalized JSON outcome through the worker transport. Never
+write an outcome file for the root to copy into the control plane.
+
+If the response format is rejected while the session is live, follow the
+same-session formatting-repair continuation. If the response is empty while
+the session is live, follow the response-retrieval continuation. Do not repeat
+non-idempotent work blindly; interruption recovery is owned by the control
+plane.

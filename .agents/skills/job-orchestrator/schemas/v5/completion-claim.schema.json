@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Worker completion claim v5",
+  "type": "object",
+  "required": ["schema_version", "response_id", "condition_results", "claimed_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 5},
+    "response_id": {"type": "string", "minLength": 1},
+    "condition_results": {"type": "array", "items": {"type": "object"}},
+    "claimed_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}
