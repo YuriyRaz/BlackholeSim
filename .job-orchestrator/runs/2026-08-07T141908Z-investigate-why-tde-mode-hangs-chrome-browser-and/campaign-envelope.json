@@ -1,0 +1,51 @@
+{
+  "authority_id": "AUTH-EB7689720723962910D0",
+  "branch_policy": {
+    "baseline_commit": "reported_by_branch_init_worker",
+    "branch": "campaign/camp-8a5f92e507d8313caf9e",
+    "required": false
+  },
+  "campaign_id": "CAMP-8A5F92E507D8313CAF9E",
+  "compilation_digest": "4bab9706779f73288963acb408dd27ce7c24bdc656d6317322b620acce2ca4fd",
+  "context_snapshots": [],
+  "created_at": "2026-08-07T14:19:08.171461Z",
+  "entry_contract": [
+    "goal"
+  ],
+  "envelope_id": "ENV-FFA42846961DA776DEDB",
+  "exit_contract": [
+    "goal_judgment"
+  ],
+  "goal": "Investigate why TDE mode hangs Chrome browser and implement a fix",
+  "limits": {
+    "max_concurrency": 8,
+    "max_cycles": 20,
+    "max_expansions": 64,
+    "max_jobs_per_cycle": 64,
+    "max_jobs_per_expansion": 32,
+    "max_total_jobs": 512
+  },
+  "mutating": false,
+  "phase_configurations": {},
+  "phase_sequence": [],
+  "publication_policy": {
+    "deployment": false,
+    "destructive_migration": false,
+    "merge": false,
+    "pull_request": false,
+    "release": false
+  },
+  "repository_target": "C:\\Projects\\BlackholeSim",
+  "safety_invariants": [
+    "independent_verification",
+    "recovery",
+    "root_isolation",
+    "goal_judge_authority",
+    "no_false_completion"
+  ],
+  "schema_version": 6,
+  "strategy": "default_adaptive",
+  "strategy_digest": "80e2f1d66914f9ce464e61b0b746f2ce19c3be09e59826524b7bfb0dd57232d9",
+  "strategy_mode": "custom",
+  "version": 1
+}

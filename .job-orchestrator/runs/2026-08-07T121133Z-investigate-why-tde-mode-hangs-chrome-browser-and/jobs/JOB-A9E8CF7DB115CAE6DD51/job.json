@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "job_id": "JOB-A9E8CF7DB115CAE6DD51",
+  "purpose_key": "remote_verification",
+  "revision": 0,
+  "role": "remote_verifier",
+  "schema_version": 6,
+  "status": "pending"
+}

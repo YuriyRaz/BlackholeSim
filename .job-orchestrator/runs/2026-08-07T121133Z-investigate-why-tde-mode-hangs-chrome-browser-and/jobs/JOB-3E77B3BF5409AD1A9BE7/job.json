@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "job_id": "JOB-3E77B3BF5409AD1A9BE7",
+  "purpose_key": "deterministic_checks",
+  "revision": 0,
+  "role": "deterministic_checker",
+  "schema_version": 6,
+  "status": "pending"
+}

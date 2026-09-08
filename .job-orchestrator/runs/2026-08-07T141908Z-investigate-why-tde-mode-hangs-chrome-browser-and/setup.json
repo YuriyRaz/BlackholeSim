@@ -1,0 +1,22 @@
+{
+  "adapter_binding": {
+    "adapter_id": "deterministic-test",
+    "adapter_secret": "test-secret"
+  },
+  "campaign_envelope_id": "ENV-FFA42846961DA776DEDB",
+  "created_at": "2026-08-07T14:19:08.171461Z",
+  "execution_mode": "hybrid",
+  "graph_generation_id": "GEN-70332C06E04585542E2E",
+  "graph_revision": 1,
+  "jobs": [
+    {
+      "job_id": "JOB-E562183E11A1B47F0BE6",
+      "prompt_path": "JOB-E562183E11A1B47F0BE6",
+      "title": "JOB-E562183E11A1B47F0BE6"
+    }
+  ],
+  "request_path": "C:\\Projects\\BlackholeSim\\.job-orchestrator\\tmp\\request-tde-hang.md",
+  "run_id": "2026-08-07T141908Z-investigate-why-tde-mode-hangs-chrome-browser-and",
+  "schema_version": 6,
+  "workspace": "C:\\Projects\\BlackholeSim"
+}

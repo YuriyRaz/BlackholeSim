@@ -1,0 +1,31 @@
+{
+  "campaign_envelope_id": "ENV-9C1E913E0F79E8D29895",
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "goal": "Investigate why TDE mode hangs Chrome browser and implement a fix",
+  "graph_digest": "8f739773c85ef361a713a5fab52d3c11498f9850ddf55da5d04f66f5311d8ec1",
+  "graph_revision": 1,
+  "job_ids": [
+    "JOB-AD54CF75C345302FD817",
+    "JOB-E143D9FA5D5D977A1A8D",
+    "JOB-0E0D75B3EA0F16A692EC",
+    "JOB-F48417AA264A0992C3DD",
+    "JOB-01E880598A93E72B3E72",
+    "JOB-9791406767730B888412",
+    "JOB-AEF6BE0EB0EB9F104DD2",
+    "JOB-9BDFFA19C19FCF0A88CD",
+    "JOB-3E77B3BF5409AD1A9BE7",
+    "JOB-ADE97A4944C6AC2A07C7",
+    "JOB-D6D689E3D47C986C277E",
+    "JOB-DC65510F2659AD9F9BB3",
+    "JOB-89317D3F846644ABC5AC",
+    "JOB-CCA88DD2B6EF5AFFEE22",
+    "JOB-156087F087CE46DFC2DC",
+    "JOB-A9E8CF7DB115CAE6DD51",
+    "JOB-E65E5D2689A74C0BB733"
+  ],
+  "protocol_revision": "v6-closed",
+  "run_id": "2026-08-07T121133Z-investigate-why-tde-mode-hangs-chrome-browser-and",
+  "schema_version": 6,
+  "status": "cancelled",
+  "updated_at": "2026-08-07T12:11:33.111638Z"
+}

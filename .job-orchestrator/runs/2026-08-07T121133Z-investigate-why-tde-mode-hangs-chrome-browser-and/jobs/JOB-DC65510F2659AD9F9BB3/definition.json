@@ -1,0 +1,15 @@
+{
+  "authority_id": "AUTH-DC65510F2659AD9F9BB3",
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "cycle_id": "",
+  "expansion_origin": "JOB-AD54CF75C345302FD817",
+  "graph_generation": 1,
+  "job_id": "JOB-DC65510F2659AD9F9BB3",
+  "prompt_path": "jobs/JOB-DC65510F2659AD9F9BB3/prompt.md",
+  "purpose_key": "openspec_sync",
+  "revision": 0,
+  "role": "openspec_finalizer",
+  "schema_version": 6,
+  "status": "pending",
+  "title": "Openspec Sync"
+}

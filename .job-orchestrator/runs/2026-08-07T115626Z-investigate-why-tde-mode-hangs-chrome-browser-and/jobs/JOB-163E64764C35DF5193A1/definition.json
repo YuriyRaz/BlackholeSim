@@ -1,0 +1,15 @@
+{
+  "authority_id": "AUTH-163E64764C35DF5193A1",
+  "created_at": "2026-08-07T11:56:26.343101Z",
+  "cycle_id": "",
+  "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+  "graph_generation": 1,
+  "job_id": "JOB-163E64764C35DF5193A1",
+  "prompt_path": "jobs/JOB-163E64764C35DF5193A1/prompt.md",
+  "purpose_key": "proposal_architect",
+  "revision": 0,
+  "role": "proposal_architect",
+  "schema_version": 6,
+  "status": "pending",
+  "title": "Proposal Architect"
+}

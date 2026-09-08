@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "job_id": "JOB-ADE97A4944C6AC2A07C7",
+  "purpose_key": "verification",
+  "revision": 0,
+  "role": "verifier",
+  "schema_version": 6,
+  "status": "pending"
+}

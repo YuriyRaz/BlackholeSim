@@ -1,0 +1,11 @@
+{
+  "created_at": "2026-08-07T11:56:26.343101Z",
+  "dispatch_id": "DISP-9CC2B26FB2B5F6DFBAA4",
+  "job_id": "JOB-FBBFD0E88E699F69F72A",
+  "purpose_key": "branch_init",
+  "revision": 1,
+  "role": "branch_initializer",
+  "schema_version": 6,
+  "status": "dispatch_pending",
+  "updated_at": "2026-08-07T11:57:34.742677Z"
+}

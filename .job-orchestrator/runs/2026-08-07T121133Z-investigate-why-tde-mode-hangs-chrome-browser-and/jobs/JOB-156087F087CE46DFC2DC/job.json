@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "job_id": "JOB-156087F087CE46DFC2DC",
+  "purpose_key": "cycle_push",
+  "revision": 0,
+  "role": "push_worker",
+  "schema_version": 6,
+  "status": "pending"
+}

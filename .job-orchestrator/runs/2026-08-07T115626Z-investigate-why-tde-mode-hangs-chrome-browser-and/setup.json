@@ -1,0 +1,99 @@
+{
+  "adapter_binding": {},
+  "campaign_envelope_id": "ENV-CBCD30CB2EEEDFBCB2EA",
+  "created_at": "2026-08-07T11:56:26.343101Z",
+  "execution_mode": "hybrid",
+  "graph_generation_id": "GEN-48B29ECC23DA8BE066CC",
+  "graph_revision": 1,
+  "jobs": [
+    {
+      "job_id": "JOB-BED46D76318DD8C40E5C",
+      "prompt_path": "JOB-BED46D76318DD8C40E5C",
+      "title": "JOB-BED46D76318DD8C40E5C"
+    },
+    {
+      "job_id": "JOB-FBBFD0E88E699F69F72A",
+      "prompt_path": "JOB-FBBFD0E88E699F69F72A",
+      "title": "JOB-FBBFD0E88E699F69F72A"
+    },
+    {
+      "job_id": "JOB-C4207C4863936DB236F6",
+      "prompt_path": "JOB-C4207C4863936DB236F6",
+      "title": "JOB-C4207C4863936DB236F6"
+    },
+    {
+      "job_id": "JOB-163E64764C35DF5193A1",
+      "prompt_path": "JOB-163E64764C35DF5193A1",
+      "title": "JOB-163E64764C35DF5193A1"
+    },
+    {
+      "job_id": "JOB-B10F94E7BCE769C0AC1D",
+      "prompt_path": "JOB-B10F94E7BCE769C0AC1D",
+      "title": "JOB-B10F94E7BCE769C0AC1D"
+    },
+    {
+      "job_id": "JOB-C8E08A59F1C9BB7362E4",
+      "prompt_path": "JOB-C8E08A59F1C9BB7362E4",
+      "title": "JOB-C8E08A59F1C9BB7362E4"
+    },
+    {
+      "job_id": "JOB-FC8F02E759B44060342D",
+      "prompt_path": "JOB-FC8F02E759B44060342D",
+      "title": "JOB-FC8F02E759B44060342D"
+    },
+    {
+      "job_id": "JOB-8946886C200DD3CBB0CA",
+      "prompt_path": "JOB-8946886C200DD3CBB0CA",
+      "title": "JOB-8946886C200DD3CBB0CA"
+    },
+    {
+      "job_id": "JOB-585B64EAA81E1AB74F1D",
+      "prompt_path": "JOB-585B64EAA81E1AB74F1D",
+      "title": "JOB-585B64EAA81E1AB74F1D"
+    },
+    {
+      "job_id": "JOB-0691D0AD2E4B24356800",
+      "prompt_path": "JOB-0691D0AD2E4B24356800",
+      "title": "JOB-0691D0AD2E4B24356800"
+    },
+    {
+      "job_id": "JOB-445F9E4ACA535FDBC016",
+      "prompt_path": "JOB-445F9E4ACA535FDBC016",
+      "title": "JOB-445F9E4ACA535FDBC016"
+    },
+    {
+      "job_id": "JOB-0D8690352E046573CC57",
+      "prompt_path": "JOB-0D8690352E046573CC57",
+      "title": "JOB-0D8690352E046573CC57"
+    },
+    {
+      "job_id": "JOB-C28F6323B3ABC4C06244",
+      "prompt_path": "JOB-C28F6323B3ABC4C06244",
+      "title": "JOB-C28F6323B3ABC4C06244"
+    },
+    {
+      "job_id": "JOB-139E14EA9B2170786F2A",
+      "prompt_path": "JOB-139E14EA9B2170786F2A",
+      "title": "JOB-139E14EA9B2170786F2A"
+    },
+    {
+      "job_id": "JOB-C38A61983992F658B10B",
+      "prompt_path": "JOB-C38A61983992F658B10B",
+      "title": "JOB-C38A61983992F658B10B"
+    },
+    {
+      "job_id": "JOB-FB567ED308CB8C8ED908",
+      "prompt_path": "JOB-FB567ED308CB8C8ED908",
+      "title": "JOB-FB567ED308CB8C8ED908"
+    },
+    {
+      "job_id": "JOB-B7B64F998B8501F7025E",
+      "prompt_path": "JOB-B7B64F998B8501F7025E",
+      "title": "JOB-B7B64F998B8501F7025E"
+    }
+  ],
+  "request_path": "C:\\Projects\\BlackholeSim\\.job-orchestrator\\tmp\\request-tde-hang.md",
+  "run_id": "2026-08-07T115626Z-investigate-why-tde-mode-hangs-chrome-browser-and",
+  "schema_version": 6,
+  "workspace": "C:\\Projects\\BlackholeSim"
+}

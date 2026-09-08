@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "job_id": "JOB-CCA88DD2B6EF5AFFEE22",
+  "purpose_key": "cycle_commit",
+  "revision": 0,
+  "role": "commit_worker",
+  "schema_version": 6,
+  "status": "pending"
+}

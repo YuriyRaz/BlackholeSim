@@ -1,0 +1,10 @@
+{
+  "campaign_id": "2026-08-07T115626Z-investigate-why-tde-mode-hangs-chrome-browser-and",
+  "created_at": "2026-08-07T11:57:34.731951Z",
+  "dispatch_id": "DISP-9CC2B26FB2B5F6DFBAA4",
+  "graph_generation": 1,
+  "graph_revision": 1,
+  "job_id": "JOB-FBBFD0E88E699F69F72A",
+  "prompt_sha256": "7458e56885759756e4f26dfe2c62b0c7f6c4a9d219ed4802d67bd992475c279c",
+  "run_id": "2026-08-07T115626Z-investigate-why-tde-mode-hangs-chrome-browser-and"
+}

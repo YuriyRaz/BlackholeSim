@@ -1,0 +1,15 @@
+{
+  "authority_id": "AUTH-139E14EA9B2170786F2A",
+  "created_at": "2026-08-07T11:56:26.343101Z",
+  "cycle_id": "",
+  "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+  "graph_generation": 1,
+  "job_id": "JOB-139E14EA9B2170786F2A",
+  "prompt_path": "jobs/JOB-139E14EA9B2170786F2A/prompt.md",
+  "purpose_key": "cycle_commit",
+  "revision": 0,
+  "role": "commit_worker",
+  "schema_version": 6,
+  "status": "pending",
+  "title": "Cycle Commit"
+}

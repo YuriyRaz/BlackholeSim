@@ -1,0 +1,9 @@
+{
+  "created_at": "2026-08-07T11:56:26.343101Z",
+  "job_id": "JOB-B7B64F998B8501F7025E",
+  "purpose_key": "goal_judge",
+  "revision": 0,
+  "role": "goal_judge",
+  "schema_version": 6,
+  "status": "pending"
+}

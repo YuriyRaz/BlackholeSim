@@ -1,0 +1,49 @@
+{
+  "jobs": [
+    {
+      "id": "JOB-EXPLORE-TDE",
+      "name": "Explore TDE Mode",
+      "phase": "proposal_explore",
+      "description": "Read-only exploration of TDE mode code to understand the hang issue",
+      "prompt": "You are investigating a Chrome browser hang caused by TDE (Tidal Disruption Event) mode in the BlackholeSim project. Start by exploring the codebase to understand: 1) What TDE mode does, 2) How it's triggered, 3) What rendering/animation loop it uses, 4) Any obvious infinite loops or blocking calls. Look at src/ directory, especially files related to TDE, simulation, and rendering. Report findings with file paths and line numbers.",
+      "dependencies": [],
+      "artifacts": ["exploration-report"]
+    },
+    {
+      "id": "JOB-ARCHITECT-TDE",
+      "name": "Architect TDE Fix",
+      "phase": "proposal_architect",
+      "description": "Read-only architecture analysis of the TDE hang root cause",
+      "prompt": "Based on the exploration findings, architect the root cause of the TDE mode Chrome hang. Analyze: 1) The execution flow when TDE mode is active, 2) Potential infinite loops or missing break conditions, 3) RequestAnimationFrame or setInterval usage, 4) Heavy computation blocking the main thread, 5) WebGL/WebGPU rendering pipeline issues. Provide a detailed architectural diagnosis with specific code locations.",
+      "dependencies": ["JOB-EXPLORE-TDE"],
+      "artifacts": ["architecture-report"]
+    },
+    {
+      "id": "JOB-FINALIZE-PLAN",
+      "name": "Finalize Fix Plan",
+      "phase": "proposal_finalize",
+      "description": "Read-only validation of the proposed fix approach",
+      "prompt": "Review the architecture diagnosis and finalize a concrete fix plan. Validate: 1) Is the root cause identified correctly? 2) Is the proposed fix minimal and targeted? 3) Are there side effects to consider? 4) What is the exact code change needed? Provide a validated fix plan with specific file modifications.",
+      "dependencies": ["JOB-ARCHITECT-TDE"],
+      "artifacts": ["fix-plan"]
+    },
+    {
+      "id": "JOB-IMPL-TDE",
+      "name": "Implement TDE Fix",
+      "phase": "implementation",
+      "description": "Write-capable implementation of the TDE hang fix",
+      "prompt": "Implement the validated fix for the TDE mode Chrome hang. Make the specific code changes identified in the fix plan. Ensure: 1) The fix addresses the root cause, 2) No new bugs are introduced, 3) Code follows existing style conventions. Report what was changed and why.",
+      "dependencies": ["JOB-FINALIZE-PLAN"],
+      "artifacts": ["implementation-changes"]
+    },
+    {
+      "id": "JOB-CHECKS-TDE",
+      "name": "Run Deterministic Checks",
+      "phase": "deterministic_checks",
+      "description": "Read-only automated validation of the fix",
+      "prompt": "Run all available lint, typecheck, and build commands to verify the fix doesn't break anything. Check: 1) TypeScript compilation, 2) ESLint or similar linters, 3) Build process, 4) Any existing tests. Report pass/fail status and any issues found.",
+      "dependencies": ["JOB-IMPL-TDE"],
+      "artifacts": ["checks-report"]
+    }
+  ]
+}

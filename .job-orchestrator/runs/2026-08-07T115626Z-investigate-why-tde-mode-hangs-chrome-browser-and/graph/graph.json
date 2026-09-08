@@ -1,0 +1,968 @@
+{
+  "active_planning_authority_id": null,
+  "authorities": {
+    "AUTH-0691D0AD2E4B24356800": {
+      "authority_id": "AUTH-0691D0AD2E4B24356800",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-0691D0AD2E4B24356800",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "verifier",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-0D8690352E046573CC57": {
+      "authority_id": "AUTH-0D8690352E046573CC57",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-0D8690352E046573CC57",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "openspec_finalizer",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-139E14EA9B2170786F2A": {
+      "authority_id": "AUTH-139E14EA9B2170786F2A",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-139E14EA9B2170786F2A",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "commit_worker",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-163E64764C35DF5193A1": {
+      "authority_id": "AUTH-163E64764C35DF5193A1",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-163E64764C35DF5193A1",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "proposal_architect",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-445F9E4ACA535FDBC016": {
+      "authority_id": "AUTH-445F9E4ACA535FDBC016",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-445F9E4ACA535FDBC016",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "implementation_review_architect",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [
+          "repair_worker",
+          "verifier",
+          "openspec_finalizer",
+          "commit_worker",
+          "push_worker",
+          "remote_verifier",
+          "goal_judge"
+        ],
+        "allowed_expansion_kinds": [
+          "repair",
+          "finalization"
+        ],
+        "limits": {
+          "max_concurrency": 8,
+          "max_cycles": 20,
+          "max_expansions": 64,
+          "max_jobs_per_cycle": 64,
+          "max_jobs_per_expansion": 32,
+          "max_total_jobs": 512
+        },
+        "max_child_depth": 1,
+        "max_child_jobs": 32,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-585B64EAA81E1AB74F1D": {
+      "authority_id": "AUTH-585B64EAA81E1AB74F1D",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-585B64EAA81E1AB74F1D",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "deterministic_checker",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-738928EF70D1ED96694C": {
+      "authority_id": "AUTH-738928EF70D1ED96694C",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 0,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-BED46D76318DD8C40E5C",
+      "role": "control_root",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-8946886C200DD3CBB0CA": {
+      "authority_id": "AUTH-8946886C200DD3CBB0CA",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-8946886C200DD3CBB0CA",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "implementation_worker",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-B10F94E7BCE769C0AC1D": {
+      "authority_id": "AUTH-B10F94E7BCE769C0AC1D",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-B10F94E7BCE769C0AC1D",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "proposal_finalizer",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [
+          "implementation_worker",
+          "verifier"
+        ],
+        "allowed_expansion_kinds": [
+          "openspec_implementation"
+        ],
+        "limits": {
+          "max_concurrency": 8,
+          "max_cycles": 20,
+          "max_expansions": 64,
+          "max_jobs_per_cycle": 64,
+          "max_jobs_per_expansion": 32,
+          "max_total_jobs": 512
+        },
+        "max_child_depth": 1,
+        "max_child_jobs": 32,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none",
+          "repository"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-B7B64F998B8501F7025E": {
+      "authority_id": "AUTH-B7B64F998B8501F7025E",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-B7B64F998B8501F7025E",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "goal_judge",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [
+          "hypothesis_investigator",
+          "synthesis_architect",
+          "work_planner_architect"
+        ],
+        "allowed_expansion_kinds": [
+          "continuation_analysis"
+        ],
+        "limits": {
+          "max_concurrency": 8,
+          "max_cycles": 20,
+          "max_expansions": 64,
+          "max_jobs_per_cycle": 64,
+          "max_jobs_per_expansion": 32,
+          "max_total_jobs": 512
+        },
+        "max_child_depth": 1,
+        "max_child_jobs": 32,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-C28F6323B3ABC4C06244": {
+      "authority_id": "AUTH-C28F6323B3ABC4C06244",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-C28F6323B3ABC4C06244",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "openspec_finalizer",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-C38A61983992F658B10B": {
+      "authority_id": "AUTH-C38A61983992F658B10B",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-C38A61983992F658B10B",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "push_worker",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-C4207C4863936DB236F6": {
+      "authority_id": "AUTH-C4207C4863936DB236F6",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-C4207C4863936DB236F6",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "proposal_explore",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-C8E08A59F1C9BB7362E4": {
+      "authority_id": "AUTH-C8E08A59F1C9BB7362E4",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-C8E08A59F1C9BB7362E4",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "verifier",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-FB567ED308CB8C8ED908": {
+      "authority_id": "AUTH-FB567ED308CB8C8ED908",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-FB567ED308CB8C8ED908",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "remote_verifier",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-FBBFD0E88E699F69F72A": {
+      "authority_id": "AUTH-FBBFD0E88E699F69F72A",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-FBBFD0E88E699F69F72A",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "branch_initializer",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [],
+        "allowed_expansion_kinds": [],
+        "limits": {},
+        "max_child_depth": 0,
+        "max_child_jobs": 0,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    },
+    "AUTH-FC8F02E759B44060342D": {
+      "authority_id": "AUTH-FC8F02E759B44060342D",
+      "campaign_id": "CAMP-1978D675437A7442D019",
+      "depth": 1,
+      "expires_at": "9999-12-31T23:59:59Z",
+      "granted_at": "2026-08-07T11:56:26.343101Z",
+      "job_identity": "JOB-FC8F02E759B44060342D",
+      "parent_authority_id": "AUTH-738928EF70D1ED96694C",
+      "role": "work_planner_architect",
+      "schema_version": 6,
+      "scope": {
+        "allowed_child_roles": [
+          "repair_worker",
+          "implementation_worker",
+          "implementation",
+          "verifier",
+          "integration_verifier",
+          "proposal_explore",
+          "proposal_architect",
+          "proposal_finalizer",
+          "implementation_review_architect",
+          "openspec_finalizer",
+          "commit_worker",
+          "push_worker",
+          "remote_verifier",
+          "goal_judge"
+        ],
+        "allowed_expansion_kinds": [
+          "direct_repair",
+          "implementation_set",
+          "openspec_batch"
+        ],
+        "limits": {
+          "max_concurrency": 8,
+          "max_cycles": 20,
+          "max_expansions": 64,
+          "max_jobs_per_cycle": 64,
+          "max_jobs_per_expansion": 32,
+          "max_total_jobs": 512
+        },
+        "max_child_depth": 1,
+        "max_child_jobs": 32,
+        "owned_batch_ids": [],
+        "side_effects": [
+          "none"
+        ]
+      },
+      "status": "active"
+    }
+  },
+  "batches": {},
+  "current_goal_judge_id": "JOB-B7B64F998B8501F7025E",
+  "edges": {
+    "EDGE-1458B66C5A1837069ACD": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-1458B66C5A1837069ACD",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-FB567ED308CB8C8ED908",
+      "target_job_id": "JOB-B7B64F998B8501F7025E"
+    },
+    "EDGE-277DA6822D55D4D60996": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-277DA6822D55D4D60996",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-C38A61983992F658B10B",
+      "target_job_id": "JOB-FB567ED308CB8C8ED908"
+    },
+    "EDGE-2F91DEEFC5071EE686AA": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-2F91DEEFC5071EE686AA",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-BED46D76318DD8C40E5C",
+      "target_job_id": "JOB-FBBFD0E88E699F69F72A"
+    },
+    "EDGE-383F5529FD44192221F6": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-383F5529FD44192221F6",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-445F9E4ACA535FDBC016",
+      "target_job_id": "JOB-0D8690352E046573CC57"
+    },
+    "EDGE-3A101A91F84659F4DE96": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-3A101A91F84659F4DE96",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-C28F6323B3ABC4C06244",
+      "target_job_id": "JOB-139E14EA9B2170786F2A"
+    },
+    "EDGE-3D7A2C90DDDE6F26D37A": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-3D7A2C90DDDE6F26D37A",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-8946886C200DD3CBB0CA",
+      "target_job_id": "JOB-585B64EAA81E1AB74F1D"
+    },
+    "EDGE-42456C5C9C3014DB94DD": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-42456C5C9C3014DB94DD",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-FC8F02E759B44060342D",
+      "target_job_id": "JOB-8946886C200DD3CBB0CA"
+    },
+    "EDGE-64F16C49B634C401715E": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-64F16C49B634C401715E",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-163E64764C35DF5193A1",
+      "target_job_id": "JOB-B10F94E7BCE769C0AC1D"
+    },
+    "EDGE-AD80855CBB8FCF78A54E": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-AD80855CBB8FCF78A54E",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-585B64EAA81E1AB74F1D",
+      "target_job_id": "JOB-0691D0AD2E4B24356800"
+    },
+    "EDGE-D4F484A5C2D41627AC8D": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-D4F484A5C2D41627AC8D",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-FBBFD0E88E699F69F72A",
+      "target_job_id": "JOB-C4207C4863936DB236F6"
+    },
+    "EDGE-DEC93579AD76CF3C4BF2": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-DEC93579AD76CF3C4BF2",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-B10F94E7BCE769C0AC1D",
+      "target_job_id": "JOB-C8E08A59F1C9BB7362E4"
+    },
+    "EDGE-EA158355D56B4660B548": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-EA158355D56B4660B548",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-0D8690352E046573CC57",
+      "target_job_id": "JOB-C28F6323B3ABC4C06244"
+    },
+    "EDGE-EBB1430FAEEF672397A7": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-EBB1430FAEEF672397A7",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-139E14EA9B2170786F2A",
+      "target_job_id": "JOB-C38A61983992F658B10B"
+    },
+    "EDGE-EEED788B46CA69BAC8AF": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-EEED788B46CA69BAC8AF",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-C8E08A59F1C9BB7362E4",
+      "target_job_id": "JOB-FC8F02E759B44060342D"
+    },
+    "EDGE-F127E63655194EAE6445": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-F127E63655194EAE6445",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-C4207C4863936DB236F6",
+      "target_job_id": "JOB-163E64764C35DF5193A1"
+    },
+    "EDGE-F30B066BCEDF511EC0B5": {
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "edge_id": "EDGE-F30B066BCEDF511EC0B5",
+      "edge_type": "success",
+      "graph_revision": 1,
+      "schema_version": 6,
+      "source_job_id": "JOB-0691D0AD2E4B24356800",
+      "target_job_id": "JOB-445F9E4ACA535FDBC016"
+    }
+  },
+  "envelope": {
+    "authority_id": "AUTH-738928EF70D1ED96694C",
+    "branch_policy": {
+      "baseline_commit": "reported_by_branch_init_worker",
+      "branch": "campaign/camp-1978d675437a7442d019",
+      "required": true
+    },
+    "campaign_id": "CAMP-1978D675437A7442D019",
+    "compilation_digest": "a2b9183a5ea8b03b95b06bc6105a22396aabf944924fc2a19cf7fa3f0988f983",
+    "context_snapshots": [],
+    "created_at": "2026-08-07T11:56:26.343101Z",
+    "entry_contract": [
+      "goal"
+    ],
+    "envelope_id": "ENV-CBCD30CB2EEEDFBCB2EA",
+    "exit_contract": [
+      "goal_judgment"
+    ],
+    "goal": "Investigate why TDE mode hangs Chrome browser and implement a fix",
+    "limits": {
+      "max_concurrency": 8,
+      "max_cycles": 20,
+      "max_expansions": 64,
+      "max_jobs_per_cycle": 64,
+      "max_jobs_per_expansion": 32,
+      "max_total_jobs": 512
+    },
+    "mutating": true,
+    "phase_configurations": {},
+    "phase_sequence": [
+      "branch_init",
+      "proposal_explore",
+      "proposal_architect",
+      "proposal_finalize",
+      "proposal_review",
+      "implementation_planning",
+      "implementation",
+      "deterministic_checks",
+      "verification",
+      "implementation_review",
+      "openspec_sync",
+      "openspec_archive",
+      "cycle_commit",
+      "cycle_push",
+      "remote_verification",
+      "goal_judge"
+    ],
+    "publication_policy": {
+      "deployment": false,
+      "destructive_migration": false,
+      "merge": false,
+      "pull_request": false,
+      "release": false
+    },
+    "repository_target": "C:\\Projects\\BlackholeSim",
+    "safety_invariants": [
+      "independent_verification",
+      "recovery",
+      "root_isolation",
+      "goal_judge_authority",
+      "no_false_completion"
+    ],
+    "schema_version": 6,
+    "strategy": "default_adaptive",
+    "strategy_digest": "80e2f1d66914f9ce464e61b0b746f2ce19c3be09e59826524b7bfb0dd57232d9",
+    "strategy_mode": "full_campaign",
+    "version": 1
+  },
+  "expansion_ledger": [],
+  "expansion_slot": {
+    "active_expansion_id": null,
+    "created_revision": 0,
+    "phase": "idle",
+    "plan_digest": "",
+    "staged_bytes_digest": ""
+  },
+  "expansions": {},
+  "generations": [],
+  "graph_digest": "f5060bca7f36ad31c2fb5ca21d41206de3892ef93d880540f85d665336d3768c",
+  "graph_revision": 1,
+  "jobs": {
+    "JOB-0691D0AD2E4B24356800": {
+      "authority_id": "AUTH-0691D0AD2E4B24356800",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-0691D0AD2E4B24356800",
+      "prompt_path": "jobs/JOB-0691D0AD2E4B24356800/prompt.md",
+      "purpose_key": "verification",
+      "revision": 0,
+      "role": "verifier",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Verification"
+    },
+    "JOB-0D8690352E046573CC57": {
+      "authority_id": "AUTH-0D8690352E046573CC57",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-0D8690352E046573CC57",
+      "prompt_path": "jobs/JOB-0D8690352E046573CC57/prompt.md",
+      "purpose_key": "openspec_sync",
+      "revision": 0,
+      "role": "openspec_finalizer",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Openspec Sync"
+    },
+    "JOB-139E14EA9B2170786F2A": {
+      "authority_id": "AUTH-139E14EA9B2170786F2A",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-139E14EA9B2170786F2A",
+      "prompt_path": "jobs/JOB-139E14EA9B2170786F2A/prompt.md",
+      "purpose_key": "cycle_commit",
+      "revision": 0,
+      "role": "commit_worker",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Cycle Commit"
+    },
+    "JOB-163E64764C35DF5193A1": {
+      "authority_id": "AUTH-163E64764C35DF5193A1",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-163E64764C35DF5193A1",
+      "prompt_path": "jobs/JOB-163E64764C35DF5193A1/prompt.md",
+      "purpose_key": "proposal_architect",
+      "revision": 0,
+      "role": "proposal_architect",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Proposal Architect"
+    },
+    "JOB-445F9E4ACA535FDBC016": {
+      "authority_id": "AUTH-445F9E4ACA535FDBC016",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-445F9E4ACA535FDBC016",
+      "prompt_path": "jobs/JOB-445F9E4ACA535FDBC016/prompt.md",
+      "purpose_key": "implementation_review",
+      "revision": 0,
+      "role": "implementation_review_architect",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Implementation Review"
+    },
+    "JOB-585B64EAA81E1AB74F1D": {
+      "authority_id": "AUTH-585B64EAA81E1AB74F1D",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-585B64EAA81E1AB74F1D",
+      "prompt_path": "jobs/JOB-585B64EAA81E1AB74F1D/prompt.md",
+      "purpose_key": "deterministic_checks",
+      "revision": 0,
+      "role": "deterministic_checker",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Deterministic Checks"
+    },
+    "JOB-8946886C200DD3CBB0CA": {
+      "authority_id": "AUTH-8946886C200DD3CBB0CA",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-8946886C200DD3CBB0CA",
+      "prompt_path": "jobs/JOB-8946886C200DD3CBB0CA/prompt.md",
+      "purpose_key": "implementation",
+      "revision": 0,
+      "role": "implementation_worker",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Implementation"
+    },
+    "JOB-B10F94E7BCE769C0AC1D": {
+      "authority_id": "AUTH-B10F94E7BCE769C0AC1D",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-B10F94E7BCE769C0AC1D",
+      "prompt_path": "jobs/JOB-B10F94E7BCE769C0AC1D/prompt.md",
+      "purpose_key": "proposal_finalize",
+      "revision": 0,
+      "role": "proposal_finalizer",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Proposal Finalize"
+    },
+    "JOB-B7B64F998B8501F7025E": {
+      "authority_id": "AUTH-B7B64F998B8501F7025E",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-B7B64F998B8501F7025E",
+      "prompt_path": "jobs/JOB-B7B64F998B8501F7025E/prompt.md",
+      "purpose_key": "goal_judge",
+      "revision": 0,
+      "role": "goal_judge",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Goal Judge"
+    },
+    "JOB-BED46D76318DD8C40E5C": {
+      "authority_id": "AUTH-738928EF70D1ED96694C",
+      "completion_status": "success",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "execution_status": "success",
+      "expansion_origin": "ROOT",
+      "graph_generation": 1,
+      "job_id": "JOB-BED46D76318DD8C40E5C",
+      "prompt_path": "ROOT",
+      "purpose_key": "campaign-root",
+      "report_accepted": true,
+      "revision": 0,
+      "role": "control_root",
+      "schema_version": 6,
+      "status": "completed",
+      "title": "Trusted campaign root"
+    },
+    "JOB-C28F6323B3ABC4C06244": {
+      "authority_id": "AUTH-C28F6323B3ABC4C06244",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-C28F6323B3ABC4C06244",
+      "prompt_path": "jobs/JOB-C28F6323B3ABC4C06244/prompt.md",
+      "purpose_key": "openspec_archive",
+      "revision": 0,
+      "role": "openspec_finalizer",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Openspec Archive"
+    },
+    "JOB-C38A61983992F658B10B": {
+      "authority_id": "AUTH-C38A61983992F658B10B",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-C38A61983992F658B10B",
+      "prompt_path": "jobs/JOB-C38A61983992F658B10B/prompt.md",
+      "purpose_key": "cycle_push",
+      "revision": 0,
+      "role": "push_worker",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Cycle Push"
+    },
+    "JOB-C4207C4863936DB236F6": {
+      "authority_id": "AUTH-C4207C4863936DB236F6",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-C4207C4863936DB236F6",
+      "prompt_path": "jobs/JOB-C4207C4863936DB236F6/prompt.md",
+      "purpose_key": "proposal_explore",
+      "revision": 0,
+      "role": "proposal_explore",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Proposal Explore"
+    },
+    "JOB-C8E08A59F1C9BB7362E4": {
+      "authority_id": "AUTH-C8E08A59F1C9BB7362E4",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-C8E08A59F1C9BB7362E4",
+      "prompt_path": "jobs/JOB-C8E08A59F1C9BB7362E4/prompt.md",
+      "purpose_key": "proposal_review",
+      "revision": 0,
+      "role": "verifier",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Proposal Review"
+    },
+    "JOB-FB567ED308CB8C8ED908": {
+      "authority_id": "AUTH-FB567ED308CB8C8ED908",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-FB567ED308CB8C8ED908",
+      "prompt_path": "jobs/JOB-FB567ED308CB8C8ED908/prompt.md",
+      "purpose_key": "remote_verification",
+      "revision": 0,
+      "role": "remote_verifier",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Remote Verification"
+    },
+    "JOB-FBBFD0E88E699F69F72A": {
+      "authority_id": "AUTH-FBBFD0E88E699F69F72A",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-FBBFD0E88E699F69F72A",
+      "prompt_path": "jobs/JOB-FBBFD0E88E699F69F72A/prompt.md",
+      "purpose_key": "branch_init",
+      "revision": 0,
+      "role": "branch_initializer",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Branch Init"
+    },
+    "JOB-FC8F02E759B44060342D": {
+      "authority_id": "AUTH-FC8F02E759B44060342D",
+      "created_at": "2026-08-07T11:56:26.343101Z",
+      "cycle_id": "",
+      "expansion_origin": "JOB-BED46D76318DD8C40E5C",
+      "graph_generation": 1,
+      "job_id": "JOB-FC8F02E759B44060342D",
+      "prompt_path": "jobs/JOB-FC8F02E759B44060342D/prompt.md",
+      "purpose_key": "implementation_planning",
+      "revision": 0,
+      "role": "work_planner_architect",
+      "schema_version": 6,
+      "status": "pending",
+      "title": "Implementation Planning"
+    }
+  },
+  "limits": {
+    "max_concurrency": 8,
+    "max_cycles": 20,
+    "max_expansions": 64,
+    "max_jobs_per_cycle": 64,
+    "max_jobs_per_expansion": 32,
+    "max_total_jobs": 512
+  },
+  "repair_gate_history": [],
+  "schema_version": 6,
+  "status": "sealed",
+  "target_acceptances": {},
+  "terminal_barrier": {},
+  "terminal_outcomes": {},
+  "verifier_assignments": {},
+  "verifier_authority_bindings": {}
+}

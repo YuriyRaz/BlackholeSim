@@ -1,0 +1,15 @@
+{
+  "authority_id": "AUTH-0E0D75B3EA0F16A692EC",
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "cycle_id": "",
+  "expansion_origin": "JOB-AD54CF75C345302FD817",
+  "graph_generation": 1,
+  "job_id": "JOB-0E0D75B3EA0F16A692EC",
+  "prompt_path": "jobs/JOB-0E0D75B3EA0F16A692EC/prompt.md",
+  "purpose_key": "proposal_explore",
+  "revision": 0,
+  "role": "proposal_explore",
+  "schema_version": 6,
+  "status": "pending",
+  "title": "Proposal Explore"
+}

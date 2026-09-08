@@ -1,0 +1,15 @@
+{
+  "authority_id": "AUTH-ADE97A4944C6AC2A07C7",
+  "created_at": "2026-08-07T12:11:33.111638Z",
+  "cycle_id": "",
+  "expansion_origin": "JOB-AD54CF75C345302FD817",
+  "graph_generation": 1,
+  "job_id": "JOB-ADE97A4944C6AC2A07C7",
+  "prompt_path": "jobs/JOB-ADE97A4944C6AC2A07C7/prompt.md",
+  "purpose_key": "verification",
+  "revision": 0,
+  "role": "verifier",
+  "schema_version": 6,
+  "status": "pending",
+  "title": "Verification"
+}

@@ -1,0 +1,53 @@
+{
+  "compilation_digest": "a2b9183a5ea8b03b95b06bc6105a22396aabf944924fc2a19cf7fa3f0988f983",
+  "context_snapshots": [],
+  "entry_contract": [
+    "goal"
+  ],
+  "envelope_digest": "47298aa0831f4f4a3d8553ff6744c90489e91c919791eea5ee38b13951283998",
+  "envelope_id": "ENV-CBCD30CB2EEEDFBCB2EA",
+  "exit_contract": [
+    "goal_judgment"
+  ],
+  "goal": "Investigate why TDE mode hangs Chrome browser and implement a fix",
+  "limits": {
+    "max_concurrency": 8,
+    "max_cycles": 20,
+    "max_expansions": 64,
+    "max_jobs_per_cycle": 64,
+    "max_jobs_per_expansion": 32,
+    "max_total_jobs": 512
+  },
+  "mutating": true,
+  "phase_configurations": {},
+  "phase_sequence": [
+    "branch_init",
+    "proposal_explore",
+    "proposal_architect",
+    "proposal_finalize",
+    "proposal_review",
+    "implementation_planning",
+    "implementation",
+    "deterministic_checks",
+    "verification",
+    "implementation_review",
+    "openspec_sync",
+    "openspec_archive",
+    "cycle_commit",
+    "cycle_push",
+    "remote_verification",
+    "goal_judge"
+  ],
+  "run_id": "2026-08-07T115626Z-investigate-why-tde-mode-hangs-chrome-browser-and",
+  "safety_invariants": [
+    "independent_verification",
+    "recovery",
+    "root_isolation",
+    "goal_judge_authority",
+    "no_false_completion"
+  ],
+  "strategy_digest": "80e2f1d66914f9ce464e61b0b746f2ce19c3be09e59826524b7bfb0dd57232d9",
+  "strategy_id": "default_adaptive",
+  "strategy_mode": "full_campaign",
+  "strategy_version": 1
+}

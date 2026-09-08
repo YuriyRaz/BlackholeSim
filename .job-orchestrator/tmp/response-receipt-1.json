@@ -1,0 +1,12 @@
+{
+  "dispatch_id": "DISP-9CC2B26FB2B5F6DFBAA4",
+  "job_id": "JOB-FBBFD0E88E699F69F72A",
+  "status": "completed",
+  "result_summary": "TDE hang investigation complete. Root causes identified: (1) Unbounded substep count in PhysicsEngine.js:136 with no cap, (2) SPH smoothing length computed from origin instead of center-of-mass causing O(N^2) degradation after disruption, (3) Trail updates inside substep loop causing massive element-move operations, (4) O(N^2) ConservationLedger called every frame.",
+  "artifacts": {
+    "exploration-report": {
+      "file": "C:\\Projects\\BlackholeSim\\.job-orchestrator\\runs\\2026-08-07T115626Z-investigate-why-tde-mode-hangs-chrome-browser-and\\artifacts\\tde-exploration.md",
+      "description": "Full exploration report of TDE mode hang causes"
+    }
+  }
+}
