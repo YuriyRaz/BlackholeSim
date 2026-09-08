@@ -8,7 +8,7 @@ writing, and domain decisions to persistent worker jobs.
 
 1. Read `.job-orchestrator/inputs/tde-completion-request.md` for the goal and
    acceptance conditions.
-2. Read `.job-orchestrator/inputs/tde-completion-jobs-v5.json` for v5 job
+2. Read `.job-orchestrator/inputs/tde-completion-jobs-v6.json` for v6 job
    definitions and dependencies.
 3. Set `JOBCTL_PYTHON` to the Python executable installed for this environment.
    Do not assume that `python` is on PATH.
@@ -26,13 +26,12 @@ PowerShell command shape:
 
 ```powershell
 & $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py init `
-  --protocol-version 5 `
   --request-file .job-orchestrator/inputs/tde-completion-request.md `
   --goal "Complete all TDE rebuild tasks and verify every required condition"
 
 & $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py register `
   --run .job-orchestrator/runs/<run-id> `
-  --definition .job-orchestrator/inputs/tde-completion-jobs-v5.json
+   --definition .job-orchestrator/inputs/tde-completion-jobs-v6.json
 ```
 
 `--outcome`, `--receipt`, and `--evidence` options consume file paths. They do
@@ -40,7 +39,9 @@ not accept inline JSON.
 
 ## Control Loop
 
-Repeat `next` until it returns `operation: run_complete`:
+Repeat the read-only `next` query until it returns `operation: run_complete`.
+When it returns `prepare_dispatch`, run the locked preparation command before
+starting the host Task:
 
 ```powershell
 & $env:JOBCTL_PYTHON .agents/skills/job-orchestrator/scripts/jobctl.py next `
@@ -49,6 +50,7 @@ Repeat `next` until it returns `operation: run_complete`:
 
 | Result | Root action |
 | --- | --- |
+| `prepare_dispatch` | Run `prepare-dispatch --job <job-id> --expected-revision <revision> --dependency-evidence-digest <digest>`, then send the persisted prompt. |
 | `start_job` | Send the returned prompt byte-for-byte through the configured transport. Record the adapter-issued receipt with `launch-receipt`. |
 | `resume_job` | Send the returned continuation prompt byte-for-byte to the existing native session. Record its adapter-issued launch/resume receipt. |
 | `ask_user` | Obtain the requested authority, then run `answer`; process the immediate `resume_job` result on the same worker session. |
@@ -85,7 +87,7 @@ adapter receipts:
 ```
 
 Never invent a session reference, edit a worker prompt, create or replace a
-worker report, or synthesize an outcome from workspace observations. v5 rejects
+worker report, or synthesize an outcome from workspace observations. v6 rejects
 standalone `session` and `outcome` submissions because they have no transport
 provenance.
 
@@ -104,7 +106,7 @@ or contradictory transport evidence exits the normal loop:
   --evidence <recovery-evidence.json>
 ```
 
-Recovery evidence must be a file containing a valid v5 recovery-evidence record:
+Recovery evidence must be a file containing a valid v6 recovery-evidence record:
 
 ```json
 {
@@ -113,7 +115,14 @@ Recovery evidence must be a file containing a valid v5 recovery-evidence record:
   "observed_at": "<ISO-8601-timestamp>",
   "classification": "canceled|lost|unknown|contradictory|active|returned",
   "transport": { },
-  "recovery_id": "<unique-recovery-id>"
+  "recovery_id": "<unique-recovery-id>",
+  "side_effect_check": {
+    "check_id": "<configured-check-id>",
+    "observation": "<direct-observation>",
+    "result": "retry_safe|effect_confirmed|unknown",
+    "reference": "<direct-evidence-reference>",
+    "idempotency_key": "<registered-key-or-null>"
+  }
 }
 ```
 
@@ -145,13 +154,15 @@ shows the full lifecycle:
 ```
 1.  init      → run created
 2.  register  → jobs registered
-3.  next      → {operation: start_job, job_id: J001}
-4.  launch-receipt  → J001 session established
-5.  next      → {operation: start_job, job_id: J002}
-6.  launch-receipt  → J002 session established
-7.  response-receipt → J001 completion_claimed
-8.  response-receipt → J002 completed
-9.  next      → {operation: run_complete, successful: true}
+3.  next      → {operation: prepare_dispatch, job_id: J001, expected_revision: N}
+4.  prepare-dispatch → {operation: start_job, job_id: J001}
+5.  launch-receipt  → J001 session established
+6.  next      → {operation: prepare_dispatch, job_id: J002, expected_revision: N}
+7.  prepare-dispatch → {operation: start_job, job_id: J002}
+8.  launch-receipt  → J002 session established
+9.  response-receipt → J001 completion_claimed
+10. response-receipt → J002 completed
+11. next      → {operation: run_complete, successful: true}
 ```
 
 Steps 3-4 and 5-6 must both occur before step 7. A job must be started

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cycle progress fingerprint v6",
+  "type": "object",
+  "required": ["schema_version", "fingerprint_id", "cycle_id", "run_id", "graph_revision", "jobs_completed", "jobs_total", "findings_count", "fingerprint_digest", "created_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "fingerprint_id": {"$ref": "#/$defs/id"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "run_id": {"type": "string", "pattern": "[A-Za-z0-9][A-Za-z0-9._-]{0,127}"},
+    "graph_revision": {"type": "integer", "minimum": 1},
+    "jobs_completed": {"type": "integer", "minimum": 0},
+    "jobs_total": {"type": "integer", "minimum": 1},
+    "findings_count": {"type": "integer", "minimum": 0},
+    "fingerprint_digest": {"$ref": "#/$defs/digest"},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Campaign terminal claim v6",
+  "type": "object",
+  "required": ["schema_version", "claim_id", "campaign_id", "run_id", "cycle_id", "outcome", "evidence_refs", "producer_job_id", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "claim_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "run_id": {"type": "string", "pattern": "[A-Za-z0-9][A-Za-z0-9._-]{0,127}"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "outcome": {"type": "string", "enum": ["success", "partial_success", "blocked", "abandoned", "cancelled"]},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"}, "uniqueItems": true},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "reason": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

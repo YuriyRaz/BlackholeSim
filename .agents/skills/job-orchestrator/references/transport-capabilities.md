@@ -27,9 +27,9 @@ outbox, duplicate transcript, message IDs, delivery state, or cancellation
 state machine. It records only orchestration facts needed to operate and audit
 the run.
 
-## Trusted v5 Receipts
+## Trusted v6 Receipts
 
-An adapter used for a trusted v5 run MUST expose a capability profile and
+An adapter used for a trusted v6 run MUST expose a capability profile and
 verification methods for launch and response receipts. A launch receipt binds
 the transport, dispatch ID, native session reference, run/job correlation,
 exact prompt SHA-256, creation time, and adapter proof. A response receipt binds
@@ -41,6 +41,42 @@ proof, prompt digest, or raw response. Receipt verification failure is a hard
 error. Unsupported or unknown adapter capability is reported as unavailable and
 blocks trusted completion; it is never emulated by accepting a non-empty string.
 
-The fake adapter in `scripts/transport_v5.py` is the conformance adapter. A
-production adapter may use a platform-issued task ID and adapter-owned proof,
-but it must preserve the same correlation and digest contract.
+A production adapter must be a host Task integration that receives the
+platform-issued Task ID and adapter-owned proof from the host; a root-configured
+shared-secret HMAC is never production authenticity. Capability negotiation
+happens before a run directory is created.
+
+## v6 Receipt Fields
+
+### Launch Receipt
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `dispatch_id` | string | Dispatch identity |
+| `native_session_ref` | string | Transport-native session reference |
+| `run_id` | string | Run identity |
+| `campaign_id` | string | Campaign identity |
+| `job_id` | string | Job identity |
+| `graph_revision` | integer | Graph revision at dispatch |
+| `graph_generation` | integer | Graph generation at dispatch |
+| `prompt_sha256` | string | SHA-256 of dispatched prompt |
+| `created_at` | string | RFC 3339 creation timestamp |
+| `adapter_proof` | string | Adapter-authenticated proof |
+
+### Response Receipt
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `attempt_id` | string | Attempt identity |
+| `native_session_ref` | string | Transport-native session reference |
+| `run_id` | string | Run identity |
+| `campaign_id` | string | Campaign identity |
+| `job_id` | string | Job identity |
+| `graph_revision` | integer | Graph revision at response |
+| `graph_generation` | integer | Graph generation at response |
+| `response_id` | string | Response identity |
+| `raw_response` | string | Exact raw response bytes |
+| `received_at` | string | RFC 3339 receive timestamp |
+| `status` | string | Response status |
+| `session_liveness` | string | Session liveness classification |
+| `adapter_proof` | string | Adapter-authenticated proof |

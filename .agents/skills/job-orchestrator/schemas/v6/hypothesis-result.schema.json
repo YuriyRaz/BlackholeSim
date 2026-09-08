@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hypothesis investigation result v6",
+  "type": "object",
+  "required": ["schema_version", "hypothesis_result_id", "finding_id", "producer_job_id", "cycle_id", "status", "evidence_refs", "predicted_observations", "falsifying_observations", "primary_evidence", "confidence", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "hypothesis_result_id": {"$ref": "#/$defs/id"},
+    "finding_id": {"$ref": "#/$defs/id"},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "status": {"type": "string", "enum": ["supported", "refuted", "partial", "inconclusive", "blocked"]},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"}, "uniqueItems": true},
+    "predicted_observations": {"type": "array", "items": {"type": "string"}},
+    "falsifying_observations": {"type": "array", "items": {"type": "string"}},
+    "primary_evidence": {"type": "string"},
+    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+    "reason": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

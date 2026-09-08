@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dynamic orchestration condition result v6",
+  "type": "object",
+  "required": ["schema_version", "condition_id", "target_job_id", "target_gate_revision", "run_id", "cycle_id", "status", "producer_job_id", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "condition_id": {"$ref": "#/$defs/id"},
+    "target_job_id": {"$ref": "#/$defs/id"},
+    "target_gate_revision": {"type": "integer", "minimum": 1},
+    "run_id": {"type": "string", "pattern": "[A-Za-z0-9][A-Za-z0-9._-]{0,127}"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "status": {"type": "string", "enum": ["met", "unmet", "pending", "error"]},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "assignment_id": {"$ref": "#/$defs/id"},
+    "verdict": {"type": "string", "enum": ["pass", "fail", "not-run", "unavailable", "unknown"]},
+    "wire_status": {"type": "string", "enum": ["passed", "failed", "not_run", "unavailable", "unknown"]},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"}, "uniqueItems": true},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

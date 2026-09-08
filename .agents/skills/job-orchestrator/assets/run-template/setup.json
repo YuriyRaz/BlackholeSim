@@ -1,7 +1,0 @@
-{
-  "schema_version": 4,
-  "request_path": "request.md",
-  "workspace": "{{WORKSPACE}}",
-  "execution_mode": "sequential",
-  "jobs": []
-}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Append-only finding disposition v6",
+  "type": "object",
+  "required": ["schema_version", "disposition_id", "finding_id", "producer_job_id", "producer_role", "cycle_id", "status", "evidence_refs", "reason", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "disposition_id": {"$ref": "#/$defs/id"},
+    "finding_id": {"$ref": "#/$defs/id"},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "producer_role": {"type": "string", "enum": ["goal_judge", "implementation_review_architect", "verifier", "integration_verifier"]},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "status": {"type": "string", "enum": ["verified", "refuted", "superseded", "accepted_risk"]},
+    "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"}, "uniqueItems": true},
+    "reason": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {"id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"}}
+}

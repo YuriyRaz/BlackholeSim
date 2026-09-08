@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Synthesis of hypothesis results v6",
+  "type": "object",
+  "required": ["schema_version", "synthesis_id", "hypothesis_result_ids", "producer_job_id", "cycle_id", "conclusion", "evidence_refs", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "synthesis_id": {"$ref": "#/$defs/id"},
+    "hypothesis_result_ids": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "conclusion": {"type": "string", "enum": ["root_cause_identified", "partial_understanding", "no_actionable_cause", "needs_further_investigation"]},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"}, "uniqueItems": true},
+    "summary": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

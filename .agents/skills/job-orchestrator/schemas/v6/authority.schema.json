@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Expansion authority by job identity and role v6",
+  "type": "object",
+  "required": ["schema_version", "authority_id", "campaign_id", "job_identity", "role", "scope", "granted_at", "expires_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "authority_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "job_identity": {"$ref": "#/$defs/id"},
+    "role": {"type": "string", "minLength": 1},
+    "depth": {"type": "integer", "minimum": 0},
+    "parent_authority_id": {"$ref": "#/$defs/id"},
+    "status": {"type": "string", "enum": ["active", "sealed", "revoked", "expired"]},
+    "scope": {"$ref": "#/$defs/authority_scope"},
+    "granted_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"},
+    "authority_scope": {
+      "type": "object",
+      "required": ["allowed_child_roles", "max_child_depth", "side_effects", "max_child_jobs"],
+      "properties": {
+        "allowed_expansion_kinds": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "allowed_child_roles": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "owned_batch_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+        "side_effects": {"type": "array", "items": {"type": "string", "enum": ["none", "repository", "external_idempotent", "external_non_idempotent"]}, "uniqueItems": true},
+        "max_child_jobs": {"type": "integer", "minimum": 0},
+        "max_child_depth": {"type": "integer", "minimum": 0},
+        "limits": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

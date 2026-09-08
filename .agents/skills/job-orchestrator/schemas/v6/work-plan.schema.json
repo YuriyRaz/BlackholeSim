@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Work plan variants v6",
+  "type": "object",
+  "required": ["schema_version", "plan_id", "plan_type", "cycle_id", "producer_job_id", "targets", "created_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "plan_type": {"type": "string", "enum": ["direct_repair", "implementation_set", "openspec_batch", "no_safe_path"]},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "targets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/plan_target"}},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"},
+    "plan_target": {
+      "type": "object",
+      "required": ["target_id", "target_type"],
+      "properties": {
+        "target_id": {"$ref": "#/$defs/id"},
+        "target_type": {"type": "string", "enum": ["finding", "goal_gate", "job", "artifact"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}

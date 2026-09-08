@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Expansion commit operation v6",
+  "type": "object",
+  "required": ["schema_version", "commit_id", "expansion_id", "campaign_id", "graph_revision_before", "graph_revision_after", "status", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "commit_id": {"$ref": "#/$defs/id"},
+    "expansion_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "graph_revision_before": {"type": "integer", "minimum": 0},
+    "graph_revision_after": {"type": "integer", "minimum": 1},
+    "status": {"type": "string", "enum": ["pending", "committed", "rolled_back", "failed"]},
+    "graph_digest_before": {"$ref": "#/$defs/digest"},
+    "graph_digest_after": {"$ref": "#/$defs/digest"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

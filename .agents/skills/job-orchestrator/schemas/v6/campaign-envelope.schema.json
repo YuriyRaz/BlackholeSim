@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Frozen campaign envelope v6",
+  "type": "object",
+  "required": ["schema_version", "envelope_id", "campaign_id", "goal", "strategy", "version", "authority_id", "limits", "created_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "envelope_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "goal": {"type": "string", "minLength": 1},
+    "strategy": {"type": "string", "minLength": 1},
+    "version": {"type": "integer", "minimum": 1},
+    "authority_id": {"$ref": "#/$defs/id"},
+    "limits": {"$ref": "#/$defs/campaign_limits"},
+    "strategy_mode": {"type": "string", "enum": ["full_campaign", "proposal_only", "implementation_from_proposal", "architect_review_only", "custom"]},
+    "strategy_digest": {"$ref": "#/$defs/digest"},
+    "compilation_digest": {"$ref": "#/$defs/digest"},
+    "phase_sequence": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "phase_configurations": {"type": "object", "additionalProperties": {"type": "object"}},
+    "entry_contract": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "exit_contract": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "context_snapshots": {"type": "array", "items": {"$ref": "#/$defs/frozen_context"}},
+    "safety_invariants": {"type": "array", "items": {"type": "string", "enum": ["independent_verification", "recovery", "root_isolation", "goal_judge_authority", "no_false_completion"]}, "uniqueItems": true},
+    "mutating": {"type": "boolean"},
+    "repository_target": {"type": "string", "minLength": 1},
+    "branch_policy": {"$ref": "#/$defs/branch_policy"},
+    "publication_policy": {"$ref": "#/$defs/publication_policy"},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"},
+    "campaign_limits": {
+      "type": "object",
+      "required": ["max_cycles", "max_jobs_per_cycle", "max_total_jobs"],
+      "properties": {
+        "max_cycles": {"type": "integer", "minimum": 1},
+        "max_jobs_per_cycle": {"type": "integer", "minimum": 1},
+        "max_total_jobs": {"type": "integer", "minimum": 1},
+        "max_jobs_per_expansion": {"type": "integer", "minimum": 1},
+        "max_concurrency": {"type": "integer", "minimum": 1},
+        "max_expansions": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "frozen_context": {
+      "type": "object",
+      "required": ["module_id", "namespace", "version", "digest", "constraints", "inherited_from", "applicable_roles", "evidence_requirements", "source_rules", "goal_gates"],
+      "properties": {
+        "module_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "version": {"type": "integer", "minimum": 1},
+        "digest": {"$ref": "#/$defs/digest"},
+        "constraints": {"type": "object"},
+        "inherited_from": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "applicable_roles": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "evidence_requirements": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "source_rules": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "goal_gates": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "branch_policy": {
+      "type": "object",
+      "required": ["required", "branch", "baseline_commit"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "branch": {"type": "string", "minLength": 1},
+        "baseline_commit": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "publication_policy": {
+      "type": "object",
+      "required": ["pull_request", "merge", "release", "deployment", "destructive_migration"],
+      "properties": {
+        "pull_request": {"type": "boolean", "const": false},
+        "merge": {"type": "boolean", "const": false},
+        "release": {"type": "boolean", "const": false},
+        "deployment": {"type": "boolean", "const": false},
+        "destructive_migration": {"type": "boolean", "const": false}
+      },
+      "additionalProperties": false
+    }
+  }
+}

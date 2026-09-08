@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authenticated campaign goal gate result v6",
+  "type": "object",
+  "required": ["schema_version", "goal_gate_result_id", "goal_gate_id", "definition_digest", "run_id", "cycle_id", "graph_revision", "producer_job_id", "response_id", "status", "measurement", "evidence_refs", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "goal_gate_result_id": {"$ref": "#/$defs/id"},
+    "goal_gate_id": {"$ref": "#/$defs/id"},
+    "definition_digest": {"$ref": "#/$defs/digest"},
+    "run_id": {"type": "string", "pattern": "[A-Za-z0-9][A-Za-z0-9._-]{0,127}"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "graph_revision": {"type": "integer", "minimum": 1},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "response_id": {"$ref": "#/$defs/id"},
+    "status": {"type": "string", "enum": ["passed", "failed", "unavailable"]},
+    "measurement": {"type": "string", "minLength": 1},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"}, "uniqueItems": true},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

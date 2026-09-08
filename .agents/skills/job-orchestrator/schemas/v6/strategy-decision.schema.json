@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Strategy composition decision v6",
+  "type": "object",
+  "required": ["schema_version", "decision_id", "campaign_id", "cycle_id", "decision_type", "rationale", "producer_job_id", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "decision_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "decision_type": {"type": "string", "enum": ["expand", "repair", "verify", "synthesize", "terminate", "redirect"]},
+    "rationale": {"type": "string", "minLength": 1},
+    "producer_job_id": {"$ref": "#/$defs/id"},
+    "parameters": {"type": "object"},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

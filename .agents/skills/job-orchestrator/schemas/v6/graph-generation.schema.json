@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Graph generation record v6",
+  "type": "object",
+  "required": ["schema_version", "generation_id", "campaign_id", "graph_revision", "parent_revision", "vertex_count", "edge_count", "graph_digest", "created_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "generation_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "graph_revision": {"type": "integer", "minimum": 1},
+    "parent_revision": {"type": "integer", "minimum": 0},
+    "vertex_count": {"type": "integer", "minimum": 1},
+    "edge_count": {"type": "integer", "minimum": 0},
+    "graph_digest": {"$ref": "#/$defs/digest"},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

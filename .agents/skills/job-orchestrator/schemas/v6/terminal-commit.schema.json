@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dynamic orchestration terminal commit v6",
+  "type": "object",
+  "required": ["schema_version", "commit_id", "campaign_id", "run_id", "sealed_graph_digest", "goal_judgment_id", "status", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "commit_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "run_id": {"type": "string", "pattern": "[A-Za-z0-9][A-Za-z0-9._-]{0,127}"},
+    "sealed_graph_digest": {"$ref": "#/$defs/digest"},
+    "goal_judgment_id": {"$ref": "#/$defs/id"},
+    "status": {"type": "string", "enum": ["committed", "rolled_back", "failed"]},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"}, "uniqueItems": true},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"}
+  }
+}

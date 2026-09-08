@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dynamic orchestration outcome with typed decisions v6",
+  "type": "object",
+  "required": ["schema_version", "outcome_id", "job_id", "run_id", "dispatch_id", "status", "decision_results", "recorded_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "outcome_id": {"$ref": "#/$defs/id"},
+    "job_id": {"$ref": "#/$defs/id"},
+    "run_id": {"type": "string", "pattern": "[A-Za-z0-9][A-Za-z0-9._-]{0,127}"},
+    "dispatch_id": {"$ref": "#/$defs/id"},
+    "status": {"type": "string", "enum": ["success", "failure", "partial", "cancelled"]},
+    "decision_results": {"type": "array", "items": {"$ref": "#/$defs/decision_result"}},
+    "artifacts": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+    "recorded_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"},
+    "decision_result": {
+      "type": "object",
+      "required": ["decision_type", "result"],
+      "properties": {
+        "decision_type": {"type": "string", "enum": ["repair", "expand", "verify", "terminate", "continue"]},
+        "result": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}

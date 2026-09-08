@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Graph expansion plan with jobs edges batches v6",
+  "type": "object",
+  "required": ["schema_version", "plan_id", "campaign_id", "source_job_id", "target_jobs", "edges", "batches", "graph_revision", "created_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "campaign_id": {"$ref": "#/$defs/id"},
+    "source_job_id": {"$ref": "#/$defs/id"},
+    "target_jobs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/planned_job"}, "uniqueItems": true},
+    "edges": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/planned_edge"}},
+    "batches": {"type": "array", "items": {"$ref": "#/$defs/planned_batch"}},
+    "graph_revision": {"type": "integer", "minimum": 1},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"},
+    "planned_job": {
+      "type": "object",
+      "required": ["job_id", "role", "purpose"],
+      "properties": {
+        "job_id": {"$ref": "#/$defs/id"},
+        "role": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "context_snapshot_id": {"$ref": "#/$defs/id"},
+        "activation_id": {"$ref": "#/$defs/id"},
+        "required_evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_artifact"}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "planned_edge": {
+      "type": "object",
+      "required": ["source_job_id", "target_job_id", "edge_type"],
+      "properties": {
+        "source_job_id": {"$ref": "#/$defs/id"},
+        "target_job_id": {"$ref": "#/$defs/id"},
+        "edge_type": {"type": "string", "enum": ["success", "execution", "all-settled", "report", "verification", "batch", "cycle"]}
+      },
+      "additionalProperties": false
+    },
+    "planned_batch": {
+      "type": "object",
+      "required": ["batch_id", "job_ids"],
+      "properties": {
+        "batch_id": {"$ref": "#/$defs/id"},
+        "job_ids": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/id"}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "evidence_artifact": {
+      "type": "object",
+      "required": ["artifact_ref", "artifact_digest"],
+      "properties": {
+        "artifact_ref": {"type": "string", "pattern": "run://[^/]+/(jobs|graph|campaign)/.+"},
+        "artifact_digest": {"$ref": "#/$defs/digest"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

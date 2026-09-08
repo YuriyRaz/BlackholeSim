@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dynamic orchestration job v6",
+  "type": "object",
+  "required": ["schema_version", "job_id", "run_id", "title", "status", "activation_id", "context_snapshot_id", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 6},
+    "job_id": {"$ref": "#/$defs/id"},
+    "run_id": {"type": "string", "pattern": "[A-Za-z0-9][A-Za-z0-9._-]{0,127}"},
+    "title": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["pending", "running", "completed", "failed", "cancelled", "waiting", "dispatch_pending"]},
+    "activation_id": {"$ref": "#/$defs/id"},
+    "context_snapshot_id": {"$ref": "#/$defs/id"},
+    "repair_relationship": {"$ref": "#/$defs/repair_ref"},
+    "prompt_path": {"type": "string", "minLength": 1},
+    "session_ref": {"type": "string"},
+    "outcome": {"type": "object"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "revision": {"type": "integer", "minimum": 0},
+    "execution_status": {"type": "string", "enum": ["success", "failure"]},
+    "completion_status": {"type": "string", "enum": ["success", "failed"]},
+    "report_accepted": {"type": "boolean"},
+    "verification_passed": {"type": "boolean"},
+    "condition_id": {"type": "string"},
+    "target_gate_revision": {"type": "integer", "minimum": 1},
+    "target_job_id": {"$ref": "#/$defs/id"},
+    "cycle_id": {"$ref": "#/$defs/id"},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "question": {"type": "string"},
+    "dispatch_id": {"$ref": "#/$defs/id"},
+    "role": {"type": "string"},
+    "purpose_key": {"type": "string"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "[A-Z][A-Z0-9_-]{0,127}"},
+    "digest": {"type": "string", "pattern": "[0-9a-f]{64}"},
+    "repair_ref": {
+      "type": "object",
+      "required": ["target_job_id", "finding_id"],
+      "properties": {
+        "target_job_id": {"$ref": "#/$defs/id"},
+        "finding_id": {"$ref": "#/$defs/id"}
+      },
+      "additionalProperties": false
+    }
+  }
+}
