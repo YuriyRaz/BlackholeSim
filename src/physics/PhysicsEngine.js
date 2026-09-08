@@ -21,7 +21,6 @@ export class PhysicsEngine {
     this.gwLuminosity = 0;
     this._playing = true;
     this._speedMultiplier = 1.0;
-    this._snapshots = [];
     this._snapshotCounter = 0;
     this._accretedMass = 0;
     this._accretionWindow = [];
@@ -81,7 +80,6 @@ export class PhysicsEngine {
     this.gwLuminosity = 0;
     this._accretedMass = 0;
     this._accretionWindow = [];
-    this._snapshots = [];
     this._snapshotCounter = 0;
     this._mergedBH = null;
     this._fallbackRate = 0;
@@ -133,7 +131,7 @@ export class PhysicsEngine {
 
     const matterDt = this._computeMatterTimestep();
     const maxDt = Math.min(Constants.dt_max, matterDt);
-    const substeps = Math.max(1, Math.ceil(effectiveDt / maxDt));
+    const substeps = Math.min(1000, Math.max(1, Math.ceil(effectiveDt / maxDt)));
     const subDt = effectiveDt / substeps;
 
     for (let s = 0; s < substeps; s++) {
@@ -145,18 +143,25 @@ export class PhysicsEngine {
       this._classifyBoundParticles();
       this._computeFallbackRate(subDt);
       this._updatePhaseTransitions(subDt);
+      for (const p of this.matterParticles) {
+        if (p._shockHeating) {
+          p._shockHeating = 0;
+        }
+      }
       this._captureParticlesAtISCO(subDt);
       this._computeAccretion(subDt);
       this._computeGravitationalWaves(subDt);
-      for (const body of this.bodies) {
-        if (!body.fixed && !body.disrupted) {
-          body.updateTrail();
-        }
-      }
       this._computeBHPairs();
       this.simTime += subDt;
       this._snapshotCounter++;
     }
+    // Update trails once per frame, not per substep
+    for (const body of this.bodies) {
+      if (!body.fixed && !body.disrupted) {
+        body.updateTrail();
+      }
+    }
+    this._updateParticleTrails();
   }
 
   _computeFallbackRate(dt) {
@@ -465,6 +470,7 @@ export class PhysicsEngine {
   }
 
   _integrateGas(dt) {
+    if (this.gasParticles.length === 0) return;
     const blackHoles = this._blackHoles;
 
     const accelerations = [];
@@ -491,28 +497,28 @@ export class PhysicsEngine {
           ax += fd[0];
           ay += fd[1];
           az += fd[2];
-        }
 
-        if (bh.isInErgosphere(gp.position)) {
-          const spinDir = bh.spinAxis;
-          const speed = Math.sqrt(gp.velocity[0] ** 2 + gp.velocity[1] ** 2 + gp.velocity[2] ** 2);
-          const perp = [
-            -dz * spinDir[1] + dy * spinDir[2],
-            dx * spinDir[2] - dz * spinDir[0],
-            dy * spinDir[0] - dx * spinDir[1]
-          ];
-          const perpLen = Math.sqrt(perp[0] ** 2 + perp[1] ** 2 + perp[2] ** 2);
-          if (perpLen > 0.001 && speed > 0.001) {
-            const targetSpeed = speed;
-            const targetVel = [
-              perp[0] / perpLen * targetSpeed,
-              perp[1] / perpLen * targetSpeed,
-              perp[2] / perpLen * targetSpeed
+          if (bh.isInErgosphere(gp.position)) {
+            const spinDir = bh.spinAxis;
+            const speed = Math.sqrt(gp.velocity[0] ** 2 + gp.velocity[1] ** 2 + gp.velocity[2] ** 2);
+            const perp = [
+              -dz * spinDir[1] + dy * spinDir[2],
+              dx * spinDir[2] - dz * spinDir[0],
+              dy * spinDir[0] - dx * spinDir[1]
             ];
-            const ergoStrength = 0.5;
-            ax += ergoStrength * (targetVel[0] - gp.velocity[0]) / dt;
-            ay += ergoStrength * (targetVel[1] - gp.velocity[1]) / dt;
-            az += ergoStrength * (targetVel[2] - gp.velocity[2]) / dt;
+            const perpLen = Math.sqrt(perp[0] ** 2 + perp[1] ** 2 + perp[2] ** 2);
+            if (perpLen > 0.001 && speed > 0.001) {
+              const targetSpeed = speed;
+              const targetVel = [
+                perp[0] / perpLen * targetSpeed,
+                perp[1] / perpLen * targetSpeed,
+                perp[2] / perpLen * targetSpeed
+              ];
+              const ergoStrength = 0.5;
+              ax += ergoStrength * (targetVel[0] - gp.velocity[0]) / dt;
+              ay += ergoStrength * (targetVel[1] - gp.velocity[1]) / dt;
+              az += ergoStrength * (targetVel[2] - gp.velocity[2]) / dt;
+            }
           }
         }
       }
@@ -577,6 +583,10 @@ export class PhysicsEngine {
   }
 
   _computeAccretion(dt) {
+    if (this.gasParticles.length === 0) {
+      this.accretionRate = 0;
+      return;
+    }
     const blackHoles = this._blackHoles;
     let accretedThisStep = 0;
 
@@ -642,6 +652,7 @@ export class PhysicsEngine {
       if (p.phase === 'debris' || p.phase === 'disk') {
         if (specificOrbitalEnergy > 0 && r > rs * 100) {
           p.escaped = true;
+          this._ledger.recordEscape(p.mass);
         }
       }
     }
@@ -663,9 +674,10 @@ export class PhysicsEngine {
       if (r < bh.rs * 10) continue;
 
       const vCirc = Math.sqrt(Constants.G_solar_km * bh.mass / r);
-      const vPhi = Math.abs(
-        (dx * p.velocity[2] - dz * p.velocity[0]) / (r + 1e-15)
-      );
+      const Lx = dy * p.velocity[2] - dz * p.velocity[1];
+      const Ly = dz * p.velocity[0] - dx * p.velocity[2];
+      const Lz = dx * p.velocity[1] - dy * p.velocity[0];
+      const vPhi = Math.sqrt(Lx * Lx + Ly * Ly + Lz * Lz) / (r + 1e-15);
       const circularity = vPhi / (vCirc + 1e-15);
       const hasShockHeating = p._shockHeating > 0;
 
@@ -774,6 +786,12 @@ export class PhysicsEngine {
 
   _computeGravitationalWaves(subDt) {
     const bodies = this.bodies.filter(b => !b.fixed && !b.disrupted);
+    if (bodies.length < 2) {
+      this.gwFrequency = 0;
+      this.gwStrain = 0;
+      this.gwLuminosity = 0;
+      return;
+    }
     let maxFreq = 0;
     let maxStrain = 0;
     let totalLuminosity = 0;
@@ -859,41 +877,6 @@ export class PhysicsEngine {
       if (trail.length > this._trailMaxLength) {
         trail.shift();
       }
-    }
-  }
-
-  _saveSnapshot() {
-    const snapshot = {
-      time: this.simTime,
-      bodies: this.bodies.map(b => ({
-        id: b.id,
-        position: [...b.position],
-        velocity: [...b.velocity],
-        mass: b.mass,
-        disrupted: b.disrupted
-      })),
-      gas: this.gasParticles.map(g => ({
-        position: [...g.position],
-        velocity: [...g.velocity],
-        mass: g.mass,
-        temperature: g.temperature
-      })),
-      gw: {
-        frequency: this.gwFrequency,
-        strain: this.gwStrain,
-        phase: this.gwPhase,
-        luminosity: this.gwLuminosity
-      },
-      accretionRate: this.accretionRate,
-      fallbackRate: this._fallbackRate,
-      fallbackStartTime: this._fallbackStartTime,
-      fallbackMass: this._fallbackMass,
-      gwRippleFadeStrain: this._gwRippleFadeStrain,
-      gwRippleFadeTime: this._gwRippleFadeTime
-    };
-    this._snapshots.push(snapshot);
-    if (this._snapshots.length > Constants.maxSnapshots) {
-      this._snapshots.shift();
     }
   }
 
@@ -1022,10 +1005,27 @@ export class PhysicsEngine {
       this._smoothingLength = 1;
       return;
     }
-    const R = Math.max(...active.map(p => {
-      const dx = p.position[0], dy = p.position[1], dz = p.position[2];
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    }));
+    // Compute center of mass
+    let cx = 0, cy = 0, cz = 0, totalMass = 0;
+    for (const p of active) {
+      cx += p.mass * p.position[0];
+      cy += p.mass * p.position[1];
+      cz += p.mass * p.position[2];
+      totalMass += p.mass;
+    }
+    cx /= totalMass;
+    cy /= totalMass;
+    cz /= totalMass;
+    // Compute max distance from center of mass
+    let R = 0;
+    for (const p of active) {
+      const dx = p.position[0] - cx;
+      const dy = p.position[1] - cy;
+      const dz = p.position[2] - cz;
+      const dist = dx * dx + dy * dy + dz * dz;
+      if (dist > R) R = dist;
+    }
+    R = Math.sqrt(R);
     const volume = (4 / 3) * Math.PI * Math.pow(R + 1, 3);
     this._smoothingLength = Constants.sphEtaSmooth * Math.pow(volume / active.length, 1 / 3);
   }
@@ -1166,7 +1166,6 @@ export class PhysicsEngine {
     for (const p of active) {
       if (p._shockHeating) {
         this._ledger.recordShockHeating(p.mass * p._shockHeating);
-        p._shockHeating = 0;
       }
       if (p._coolingRate) {
         this._ledger.recordCooling(-p.mass * p._coolingRate * dt);
@@ -1241,5 +1240,5 @@ export class PhysicsEngine {
     return kinetic + potential;
   }
 
-  getSnapshots() { return this._snapshots; }
+  getSnapshots() { return []; }
 }

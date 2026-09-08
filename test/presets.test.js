@@ -134,14 +134,14 @@ describe('Presets', () => {
     const dR = Constants.tidalDisruptionRadius(blackHole.mass, star.radius, star.mass);
 
     expect(separation).toBeCloseTo(3 * dR, -2);
-    expect(preset.matterParticles.length).toBe(1000);
+    expect(preset.matterParticles.length).toBe(500);
   });
 
   it('generates polytrope matter particles for TDE preset', () => {
     const preset = TDEPreset();
     expect(preset.matterParticles.length).toBeGreaterThan(0);
     expect(preset.matterParticles[0].phase).toBe('stellar');
-    expect(preset.matterParticles[0].mass).toBeCloseTo(1 / 1000, 5);
+    expect(preset.matterParticles[0].mass).toBeCloseTo(1 / 500, 5);
     expect(preset.matterParticles[0].density).toBeGreaterThan(0);
   });
 });

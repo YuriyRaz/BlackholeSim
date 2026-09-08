@@ -51,7 +51,7 @@ describe('Task 7.1: Deterministic headless TDE integration test', () => {
     expect(isFinite(state.ledgers.energy.total)).toBe(true);
   });
 
-  it('TDE preset runs headlessly without errors', { timeout: 60000 }, () => {
+  it('TDE preset runs headlessly without errors', { timeout: 15000 }, () => {
     const { TDEPreset } = require('../src/presets/presets.js');
     const engine = new PhysicsEngine();
     const preset = TDEPreset();

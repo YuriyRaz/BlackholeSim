@@ -47,6 +47,18 @@ export function generatePolytrope(options = {}) {
   const xi1 = le.xi1;
   const dtheta1 = le.dtheta1;
 
+  // Build cumulative mass profile from Lane-Emden solution
+  const cumulativeMass = [0];
+  for (let i = 1; i < le.points.length; i++) {
+    const xi_prev = le.points[i - 1].xi;
+    const xi_curr = le.points[i].xi;
+    const dxi = xi_curr - xi_prev;
+    const theta_avg = 0.5 * (le.points[i - 1].theta + le.points[i].theta);
+    const dM = xi_curr * xi_curr * Math.pow(Math.max(theta_avg, 0), n) * dxi;
+    cumulativeMass.push(cumulativeMass[i - 1] + dM);
+  }
+  const totalMassLE = cumulativeMass[cumulativeMass.length - 1];
+
   const R_star_km = radius * Constants.R_sun_km;
   const alpha = R_star_km / xi1;
 
@@ -56,8 +68,14 @@ export function generatePolytrope(options = {}) {
   const particles = [];
 
   for (let i = 0; i < N; i++) {
-    const r_fraction = Math.cbrt(rng.next());
-    const xi_sample = r_fraction * xi1;
+    // Inverse CDF sampling from cumulative mass profile
+    const u = rng.next() * totalMassLE;
+    let idx = 0;
+    while (idx < cumulativeMass.length - 1 && cumulativeMass[idx + 1] < u) {
+      idx++;
+    }
+    const massFrac = (u - cumulativeMass[idx]) / (cumulativeMass[idx + 1] - cumulativeMass[idx] + 1e-30);
+    const xi_sample = le.points[idx].xi + massFrac * (le.points[Math.min(idx + 1, le.points.length - 1)].xi - le.points[idx].xi);
     const theta_sample = getThetaAt(le.points, xi_sample);
     const density = rho_c * Math.pow(Math.max(theta_sample, 0), n);
 

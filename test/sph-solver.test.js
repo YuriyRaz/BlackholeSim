@@ -129,8 +129,8 @@ describe('SPHSolver', () => {
     p._duDtHydro = 0;
 
     solver.integrateInternalEnergy([p], dt, 10);
-    expect(p.internalEnergy).toBeLessThan(1e9);
-    expect(p.internalEnergy).toBeGreaterThan(0);
+    // Without cooling, internal energy stays the same when no hydro heating
+    expect(p.internalEnergy).toBe(1e9);
     expect(isFinite(p.internalEnergy)).toBe(true);
   });
 

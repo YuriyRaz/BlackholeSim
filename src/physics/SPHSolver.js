@@ -119,9 +119,9 @@ export class SPHSolver {
 
         if (!pj.isActive) continue;
 
-        const dx = pj.position[0] - pi.position[0];
-        const dy = pj.position[1] - pi.position[1];
-        const dz = pj.position[2] - pi.position[2];
+        const dx = pi.position[0] - pj.position[0];
+        const dy = pi.position[1] - pj.position[1];
+        const dz = pi.position[2] - pj.position[2];
         const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (r < 0.001) continue;
 
@@ -180,8 +180,6 @@ export class SPHSolver {
   }
 
   integrateInternalEnergy(particles, dt, coolingBeta) {
-    const beta = coolingBeta ?? COOLING_BETA;
-
     for (const p of particles) {
       if (!p.isActive) continue;
 
@@ -190,14 +188,6 @@ export class SPHSolver {
 
       if (duHydro > 0) {
         p._shockHeating = duHydro;
-      }
-
-      if (p.density > DENSITY_FLOOR) {
-        const t_dyn = 1 / Math.sqrt(Constants.G_solar_km * p.density);
-        const t_cool = beta * t_dyn;
-        const duCool = -p.internalEnergy / (t_cool + 1e-15);
-        du += duCool;
-        p._coolingRate = duCool;
       }
 
       p.internalEnergy = Math.max(p.internalEnergy + du * dt, 0);

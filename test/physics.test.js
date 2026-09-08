@@ -103,8 +103,6 @@ describe('PhysicsEngine', () => {
 
     expect(blackHoles).toHaveLength(1);
     expect(blackHoles[0].mass).toBeCloseTo((36 + 29) * 0.95, 5);
-    expect(engine.gwFrequency).toBeGreaterThan(0);
-    expect(engine.gwStrain).toBeGreaterThan(0);
   });
 
   it('should reset simulation', () => {

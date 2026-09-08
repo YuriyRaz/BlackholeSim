@@ -27,7 +27,7 @@ describe('Benchmarks', () => {
   const ITERATIONS = 10;
   const PARTICLE_COUNT = 1000;
 
-  it('neighbor search throughput', { timeout: 120000 }, () => {
+  it('neighbor search throughput', { timeout: 45000 }, () => {
     const grid = new SpatialHashGrid(100);
     const particles = createParticleRing(PARTICLE_COUNT, 2.5e7, 1.0);
     const smoothingLength = 500;
@@ -46,10 +46,10 @@ describe('Benchmarks', () => {
     const opsPerSec = (ITERATIONS * PARTICLE_COUNT) / (elapsed / 1000);
 
     console.log(`Neighbor search: ${elapsed.toFixed(2)}ms for ${ITERATIONS} iterations, ${opsPerSec.toFixed(0)} queries/sec`);
-    expect(opsPerSec).toBeGreaterThan(0);
+    expect(opsPerSec).toBeGreaterThan(100);
   });
 
-  it('SPH forces throughput', { timeout: 120000 }, () => {
+  it('SPH forces throughput', { timeout: 45000 }, () => {
     const engine = new PhysicsEngine();
     const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
     engine.addObject(bh);
@@ -72,10 +72,10 @@ describe('Benchmarks', () => {
     const opsPerSec = ITERATIONS / (elapsed / 1000);
 
     console.log(`SPH forces: ${elapsed.toFixed(2)}ms for ${ITERATIONS} iterations, ${opsPerSec.toFixed(0)} steps/sec`);
-    expect(opsPerSec).toBeGreaterThan(0);
+    expect(opsPerSec).toBeGreaterThan(1);
   });
 
-  it('gravity integration throughput', { timeout: 120000 }, () => {
+  it('gravity integration throughput', { timeout: 45000 }, () => {
     const engine = new PhysicsEngine();
     const bh = new BlackHole({ mass: 1e6, position: [0, 0, 0], fixed: true });
     engine.addObject(bh);
@@ -91,10 +91,10 @@ describe('Benchmarks', () => {
     const opsPerSec = ITERATIONS / (elapsed / 1000);
 
     console.log(`Gravity integration: ${elapsed.toFixed(2)}ms for ${ITERATIONS} iterations, ${opsPerSec.toFixed(0)} steps/sec`);
-    expect(opsPerSec).toBeGreaterThan(0);
+    expect(opsPerSec).toBeGreaterThan(1);
   });
 
-  it('particle rendering throughput', { timeout: 120000 }, () => {
+  it('particle rendering throughput', { timeout: 45000 }, () => {
     const particles = createParticleRing(PARTICLE_COUNT, 2.5e7, 1.0);
 
     const start = performance.now();
@@ -110,6 +110,6 @@ describe('Benchmarks', () => {
     const fps = 1000 / (elapsed / ITERATIONS);
 
     console.log(`Particle state prep: ${elapsed.toFixed(2)}ms for ${ITERATIONS} iterations, ${fps.toFixed(0)} FPS equivalent`);
-    expect(fps).toBeGreaterThan(0);
+    expect(fps).toBeGreaterThanOrEqual(30);
   });
 });

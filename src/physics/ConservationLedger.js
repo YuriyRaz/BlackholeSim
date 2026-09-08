@@ -59,15 +59,20 @@ export class ConservationLedger {
       te += p.thermalEnergy;
     }
 
-    for (let i = 0; i < matterParticles.length; i++) {
-      if (!matterParticles[i].isActive) continue;
-      for (let j = i + 1; j < matterParticles.length; j++) {
-        if (!matterParticles[j].isActive) continue;
-        const dx = matterParticles[j].position[0] - matterParticles[i].position[0];
-        const dy = matterParticles[j].position[1] - matterParticles[i].position[1];
-        const dz = matterParticles[j].position[2] - matterParticles[i].position[2];
-        const r = Math.sqrt(dx * dx + dy * dy + dz * dz + 0.01 * 0.01);
-        pe -= G * matterParticles[i].mass * matterParticles[j].mass / r;
+    // Skip O(N²) particle-particle potential energy when too many particles
+    // This is a diagnostic tool, not part of the simulation
+    const activeCount = matterParticles.filter(p => p.isActive).length;
+    if (activeCount <= 100) {
+      for (let i = 0; i < matterParticles.length; i++) {
+        if (!matterParticles[i].isActive) continue;
+        for (let j = i + 1; j < matterParticles.length; j++) {
+          if (!matterParticles[j].isActive) continue;
+          const dx = matterParticles[j].position[0] - matterParticles[i].position[0];
+          const dy = matterParticles[j].position[1] - matterParticles[i].position[1];
+          const dz = matterParticles[j].position[2] - matterParticles[i].position[2];
+          const r = Math.sqrt(dx * dx + dy * dy + dz * dz + 0.01 * 0.01);
+          pe -= G * matterParticles[i].mass * matterParticles[j].mass / r;
+        }
       }
     }
 
@@ -142,6 +147,10 @@ export class ConservationLedger {
         cooling: this.coolingEnergy,
         accreted: this.accretedEnergy,
         imbalance: energyImbalance,
+      },
+      momentum: {
+        linear: this.totalMomentum,
+        angular: this.totalAngularMomentum,
       },
       counts: {
         total: this.particleCount,

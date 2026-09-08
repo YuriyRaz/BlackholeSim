@@ -73,7 +73,7 @@ export const Constants = {
   coolingBeta: 10,
   sphOverloadThreshold: 100,
 
-  defaultStarResolution: 1000,
+  defaultStarResolution: 500,
   minStarResolution: 200,
   maxStarResolution: 2000,
 };
