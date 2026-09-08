@@ -42,51 +42,28 @@ class InstructionArchitectureTest(unittest.TestCase):
         ):
             self.assertIn(reference, skill)
 
-    def test_versioned_assets_and_cli_surface_are_shipped(self) -> None:
+    def test_only_current_protocol_assets_are_shipped(self) -> None:
+        legacy_reference = Path("references/legacy-root-session-orchestration.md")
         schemas = ROOT / "schemas"
         self.assertEqual(
-            sorted(path.name for path in schemas.iterdir() if path.is_dir()), ["v4", "v5"]
+            sorted(
+                path.name
+                for path in schemas.iterdir()
+                if path.is_dir() and any(path.iterdir())
+            ),
+            ["v6"],
         )
         self.assertFalse((ROOT / "scripts" / "workerctl.py").exists())
         self.assertFalse((ROOT / "scripts" / "verify_repair.py").exists())
+        for obsolete_assets in ("run-template", "prompts"):
+            root = ROOT / "assets" / obsolete_assets
+            self.assertFalse(root.exists() and any(path.is_file() for path in root.rglob("*")))
+        self.assertEqual([], list((ROOT / "tests").glob("test_v[0-4]_*.py")))
+        self.assertEqual([], list((ROOT / "tests").glob("test_v5_*.py")))
 
-        architecture_test = Path("tests/test_instruction_architecture.py")
-        outcome_test = Path("tests/test_v4_outcome.py")
-        outcome_proto_test = Path("tests/test_v4_outcome_protocol.py")
-        registration_test = Path("tests/test_v4_registration.py")
-        legacy_allowlist = {
-            "class Lease:": {architecture_test},
-            "def run_lease(": {architecture_test},
-            '"lifecycle-event"': {architecture_test},
-            "def validate_dispatch(": {architecture_test},
-            "def validate_schema(": {architecture_test},
-            'add_parser("compile"': {architecture_test},
-            'add_parser("migrate-v2"': {architecture_test},
-            "workerctl": {architecture_test},
-            "next_permitted": {architecture_test},
-            "protocol_ack": {architecture_test},
-            "contract_revision": {architecture_test, outcome_test, outcome_proto_test},
-            "dispatch_id": {architecture_test, outcome_test, outcome_proto_test},
-            "work_units": {architecture_test, outcome_test, outcome_proto_test},
-            "completed_work_units": {architecture_test, outcome_test, outcome_proto_test},
-            "current_workflow_node_id": {architecture_test, registration_test},
-            "checkpoint_sha256": {architecture_test},
-            "Next permitted:": {architecture_test},
-            "Completed units:": {architecture_test},
-            "executing a dispatch": {architecture_test},
-        }
-        trusted_v5_paths = {
-            Path("scripts/v5_core.py"),
-            Path("scripts/transport_v5.py"),
-            Path("tests/test_v5_protocol.py"),
-            Path("tests/test_v5_documentation.py"),
-            Path("tests/test_v5_workflows.py"),
-            Path("tests/test_v5_regressions.py"),
-            Path("tests/test_v5_artifact_integrity.py"),
-            Path("tests/test_v5_response_recovery.py"),
-            Path("tests/test_v5_transport.py"),
-        }
-        violations: list[str] = []
+        old_version_violations: list[str] = []
+        legacy_assets: set[Path] = set()
+        obsolete_label = "lega" + "cy"
         for path in sorted(ROOT.rglob("*")):
             if not path.is_file() or "__pycache__" in path.parts or any(p.startswith(".") for p in path.parts):
                 continue
@@ -96,13 +73,27 @@ class InstructionArchitectureTest(unittest.TestCase):
                 f"Classify new shipped file type before excluding it: {path}",
             )
             relative = path.relative_to(ROOT)
-            if relative in trusted_v5_paths or relative.parts[:2] == ("schemas", "v5"):
+            if relative.parts[0] == "tests":
                 continue
-            text = path.read_text(encoding="utf-8")
-            for forbidden, allowed_paths in legacy_allowlist.items():
-                if forbidden in text and relative not in allowed_paths:
-                    violations.append(f"{relative}: {forbidden}")
-        self.assertEqual([], violations)
+            text = path.read_text(encoding="utf-8").lower()
+            if obsolete_label in text:
+                legacy_assets.add(relative)
+            if re.search(r"\bv[0-4]\b", text):
+                old_version_violations.append(str(relative))
+        self.assertEqual([], old_version_violations)
+        self.assertEqual({Path("SKILL.md"), legacy_reference}, legacy_assets)
+
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8").lower()
+        legacy = (ROOT / legacy_reference).read_text(encoding="utf-8").lower()
+        self.assertIn(
+            "[legacy-root-session-orchestration.md]"
+            "(references/legacy-root-session-orchestration.md)",
+            skill,
+        )
+        self.assertIn("only supported default approach", skill)
+        self.assertIn("# legacy: root session orchestration", legacy)
+        self.assertIn("deprecated", legacy)
+        self.assertIn("protocol version 6", skill)
 
 
 if __name__ == "__main__":
